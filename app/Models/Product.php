@@ -18,4 +18,9 @@ class Product extends Model
             $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
     }
+
+    public function categories()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
