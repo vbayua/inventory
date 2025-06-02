@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
+            $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->timestamps();
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->foreignId('location_id')->nullable()->constrained('locations')->onDelete('set null');
         });
     }
 

@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('units', function (Blueprint $table) {
-            $table->id();
+            $table->string('name')->primary();
+            $table->decimal('conversion_to_base', 10, 2)->default(1.00); // Conversion factor to base unit
+            $table->string('base_unit')->default('pcs'); // Default base unit
+            $table->string('unit_type')->default('count'); // Type of unit (e.g., count, weight, volume)`
             $table->timestamps();
         });
     }

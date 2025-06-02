@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('batches', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->string('batch_number')->unique();
+            $table->date('manufacture_date')->nullable();
+            $table->date('expiry_date')->nullable();
             $table->timestamps();
+            $table->index(['product_id', 'batch_number'], 'idx_product_batch');
         });
     }
 

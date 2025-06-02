@@ -13,7 +13,22 @@ return new class extends Migration
     {
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
             $table->timestamps();
+        });
+
+        Schema::create('products_suppliers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->decimal('price', 10, 2)->nullable(); // Supplier-specific price
+            $table->timestamps();
+            $table->unique(['product_id', 'supplier_id']); // Prevent duplicate pairs
+            $table->index(['product_id', 'supplier_id']); // Index for queries
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
         });
     }
 

@@ -18,6 +18,7 @@ class SupplierFactory extends Factory
     {
         return [
             //
+            'name' => $this->faker->company,
         ];
     }
 }

@@ -9,4 +9,11 @@ class Warehouse extends Model
 {
     /** @use HasFactory<\Database\Factories\WarehouseFactory> */
     use HasFactory;
+
+    public $guarded = ['id'];
+
+    public function locations()
+    {
+        return $this->hasMany(Location::class);
+    }
 }

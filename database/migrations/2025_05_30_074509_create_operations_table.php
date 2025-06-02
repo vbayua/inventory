@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('operations', function (Blueprint $table) {
             $table->id();
+            $table->enum('operation_type', ['inbound', 'outbound', 'transfer'])->default('inbound');
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('location_id')->constrained('locations')->onDelete('cascade');
+            $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('set null');
+            $table->decimal('quantity', 10, 2)->default(0);
+            $table->string('unit')->default('pcs'); // Assuming 'pcs' as the default unit
+            $table->string('remarks')->nullable();
+            $table->datetime('operation_date');
             $table->timestamps();
         });
     }

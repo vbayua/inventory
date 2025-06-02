@@ -15,8 +15,7 @@ return new class extends Migration
             $table->string('sku')->nullable()->after('name');
             $table->string('unit')->nullable()->after('sku');
             $table->decimal('price', 10, 2)->default(0.00)->after('unit');
-            $table->integer('quantity')->default(0)->after('price');
-            $table->boolean('is_active')->default(true)->after('quantity');
+            $table->boolean('is_active')->default(true);
             $table->softDeletes();
         });
     }
