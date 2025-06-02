@@ -45,6 +45,24 @@ export interface User {
 export interface Product {
     id: number;
     name: string;
+    sku: string;
+    unit: string;
+    price: number;
+    category_id: number;
+    location_id: number;
+    supplier_id: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ProductIndex {
+    id: number;
+    name: string;
+    sku: string;
+    unit: string;
+    price: number;
+    category: number;
+    location: number;
     created_at: string;
     updated_at: string;
 }

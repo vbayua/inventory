@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table'
-import { type Product } from '@/types'
+import { type ProductIndex } from '@/types'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button, buttonVariants } from '../ui/button'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
@@ -7,7 +7,7 @@ import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 
 
-export const columns: ColumnDef<Product>[] = [
+export const columns: ColumnDef<ProductIndex>[] = [
     {
         accessorKey: "name",
         header: ({ column }) => {
@@ -20,6 +20,22 @@ export const columns: ColumnDef<Product>[] = [
                 </Button>
             )
         },
+    },
+    {
+        accessorKey: "sku",
+        header: "SKU"
+    },
+    {
+        accessorKey: "unit",
+        header: "Unit"
+    },
+    {
+        accessorKey: "price",
+        header: "Price",
+    },
+    {
+        accessorKey: "category",
+        header: "Category"
     },
     {
         accessorKey: "created_at",

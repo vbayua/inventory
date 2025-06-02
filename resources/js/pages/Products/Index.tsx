@@ -53,6 +53,8 @@ export default function Index({ products }: { products: any }) {
             preserveScroll: true,
         })
     }
+
+    // console.log(products.data)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Products Lists" />

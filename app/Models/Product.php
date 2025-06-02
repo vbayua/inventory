@@ -17,10 +17,50 @@ class Product extends Model
         if (!empty($filters['name'])) {
             $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
+        if (!empty($filters['sku'])) {
+            $query->where('sku', 'like', '%' . $filters['sku'] . '%');
+        }
+        if (!empty($sort = $filters['sort'] ?? null)) {
+            $query->orderBy($sort, $filters['direction'] ?? 'asc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
     }
 
     public function categories()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function locations()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function batches()
+    {
+        return $this->hasMany(Batch::class);
+    }
+
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class);
+    }
+
+    public function operations()
+    {
+        return $this->hasMany(Operation::class);
+    }
+
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
+    public function suppliers()
+    {
+        // return $this->belongsToMany(Supplier::class, '');
+        return $this->belongsToMany(Supplier::class, 'products_suppliers', 'product_id', 'supplier_id')
+            ->withPivot('price', 'created_at', 'updated_at');
     }
 }
