@@ -2,10 +2,11 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
+import { NavItem, type MainNavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Boxes, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar } from 'lucide-react';
 import AppLogo from './app-logo';
+import { NavMainSingle } from './nav-main-single';
 
 const mainNavItems: NavItem[] = [
     {
@@ -14,12 +15,40 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Products',
-        href: '/products',
-        icon: Boxes,
-    },
+        title: 'Operations',
+        href: '/operations',
+        icon: Cog,
+    }
 ];
 
+const warehouseNavItems: MainNavItem[] = [
+    {
+        title: 'Warehouse',
+        icon: Building,
+        subItems: [
+            {
+                title: 'Warehouse',
+                href: '/warehouse',
+                icon: Building2,
+            },
+            {
+                title: 'Location',
+                href: '/location',
+                icon: Boxes,
+            },
+            {
+                title: 'Products',
+                href: '/products',
+                icon: Box,
+            },
+            {
+                title: 'Stock',
+                href: '/stocks',
+                icon: ChartBar,
+            },
+        ]
+    }
+]
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
@@ -49,7 +78,8 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMainSingle items={mainNavItems} group='Menu' />
+                <NavMain items={warehouseNavItems} groupTitle="Warehouse" />
             </SidebarContent>
 
             <SidebarFooter>
