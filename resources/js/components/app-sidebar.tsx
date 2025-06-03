@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavItem, type MainNavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar } from 'lucide-react';
+import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar, MapPin } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavMainSingle } from './nav-main-single';
 
@@ -21,6 +21,31 @@ const mainNavItems: NavItem[] = [
     }
 ];
 
+const productNavItems: MainNavItem[] = [
+    {
+        title: 'Products',
+        icon: Box,
+        subItems: [
+            {
+                title: 'Product Master',
+                href: '/products',
+                icon: Box,
+            },
+
+            {
+                title: 'Categories',
+                href: '/categories',
+                icon: Boxes,
+            },
+            {
+                title: 'Unit',
+                href: '/units',
+                icon: Cog,
+            },
+        ]
+    },
+]
+
 const warehouseNavItems: MainNavItem[] = [
     {
         title: 'Warehouse',
@@ -34,20 +59,18 @@ const warehouseNavItems: MainNavItem[] = [
             {
                 title: 'Location',
                 href: '/location',
-                icon: Boxes,
-            },
-            {
-                title: 'Products',
-                href: '/products',
-                icon: Box,
-            },
-            {
-                title: 'Stock',
-                href: '/stocks',
-                icon: ChartBar,
+                icon: MapPin,
             },
         ]
     }
+]
+
+const stockNavItems: NavItem[] = [
+    {
+        title: 'Stock',
+        href: '/stocks',
+        icon: ChartBar,
+    },
 ]
 const footerNavItems: NavItem[] = [
     {
@@ -80,6 +103,8 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMainSingle items={mainNavItems} group='Menu' />
                 <NavMain items={warehouseNavItems} groupTitle="Warehouse" />
+                <NavMain items={productNavItems} groupTitle="Product" />
+                <NavMainSingle items={stockNavItems} group='Stock' />
             </SidebarContent>
 
             <SidebarFooter>
