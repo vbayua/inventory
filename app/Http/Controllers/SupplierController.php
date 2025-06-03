@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
 use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
@@ -13,7 +14,18 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Suppliers/Index', [
+            'suppliers' => Supplier::orderBy('created_at', 'desc')
+                ->paginate(10)
+                ->withQueryString()
+                ->through(fn($supplier) => [
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                    'created_at' => $supplier->created_at->diffForHumans(),
+                    'updated_at' => $supplier->updated_at->diffForHumans(),
+                ]),
+            'count' => Supplier::count(),
+        ]);
     }
 
     /**
@@ -21,7 +33,7 @@ class SupplierController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Suppliers/Create');
     }
 
     /**
@@ -29,7 +41,10 @@ class SupplierController extends Controller
      */
     public function store(StoreSupplierRequest $request)
     {
-        //
+        $validated = $request->validated();
+        Supplier::create($validated);
+
+        return redirect()->route('supplier.index')->with('success', 'Supplier created successfully.');
     }
 
     /**
@@ -37,7 +52,14 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        //
+        return Inertia::render('Suppliers/Show', [
+            'supplier' => [
+                'id' => $supplier->id,
+                'name' => $supplier->name,
+                'created_at' => $supplier->created_at->diffForHumans(),
+                'updated_at' => $supplier->updated_at->diffForHumans(),
+            ],
+        ]);
     }
 
     /**
@@ -45,7 +67,12 @@ class SupplierController extends Controller
      */
     public function edit(Supplier $supplier)
     {
-        //
+        return Inertia::render('Suppliers/Edit', [
+            'supplier' => [
+                'id' => $supplier->id,
+                'name' => $supplier->name
+            ],
+        ]);
     }
 
     /**
@@ -53,7 +80,10 @@ class SupplierController extends Controller
      */
     public function update(UpdateSupplierRequest $request, Supplier $supplier)
     {
-        //
+        $validated = $request->validated();
+        $supplier->update($validated);
+
+        return redirect()->route('supplier.index')->with('success', 'Supplier updated successfully.');
     }
 
     /**
@@ -61,6 +91,8 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier)
     {
-        //
+        $supplier->delete();
+
+        return redirect()->route('supplier.index')->with('success', 'Supplier deleted successfully.');
     }
 }
