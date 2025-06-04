@@ -19,7 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 type SearchSupplierForm = {
-    name?: string
+    name?: string;
 }
 
 export default function Index({ suppliers }: { suppliers: any }) {
@@ -40,7 +40,8 @@ export default function Index({ suppliers }: { suppliers: any }) {
 
     const filterSupplier: FormEventHandler = (e) => {
         e.preventDefault()
-        get(route('supplier.index', { 'name': data.name }), {
+        const params = data.name ? { name: data.name } : {};
+        get(route('supplier.index', params), {
             preserveScroll: true,
         })
     }

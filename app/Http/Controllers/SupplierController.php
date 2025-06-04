@@ -14,9 +14,11 @@ class SupplierController extends Controller
      */
     public function index()
     {
+        $filters = request()->only('name');
         return Inertia::render('Suppliers/Index', [
-            'suppliers' => Supplier::orderBy('created_at', 'desc')
+            'suppliers' => Supplier::orderBy('created_at', 'desc')->filter($filters)
                 ->paginate(10)
+                ->appends($filters)
                 ->withQueryString()
                 ->through(fn($supplier) => [
                     'id' => $supplier->id,
@@ -25,6 +27,7 @@ class SupplierController extends Controller
                     'updated_at' => $supplier->updated_at->diffForHumans(),
                 ]),
             'count' => Supplier::count(),
+            'name' => request()->name,
         ]);
     }
 
@@ -83,7 +86,8 @@ class SupplierController extends Controller
         $validated = $request->validated();
         $supplier->update($validated);
 
-        return redirect()->route('supplier.index')->with('success', 'Supplier updated successfully.');
+        return redirect()->route('supplier.show', $supplier->id)
+            ->with('success', 'Supplier updated successfully.');
     }
 
     /**
