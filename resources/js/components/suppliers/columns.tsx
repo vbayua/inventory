@@ -4,6 +4,7 @@ import { Button, buttonVariants } from '../ui/button'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
+import { DataTableColumnHeader } from '../data-table-column-header'
 
 type SupplierIndex = {
     id: number;
@@ -17,12 +18,10 @@ export const columns: ColumnDef<SupplierIndex>[] = [
         accessorKey: "name",
         header: ({ column }) => {
             return (
-                <Button
-                    variant={'ghost'}
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                <DataTableColumnHeader
+                    column={column}
+                    title="Supplier Name"
+                />
             )
         },
     },

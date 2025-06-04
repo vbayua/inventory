@@ -70,10 +70,7 @@ export default function Index({ suppliers }: { suppliers: any }) {
                         </Button>
                     </div>
                 </form>
-                <DataTable columns={columns} data={suppliers.data} />
-            </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <PaginationIndex links={suppliers.links} />
+                <DataTable columns={columns} data={suppliers.data} links={suppliers.links} />
             </div>
         </AppLayout>
     );
