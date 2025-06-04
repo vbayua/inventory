@@ -13,7 +13,17 @@ class WarehouseController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia('Warehouses/Index', [
+            'warehouses' => Warehouse::orderBy('created_at', 'desc')
+                ->paginate(10)
+                ->withQueryString()
+                ->through(fn($warehouse) => [
+                    'id' => $warehouse->id,
+                    'name' => $warehouse->name,
+                    'created_at' => $warehouse->created_at->diffForHumans(),
+                    'updated_at' => $warehouse->updated_at->diffForHumans(),
+                ]),
+        ]);
     }
 
     /**
@@ -21,7 +31,7 @@ class WarehouseController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia('Warehouses/Create');
     }
 
     /**
@@ -29,7 +39,10 @@ class WarehouseController extends Controller
      */
     public function store(StoreWarehouseRequest $request)
     {
-        //
+        $validated = $request->validated();
+        Warehouse::create($validated);
+
+        return redirect()->route('warehouse.index')->with('success', 'Warehouse created successfully.');
     }
 
     /**
@@ -37,7 +50,10 @@ class WarehouseController extends Controller
      */
     public function show(Warehouse $warehouse)
     {
-        //
+        $warehouse->load('locations');
+        return inertia('Warehouses/Show', [
+            'warehouse' => $warehouse
+        ]);
     }
 
     /**
@@ -45,7 +61,9 @@ class WarehouseController extends Controller
      */
     public function edit(Warehouse $warehouse)
     {
-        //
+        return Inertia('Warehouses/Edit', [
+            'warehouse' => $warehouse,
+        ]);
     }
 
     /**
@@ -53,7 +71,12 @@ class WarehouseController extends Controller
      */
     public function update(UpdateWarehouseRequest $request, Warehouse $warehouse)
     {
-        //
+        // dd($request);
+        $validated = $request->validated();
+        $warehouse->update($validated);
+
+        return redirect()->route('warehouse.show', $warehouse->id)
+            ->with('success', 'Warehouse updated successfully.');
     }
 
     /**
@@ -61,6 +84,8 @@ class WarehouseController extends Controller
      */
     public function destroy(Warehouse $warehouse)
     {
-        //
+        $warehouse->delete();
+
+        return redirect()->route('warehouse.index')->with('success', 'Warehouse deleted successfully.');
     }
 }
