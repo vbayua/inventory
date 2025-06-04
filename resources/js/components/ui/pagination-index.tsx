@@ -18,6 +18,7 @@ type PaginationIndexProps = {
 }
 
 export const PaginationIndex = ({ links }: PaginationIndexProps) => {
+    // console.log(links)
     return (
         <Pagination>
             <PaginationContent>
@@ -38,7 +39,7 @@ export const PaginationIndex = ({ links }: PaginationIndexProps) => {
                                 )}
                                 {!link.label.includes('Previous') && !link.label.includes('Next') && (
                                     <PaginationItem>
-                                        <PaginationLink href={link.url || '#'} >
+                                        <PaginationLink href={link.url || '#'} isActive={link.active} prefetch>
                                             {link.label}
                                         </PaginationLink>
                                     </PaginationItem>
@@ -47,9 +48,6 @@ export const PaginationIndex = ({ links }: PaginationIndexProps) => {
                         ))}
                     </>
                 )}
-                <PaginationItem>
-                    <PaginationEllipsis />
-                </PaginationItem>
             </PaginationContent>
         </Pagination>
     )
