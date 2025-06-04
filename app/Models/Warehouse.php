@@ -12,6 +12,12 @@ class Warehouse extends Model
 
     public $guarded = ['id'];
 
+    public function scopeFilter($query, $filters)
+    {
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+    }
     public function locations()
     {
         return $this->hasMany(Location::class);

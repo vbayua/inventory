@@ -13,16 +13,21 @@ class WarehouseController extends Controller
      */
     public function index()
     {
+        $filters = request()->only(['name']);
+        $warehouses = Warehouse::orderBy('created_at', 'desc')->filter($filters)
+            ->paginate(10)
+            ->appends($filters)
+            ->withQueryString()
+            ->through(fn($warehouse) => [
+                'id' => $warehouse->id,
+                'name' => $warehouse->name,
+                'created_at' => $warehouse->created_at->diffForHumans(),
+                'updated_at' => $warehouse->updated_at->diffForHumans(),
+            ]);
+
         return Inertia('Warehouses/Index', [
-            'warehouses' => Warehouse::orderBy('created_at', 'desc')
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn($warehouse) => [
-                    'id' => $warehouse->id,
-                    'name' => $warehouse->name,
-                    'created_at' => $warehouse->created_at->diffForHumans(),
-                    'updated_at' => $warehouse->updated_at->diffForHumans(),
-                ]),
+            'warehouses' => $warehouses,
+            'name' => request()->name,
         ]);
     }
 
