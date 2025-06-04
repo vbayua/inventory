@@ -32,17 +32,16 @@ export default function Edit({ supplier }: { supplier: Supplier }) {
     ];
     const supplierName = useRef<HTMLInputElement>(null)
     const { data, setData, put, reset, processing, errors } = useForm<Required<EditSupplierForm>>({
-        name: supplier.name || '',
+        name: `${supplier.name}`,
     })
 
-    const createSupplier: FormEventHandler = (e) => {
+    const editSupplier: FormEventHandler = (e) => {
         e.preventDefault()
 
-        put(route('supplier.update'), {
-            forceFormData: true,
+        put(route('supplier.update', { id: supplier.id }), {
             preserveScroll: true,
             onSuccess: () => {
-                reset()
+                // reset()
             },
             onError: (errors) => {
                 if (errors.name) {
@@ -55,8 +54,8 @@ export default function Edit({ supplier }: { supplier: Supplier }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create New Supplier" />
-            <form onSubmit={createSupplier} className='space-y-6 mt-8 p-4'>
+            <Head title="Edit Supplier" />
+            <form onSubmit={editSupplier} className='space-y-6 mt-8 p-4'>
                 <div className="grid gap-2">
                     <Label htmlFor='name'>Supplier Name</Label>
 
@@ -65,6 +64,8 @@ export default function Edit({ supplier }: { supplier: Supplier }) {
                         ref={supplierName}
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
+                        type='text'
+                        name='name'
                         className='mt-1 block w-full'
                         placeholder='Supplier Name'
                     />
@@ -73,7 +74,7 @@ export default function Edit({ supplier }: { supplier: Supplier }) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <Button disabled={processing}>Edit Supplier</Button>
+                    <Button disabled={processing} type='submit'>Edit Supplier</Button>
                 </div>
             </form>
         </AppLayout >
