@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
@@ -13,7 +14,11 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::all();
+        // dd($categories);
+        return Inertia::render('Categories/Index', [
+            'categories' => $categories,
+        ]);
     }
 
     /**
@@ -21,7 +26,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Categories/Create');
     }
 
     /**
@@ -29,7 +34,11 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
-        //
+        $validated = $request->validated();
+        // dd($validated);
+        Category::create($validated);
+
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
     }
 
     /**
@@ -37,7 +46,9 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        return Inertia::render('Categories/Show', [
+            'category' => $category,
+        ]);
     }
 
     /**
@@ -45,7 +56,9 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        return Inertia::render('Categories/Edit', [
+            'category' => $category,
+        ]);
     }
 
     /**
@@ -53,7 +66,11 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        //
+        $validated = $request->validated();
+
+        $category->update($validated);
+
+        return redirect()->route('categories.show', $category->id)->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -61,6 +78,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+
+        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 }
