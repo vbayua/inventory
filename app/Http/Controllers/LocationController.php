@@ -13,7 +13,28 @@ class LocationController extends Controller
      */
     public function index()
     {
-        //
+        // $filters = request()->only(['name', 'warehouse_id']);
+        // $query = Location::with(['warehouse'])->orderBy('created_at', 'desc');
+        $locations = Location::with(['warehouse'])->orderBy('created_at', 'desc');
+        // $locations = $query->filter($filters)
+        //     ->paginate(10)
+        //     ->appends($filters)
+        //     ->withQueryString()
+        //     ->through(fn($location) => [
+        //         'id' => $location->id,
+        //         'name' => $location->name,
+        //         'warehouse' => [
+        //             'id' => $location->warehouse->id,
+        //             'name' => $location->warehouse->name,
+        //         ],
+        //         'created_at' => $location->created_at,
+        //         'updated_at' => $location->updated_at,
+        //     ]);
+
+        return Inertia('Locations/Index', [
+            'locations' => $locations->get(),
+            'name' => request()->name,
+        ]);
     }
 
     /**
@@ -21,7 +42,12 @@ class LocationController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia('Locations/Create', [
+            'warehouses' => \App\Models\Warehouse::all()->map(fn($warehouse) => [
+                'id' => $warehouse->id,
+                'name' => $warehouse->name,
+            ]),
+        ]);
     }
 
     /**
@@ -29,7 +55,8 @@ class LocationController extends Controller
      */
     public function store(StoreLocationRequest $request)
     {
-        //
+        Location::create($request->validated());
+        return redirect()->route('location.index')->with('success', 'Location created successfully.');
     }
 
     /**
@@ -37,7 +64,20 @@ class LocationController extends Controller
      */
     public function show(Location $location)
     {
-        //
+        return Inertia('Locations/Show', [
+            'location' => $location->load(['warehouse', 'stocks']),
+            'products' => $location->stocks->map(fn($stock) => [
+                'id' => $stock->product->id,
+                'name' => $stock->product->name,
+                'sku' => $stock->product->sku,
+                'quantity' => $stock->quantity,
+                'batch' => $stock->batch ? [
+                    'id' => $stock->batch->id,
+                    'number' => $stock->batch->number,
+                    'expiry_date' => $stock->batch->expiry_date,
+                ] : null,
+            ]),
+        ]);
     }
 
     /**
@@ -45,7 +85,13 @@ class LocationController extends Controller
      */
     public function edit(Location $location)
     {
-        //
+        return Inertia('Locations/Edit', [
+            'location' => $location->load(['warehouse']),
+            'warehouses' => \App\Models\Warehouse::all()->map(fn($warehouse) => [
+                'id' => $warehouse->id,
+                'name' => $warehouse->name,
+            ]),
+        ]);
     }
 
     /**
@@ -53,7 +99,8 @@ class LocationController extends Controller
      */
     public function update(UpdateLocationRequest $request, Location $location)
     {
-        //
+        $location->update($request->validated());
+        return redirect()->route('location.show', $location->id)->with('success', 'Location updated successfully.');
     }
 
     /**
@@ -61,6 +108,7 @@ class LocationController extends Controller
      */
     public function destroy(Location $location)
     {
-        //
+        $location->delete();
+        return redirect()->route('location.index')->with('success', 'Location deleted successfully.');
     }
 }

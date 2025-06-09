@@ -14,6 +14,13 @@ class Location extends Model
 
     public $guarded = ['id'];
 
+    public function scopeFilter($query, $filters)
+    {
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+    }
+
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
