@@ -15,7 +15,7 @@ class ProductController extends Controller
     public function index()
     {
         $filters = request()->only('name');
-        $products = Product::orderBy('created_at', 'desc')->with(['categories', 'suppliers', 'locations'])->filter($filters)
+        $products = Product::orderBy('created_at', 'desc')->with(['categories', 'suppliers'])->filter($filters)
             ->paginate(10)
             ->appends($filters)
             ->through(
@@ -25,7 +25,6 @@ class ProductController extends Controller
                     'unit' => $product->unit,
                     'name' => $product->name,
                     'category' => $product->categories ? $product->categories->name : null,
-                    'location' => $product->locations ? $product->locations->name : null,
                     // 'supplier' => $product->suppliers->map(fn($supplier) => [
                     //     'id' => $supplier->id,
                     //     'name' => $supplier->name,
@@ -62,7 +61,6 @@ class ProductController extends Controller
     {
         return Inertia::render('Products/Create', [
             'categories' => \App\Models\Category::select('id', 'name')->get(),
-            'locations' => \App\Models\Location::select('id', 'name')->get(),
             'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
             'units' => \App\Models\Unit::select('name')->get()
         ]);
@@ -73,16 +71,28 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        Product::create($request->validate([
+        // dd($request->all());
+        $request->merge([
+            'category_id' => $request->category_id === 'none' ? null : $request->category_id,
+            'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
+        ]);
+
+        $product = Product::create($request->validate([
             'name' => ['required'],
             'sku' => ['nullable', 'string'],
             'unit' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'location_id' => ['nullable', 'exists:locations,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'is_active' => ['nullable', 'boolean'],
         ]));
+
+        $product->suppliers()->attach($request->supplier_id, [
+            'price' => $request->price,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
 
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
@@ -121,11 +131,16 @@ class ProductController extends Controller
             'unit' => ['nullable', 'string'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'location_id' => ['nullable', 'exists:locations,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'is_active' => ['nullable', 'boolean'],
         ]));
-
+        $product->suppliers()->syncWithoutDetaching([
+            $request->supplier_id => [
+                'price' => $request->price,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ]);
         return redirect()->route('products.index')
             ->with('success', 'Product Updated Sucessfully!');
     }
