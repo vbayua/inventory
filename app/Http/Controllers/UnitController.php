@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Unit;
 use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\UpdateUnitRequest;
+use Inertia\Inertia;
 
 class UnitController extends Controller
 {
@@ -13,7 +14,9 @@ class UnitController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Units/Index', [
+            'units' => Unit::all(),
+        ]);
     }
 
     /**
@@ -21,7 +24,7 @@ class UnitController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Units/Create');
     }
 
     /**
@@ -29,7 +32,11 @@ class UnitController extends Controller
      */
     public function store(StoreUnitRequest $request)
     {
-        //
+        $validated = $request->validated();
+        // dd($validated);
+        Unit::create($validated);
+
+        return redirect()->route('units.index')->with('success', 'Unit created successfully.');
     }
 
     /**
@@ -37,7 +44,9 @@ class UnitController extends Controller
      */
     public function show(Unit $unit)
     {
-        //
+        return Inertia::render('Units/Show', [
+            'unit' => $unit,
+        ]);
     }
 
     /**
@@ -45,7 +54,9 @@ class UnitController extends Controller
      */
     public function edit(Unit $unit)
     {
-        //
+        return Inertia::render('Units/Edit', [
+            'unit' => $unit,
+        ]);
     }
 
     /**
@@ -53,7 +64,11 @@ class UnitController extends Controller
      */
     public function update(UpdateUnitRequest $request, Unit $unit)
     {
-        //
+        $validated = $request->validated();
+
+        $unit->update($validated);
+
+        return redirect()->route('units.index')->with('success', 'Unit updated successfully.');
     }
 
     /**
@@ -61,6 +76,8 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit)
     {
-        //
+        $unit->delete();
+
+        return redirect()->route('units.index')->with('success', 'Unit deleted successfully.');
     }
 }
