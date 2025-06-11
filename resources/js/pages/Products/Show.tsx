@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 export default function Show({ product }: { product: { id: number; name?: string } }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -14,6 +15,20 @@ export default function Show({ product }: { product: { id: number; name?: string
             href: `/products/${product.id}`,
         }
     ];
+
+    const deleteProduct = (id: number) => {
+        if (confirm('Are you sure you want to delete this product?')) {
+            // Call the delete API endpoint
+            router.delete(`/products/${id}`, {
+                onSuccess: () => {
+                    toast.success('Product deleted successfully');
+                },
+                onError: () => {
+                    toast.error('Failed to delete product');
+                },
+            });
+        }
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${product?.name}`} />
@@ -23,12 +38,24 @@ export default function Show({ product }: { product: { id: number; name?: string
                         <h2 className="text-2xl font-semibold mb-4">{product.name}</h2>
 
                         <p className="text-gray-600">product ID: {product.id}</p>
-                        <div className="flex">
-                            <Link href={`/products/${product.id}/edit`}>
-                                <Button variant="outline" className="cursor-pointer mt-4">
-                                    Edit Product
-                                </Button>
-                            </Link>
+                        <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
+                            <h3 className='font-semibold font-lg'>Actions</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <h3 className='text-md'>Edit</h3>
+                                    <Link href={`/products/${product.id}/edit`}>
+                                        <Button variant="outline" className="cursor-pointer mt-4">
+                                            Edit Product
+                                        </Button>
+                                    </Link>
+                                </div>
+                                <div>
+                                    <h3 className='text-md'>Danger Zone</h3>
+                                    <Button variant="destructive" className="cursor-pointer mt-4" size={"sm"} onClick={() => deleteProduct(product.id)}>
+                                        Delete
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

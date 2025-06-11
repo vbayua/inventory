@@ -35,16 +35,28 @@ type EditProductForm = {
     sku?: string,
     unit?: number | string,
     price?: number,
-    category_id?: number | null,
-    location_id?: number | null,
-    supplier_id?: number | null,
+    category_id?: string | null,
+    supplier_id?: string | null,
 }
-export default function Edit({ product, categories, locations, suppliers, units }: {
+
+type Category = {
+    id?: number,
+    name?: string,
+}
+
+type Supplier = {
+    id?: number,
+    name?: string,
+}
+
+type Unit = {
+    name?: string,
+}
+export default function Edit({ product, categories, suppliers, units }: {
     product: Product,
-    categories: { id: number, name: string }[],
-    locations: { id: number, name: string }[],
-    suppliers: { id: number, name: string }[],
-    units: { name: string }[]
+    categories: Category[],
+    suppliers: Supplier[],
+    units: Unit[]
 }) {
     const productName = useRef<HTMLInputElement>(null)
     const productSku = useRef<HTMLInputElement>(null)
@@ -55,9 +67,8 @@ export default function Edit({ product, categories, locations, suppliers, units 
         sku: product.sku,
         unit: product.unit,
         price: product.price,
-        category_id: product.category_id,
-        location_id: product.location_id,
-        supplier_id: product.supplier_id
+        category_id: String(product.category_id),
+        supplier_id: String(product.supplier_id)
     })
 
     const editProduct: FormEventHandler = (e) => {
@@ -70,7 +81,7 @@ export default function Edit({ product, categories, locations, suppliers, units 
             },
             onError: (errors) => {
                 if (errors.name) {
-                    reset('name')
+                    reset('name', 'sku', 'unit', 'price', 'category_id', 'supplier_id')
                     productName.current?.focus()
                 }
             }
@@ -151,7 +162,7 @@ export default function Edit({ product, categories, locations, suppliers, units 
                 <div className="grid gap-2">
                     <Label htmlFor='category'>Category</Label>
                     <Select
-                        onValueChange={(value) => setData('category_id', Number(value))}
+                        onValueChange={(value) => setData('category_id', String(value))}
                         value={String(data.category_id)}
                         defaultValue={String(data.category_id)}
                     >
@@ -171,33 +182,11 @@ export default function Edit({ product, categories, locations, suppliers, units 
                     <InputError message={errors.category_id} />
                 </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor='location'>location</Label>
-                    <Select
-                        onValueChange={(value) => setData('location_id', Number(value))}
-                        value={String(data.location_id)}
-                        defaultValue={String(data.location_id)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {locations.map((location) => (
-                                <SelectItem key={location.id} value={String(location.id)}>
-                                    {location.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <InputError message={errors.location_id} />
-                </div>
 
                 <div className="grid gap-2">
                     <Label htmlFor='supplier'>Supplier</Label>
                     <Select
-                        onValueChange={(value) => setData('supplier_id', Number(value))}
+                        onValueChange={(value) => setData('supplier_id', String(value))}
                         value={String(data.supplier_id)}
                         defaultValue={String(data.supplier_id)}
                     >

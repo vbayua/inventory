@@ -33,15 +33,28 @@ type CreateProductForm = {
     sku?: string,
     unit?: number | string,
     price?: number,
-    category_id?: number | null,
-    location_id?: number | null,
-    supplier_id?: number | null,
+    category_id?: string | null,
+    supplier_id?: string | null,
 }
-export default function Create({ categories, locations, suppliers, units }: {
-    categories: { id: number, name: string }[],
-    locations: { id: number, name: string }[],
-    suppliers: { id: number, name: string }[],
-    units: { name: string }[]
+
+type Category = {
+    id?: number,
+    name?: string,
+}
+
+type Supplier = {
+    id?: number,
+    name?: string,
+}
+
+type Unit = {
+    name?: string,
+}
+
+export default function Create({ categories, suppliers, units }: {
+    categories: Category[],
+    suppliers: Supplier[],
+    units: Unit[],
 }) {
 
     const productSku = useRef<HTMLInputElement>(null)
@@ -52,29 +65,54 @@ export default function Create({ categories, locations, suppliers, units }: {
         sku: '',
         unit: '',
         price: 0,
-        category_id: null,
-        location_id: null,
-        supplier_id: null
+        category_id: '',
+        supplier_id: '',
     })
 
     const createProduct: FormEventHandler = (e) => {
         e.preventDefault()
-
+        if (data.category_id === 'none') setData('category_id', null);
+        if (data.supplier_id === 'none') setData('supplier_id', null);
+        console.log('Creating product with data:', data);
         post(route('products.store'), {
-            forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
                 reset()
             },
             onError: (errors) => {
                 if (errors.name) {
-                    reset('name')
+                    reset('name', 'sku', 'unit', 'price', 'category_id', 'supplier_id')
+                    toast.error(errors.name)
                     productName.current?.focus()
                 }
             }
         })
     }
 
+    const generateSku = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault()
+        // const randomSku = Math.random().toString(36).substring(2, 10).toUpperCase();
+        const firstWord = productName.current?.value.trim().split(' ')[0] || '';
+        const initials = firstWord.slice(0, 2).toUpperCase();
+        const randomSku = initials + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+        if (!randomSku) {
+            toast.error('Please enter a product name before generating SKU.');
+            return;
+        } else {
+            setData('sku', randomSku);
+            if (productSku.current) {
+                productSku.current.value = randomSku;
+            }
+        }
+        // Ensure SKU is unique by appending a random string
+        // If you want to ensure uniqueness, you might need to check against existing SKUs in your database.
+        // For now, we will just generate a random SKU
+        // Example: SKU format "PRODUCT-12345-XYZ"
+        // Note: The SKU generation logic can be customized as per your requirements.
+        // For example, you can use a combination of product name and a random string.
+        // const randomSku = Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 5).toUpperCase();
+
+    }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Product" />
@@ -94,25 +132,31 @@ export default function Create({ categories, locations, suppliers, units }: {
                     <InputError message={errors.name} />
                 </div>
 
-                <div className="grid gap-2">
-                    <Label htmlFor='sku'>SKU</Label>
+                <div className="grid md:grid-cols-2 items-center gap-2">
 
-                    <Input
-                        id='sku'
-                        ref={productSku}
-                        value={data.sku}
-                        onChange={(e) => setData('sku', e.target.value)}
-                        placeholder='SKU'
-                        className='mt-1 block w-full'
-                    />
+                    <div>
+                        <Label htmlFor='sku'>SKU</Label>
 
-                    <InputError message={errors.sku} />
+                        <Input
+                            id='sku'
+                            ref={productSku}
+                            value={data.sku}
+                            onChange={(e) => setData('sku', e.target.value)}
+                            placeholder='SKU'
+                            className='mt-1 block w-full'
+                        />
+                        <InputError message={errors.sku} />
+                    </div>
+                    {productName.current && productName.current.value && (
+                        <Button className="md:self-end" variant={'secondary'} onClick={(e) => generateSku(e)}>Generate SKU</Button>
+                    )}
+
                 </div>
 
                 <div className="grid gap-2">
                     <Label htmlFor='unit'>unit</Label>
                     <Select
-                        onValueChange={(value) => setData('unit', Number(value))}
+                        onValueChange={(value) => setData('unit', String(value))}
                         value={String(data.unit)}
                         defaultValue={String(data.unit)}
                     >
@@ -150,7 +194,7 @@ export default function Create({ categories, locations, suppliers, units }: {
                 <div className="grid gap-2">
                     <Label htmlFor='category'>Category</Label>
                     <Select
-                        onValueChange={(value) => setData('category_id', Number(value))}
+                        onValueChange={(value) => setData('category_id', String(value))}
                         value={String(data.category_id)}
                         defaultValue={String(data.category_id)}
                     >
@@ -169,34 +213,10 @@ export default function Create({ categories, locations, suppliers, units }: {
 
                     <InputError message={errors.category_id} />
                 </div>
-
-                <div className="grid gap-2">
-                    <Label htmlFor='location'>location</Label>
-                    <Select
-                        onValueChange={(value) => setData('location_id', Number(value))}
-                        value={String(data.location_id)}
-                        defaultValue={String(data.location_id)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {locations.map((location) => (
-                                <SelectItem key={location.id} value={String(location.id)}>
-                                    {location.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <InputError message={errors.location_id} />
-                </div>
-
                 <div className="grid gap-2">
                     <Label htmlFor='supplier'>Supplier</Label>
                     <Select
-                        onValueChange={(value) => setData('supplier_id', Number(value))}
+                        onValueChange={(value) => setData('supplier_id', String(value))}
                         value={String(data.supplier_id)}
                         defaultValue={String(data.supplier_id)}
                     >
@@ -204,15 +224,12 @@ export default function Create({ categories, locations, suppliers, units }: {
                             <SelectValue placeholder="Select a supplier" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectGroup>
-                                <SelectLabel>Select a supplier</SelectLabel>
-                                <SelectItem value="none">None</SelectItem>
-                                {suppliers.map((supplier) => (
-                                    <SelectItem key={supplier.id} value={String(supplier.id)}>
-                                        {supplier.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectGroup>
+                            <SelectItem value="none">None</SelectItem>
+                            {suppliers.map((supplier) => (
+                                <SelectItem key={supplier.id} value={String(supplier.id)}>
+                                    {supplier.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 

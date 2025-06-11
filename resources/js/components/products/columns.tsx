@@ -30,10 +30,6 @@ export const columns: ColumnDef<ProductIndex>[] = [
         header: "Unit"
     },
     {
-        accessorKey: "price",
-        header: "Price",
-    },
-    {
         accessorKey: "category",
         header: "Category"
     },
