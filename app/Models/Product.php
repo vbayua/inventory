@@ -32,11 +32,6 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function locations()
-    {
-        return $this->belongsTo(Location::class);
-    }
-
     public function batches()
     {
         return $this->hasMany(Batch::class);
@@ -62,5 +57,10 @@ class Product extends Model
         // return $this->belongsToMany(Supplier::class, '');
         return $this->belongsToMany(Supplier::class, 'products_suppliers', 'product_id', 'supplier_id')
             ->withPivot('price', 'created_at', 'updated_at');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit', 'name');
     }
 }
