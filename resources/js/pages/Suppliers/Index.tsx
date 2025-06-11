@@ -46,7 +46,6 @@ export default function Index({ suppliers }: { suppliers: any }) {
         })
     }
 
-    // console.log(suppliers.data)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Supplier Lists" />

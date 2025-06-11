@@ -59,7 +59,6 @@ export default function Edit({ location, warehouses }: { location: Location, war
             }
         })
     }
-    console.log(location)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Location" />
