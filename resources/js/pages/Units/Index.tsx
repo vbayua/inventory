@@ -4,7 +4,7 @@ import { columns } from '@/components/units/columns';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { buttonVariants } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { DataTable } from '@/components/units/data-table';
+import { DataTable } from '@/components/ui/datatable/data-table';
 import { FormEventHandler, useRef } from 'react';
 import { PlusIcon } from 'lucide-react';
 
@@ -52,7 +52,7 @@ export default function Index({ units }: { units: any }) {
                 </Link>
             </div>
             <div className={'p-4'}>
-                <DataTable columns={columns} data={units} clientSide={true} />
+                <DataTable columns={columns} data={units} clientSide={true} filterColumn="base_unit" />
             </div>
         </AppLayout>
     );
