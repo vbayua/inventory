@@ -1,12 +1,23 @@
 import { ColumnDef } from '@tanstack/react-table'
-import { type ProductIndex } from '@/types'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button, buttonVariants } from '../ui/button'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 
-
+type ProductIndex = {
+    id: number;
+    name: string;
+    sku: string;
+    unit: string;
+    price: number;
+    categories: {
+        id: number;
+        [key: string]: any; // Adjust this type based on your category structure
+    };
+    created_at: string;
+    updated_at: string;
+}
 export const columns: ColumnDef<ProductIndex>[] = [
     {
         accessorKey: "name",
@@ -30,16 +41,40 @@ export const columns: ColumnDef<ProductIndex>[] = [
         header: "Unit"
     },
     {
-        accessorKey: "category",
-        header: "Category"
+        id: "categories_name",
+        accessorFn: row => row.categories?.name,
+        header: "Category Name",
+        meta: {
+            filterVariant: 'select',
+        },
     },
     {
         accessorKey: "created_at",
-        header: "created_at"
+        header: "created_at",
+        cell: ({ cell }) => {
+            const date = new Date(cell.getValue() as string)
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        }
     },
     {
         accessorKey: "updated_at",
-        header: "updated_at"
+        header: "updated_at",
+        cell: ({ cell }) => {
+            const date = new Date(cell.getValue() as string)
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        }
     },
     {
         id: "actions",
