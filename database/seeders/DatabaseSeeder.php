@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use App\Models\User;
+use App\Service\StockOperationService;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -30,8 +31,15 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
 
-        Product::factory()->count(10)->create([
-            'location_id' => 1, // Assuming the first location is the main one
-        ]);
+        Product::factory()->count(10)->create()->each(function ($product) {
+            $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
+
+            // Create initial stock for each product
+            (new StockOperationService)->createInitialStock($product, [
+                'location_id' => \App\Models\Location::first()->id,
+                'batch_id' => null,
+                'quantity' => rand(10, 100),
+            ]);
+        });
     }
 }
