@@ -16,13 +16,13 @@ class StockOperationService
                 'initial',
                 $product,
                 $stockData,
-                $stockData['remarks'] ?? null
+                $stockData['remarks'] ?? 'Initial stock'
             );
             $this->setStock(
                 $product,
                 $stockData,
                 $stockData['quantity'],
-                $stockData['remarks'] ?? null,
+                $stockData['remarks'] ?? 'Initial stock',
                 'available'
             );
             return $operation;
