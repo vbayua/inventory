@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Inertia\Inertia;
@@ -38,7 +39,7 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request, StockOperationService $stockOperationService)
     {
 
 
@@ -72,18 +73,9 @@ class ProductController extends Controller
                     'quantity' => ['required', 'numeric', 'min:0'],
                 ]
             );
-            $stock = new \App\Models\Stock;
-            $stock->product_id = $product->id;
-            $stock->location_id = $stockData['location_id'];
-            $stock->quantity = $stockData['quantity'];
-            $stock->unit = $product->unit;
-            $stock->status = 'available';
-            $stock->remarks = 'Initial stock for ' . $product->name . ' created on ' . now()->format('Y-m-d H:i:s');
-            // dd($stockData);
-            $stock->save();
+            (new StockOperationService())->createInitialStock($product, $stockData);
         }
 
-        // dd($stock ?? null);
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
     }
