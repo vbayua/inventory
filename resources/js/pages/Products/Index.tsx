@@ -23,13 +23,11 @@ type SearchProductForm = {
 }
 
 export default function Index({ products }: { products: any }) {
-    // console.log(products);
     const productName = useRef<HTMLInputElement>(null)
 
     const { data, setData, get, reset, processing, errors } = useForm<Required<SearchProductForm>>({
         name: '',
     })
-
 
     const deleteProduct = (id: number) => {
         if (confirm('are you sure?')) {
@@ -45,7 +43,6 @@ export default function Index({ products }: { products: any }) {
         })
     }
 
-    // console.log(products.data)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Products Lists" />
@@ -56,23 +53,7 @@ export default function Index({ products }: { products: any }) {
                 </Link>
             </div>
             <div className={'p-4'}>
-                <form onSubmit={filterProduct} className='space-y-6 mb-4'>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Input
-                            placeholder="Filter Product"
-                            ref={productName}
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                        />
-                        <Button type="submit" className='cursor-pointer w-[200px]' disabled={processing}>
-                            <SearchIcon className='w-4 h-4 mr-2' /> Search
-                        </Button>
-                    </div>
-                </form>
-                <DataTable columns={columns} data={products.data} />
-            </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <PaginationIndex links={products.links} />
+                <DataTable columns={columns} data={products} clientSide={true} />
             </div>
         </AppLayout>
     );

@@ -16,6 +16,7 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import { SelectLabel } from '@radix-ui/react-select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -35,6 +36,10 @@ type CreateProductForm = {
     price?: number,
     category_id?: string | null,
     supplier_id?: string | null,
+    with_begin_stock?: boolean,
+    quantity?: number,
+    location_id?: number,
+    status?: string,
 }
 
 type Category = {
@@ -51,6 +56,11 @@ type Unit = {
     name?: string,
 }
 
+type Location = [
+    id?: number,
+    name?: string,
+]
+
 export default function Create({ categories, suppliers, units }: {
     categories: Category[],
     suppliers: Supplier[],
@@ -60,6 +70,7 @@ export default function Create({ categories, suppliers, units }: {
     const productSku = useRef<HTMLInputElement>(null)
     const productName = useRef<HTMLInputElement>(null)
     const productPrice = useRef<HTMLInputElement>(null)
+
     const { data, setData, post, reset, processing, errors } = useForm<Required<CreateProductForm>>({
         name: '',
         sku: '',
@@ -67,8 +78,11 @@ export default function Create({ categories, suppliers, units }: {
         price: 0,
         category_id: '',
         supplier_id: '',
+        with_begin_stock: false,
+        quantity: 0,
+        location_id: 1,
+        status: 'available',
     })
-
     const createProduct: FormEventHandler = (e) => {
         e.preventDefault()
         if (data.category_id === 'none') setData('category_id', null);
@@ -81,7 +95,8 @@ export default function Create({ categories, suppliers, units }: {
             },
             onError: (errors) => {
                 if (errors.name) {
-                    reset('name', 'sku', 'unit', 'price', 'category_id', 'supplier_id')
+                    reset('name', 'sku', 'unit', 'price', 'category_id', 'supplier_id');
+                    setData('with_begin_stock', false);;
                     toast.error(errors.name)
                     productName.current?.focus()
                 }
@@ -113,6 +128,7 @@ export default function Create({ categories, suppliers, units }: {
         // const randomSku = Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 5).toUpperCase();
 
     }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Product" />
@@ -235,6 +251,35 @@ export default function Create({ categories, suppliers, units }: {
 
                     <InputError message={errors.supplier_id} />
                 </div>
+                <div className='flex items-center gap-2'>
+                    <Checkbox
+                        id='with_begin_stock'
+                        name='with_begin_stock'
+                        checked={data.with_begin_stock}
+                        onCheckedChange={(checked) => setData('with_begin_stock', !!checked)}
+                        className='h-4 w-4'
+                    />
+                    <Label htmlFor='with_begin_stock'>With Initial Stock</Label>
+
+                    <InputError message={errors.with_begin_stock} />
+                </div>
+                {data.with_begin_stock && (
+                    <>
+                        <div className="grid gap-2">
+                            <Label htmlFor='quantity'>Set Initial Quantity</Label>
+                            <Input
+                                id='quantity'
+                                type='number'
+                                min={0}
+                                value={data.quantity}
+                                onChange={(e) => setData('quantity', Number(e.target.value))}
+                                className='mt-1 block w-full'
+                            />
+
+                            <InputError message={errors.quantity} />
+                        </div>
+                    </>
+                )}
 
                 <div className="flex items-center gap-4">
                     <Button disabled={processing}>Create Product</Button>

@@ -62,8 +62,6 @@ export interface Product {
     unit: string;
     price: number;
     category_id: number;
-    location_id: number;
-    supplier_id: number;
     created_at: string;
     updated_at: string;
 }
@@ -74,8 +72,10 @@ export interface ProductIndex {
     sku: string;
     unit: string;
     price: number;
-    category: number;
-    location: number;
+    category: {
+        id: number;
+        name: string;
+    };
     created_at: string;
     updated_at: string;
 }

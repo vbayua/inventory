@@ -28,7 +28,7 @@ import { PaginationIndex } from "../ui/pagination-index"
 import { DataTableViewOptions } from "../data-table-view-options"
 import { DataTablePagination } from "../data-table-pagination"
 import { Input } from "../ui/input"
-// import { DataTableToolbar } from "./data-table-toolbar"
+import { DataTableToolbar } from "./data-table-toolbar"
 // import { DataTablePagination } from "../data-table-pagination"
 // import { Input } from "../ui/input"
 
@@ -72,7 +72,7 @@ export function DataTable<TData, TValue>({
     return (
         <div>
             <div className="flex items-center py-4">
-                {/* <DataTableToolbar table={table} /> */}
+                <DataTableToolbar table={table} />
             </div>
             <div className="rounded-md border md:p-4 p-2">
                 <Table>

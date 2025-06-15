@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Inertia\Inertia;
@@ -14,44 +15,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $filters = request()->only('name');
-        $products = Product::orderBy('created_at', 'desc')->with(['categories', 'suppliers'])->filter($filters)
-            ->paginate(10)
-            ->appends($filters)
-            ->through(
-                fn($product) => [
-                    'id' => $product->id,
-                    'sku' => $product->sku,
-                    'unit' => $product->unit,
-                    'name' => $product->name,
-                    'category' => $product->categories ? $product->categories->name : null,
-                    // 'supplier' => $product->suppliers->map(fn($supplier) => [
-                    //     'id' => $supplier->id,
-                    //     'name' => $supplier->name,
-                    //     'price' => $supplier->pivot->price,
-                    //     'created_at' => $supplier->pivot->created_at->diffForHumans(),
-                    //     'updated_at' => $supplier->pivot->updated_at->diffForHumans(),
-                    // ]),
-                    'created_at' => $product->created_at->diffForHumans(),
-                    'updated_at' => $product->updated_at->diffForHumans(),
-                ]
-            );
+        $products =  Product::with(['categories:id,name', 'suppliers:id,name'])->orderBy('created_at', 'desc')->get();
         // dd($products);
         return Inertia::render('Products/Index', [
             'products' => $products,
             'name' => request()->name,
             'count' => Product::count()
         ]);
-        // return Inertia::render('Products/Index', [
-        //     'products' => Product::paginate(5)->through(fn($product) => [
-        //         'id' => $product->id,
-        //         'name' => $product->name,
-        //         'created_at' => $product->created_at->diffForHumans(),
-        //         'updated_at' => $product->updated_at->diffForHumans(),
-        //     ]),
-        //     'filters' => request()->all('search'),
-        //     'count' => Product::count()
-        // ]);
     }
 
     /**
@@ -69,13 +39,15 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request, StockOperationService $stockOperationService)
     {
-        // dd($request->all());
+
+
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
             'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
         ]);
+
 
         $product = Product::create($request->validate([
             'name' => ['required'],
@@ -93,6 +65,16 @@ class ProductController extends Controller
             'updated_at' => now(),
         ]);
 
+
+        if ($request->with_begin_stock) {
+            $stockData = $request->validate(
+                [
+                    'location_id' => ['required', 'exists:locations,id'],
+                    'quantity' => ['required', 'numeric', 'min:0'],
+                ]
+            );
+            (new StockOperationService())->createInitialStock($product, $stockData);
+        }
 
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
@@ -141,6 +123,7 @@ class ProductController extends Controller
                 'updated_at' => now(),
             ]
         ]);
+
         return redirect()->route('products.index')
             ->with('success', 'Product Updated Sucessfully!');
     }
