@@ -4,11 +4,19 @@ namespace App\Service;
 
 use App\Models\Operation;
 use App\Models\Stock;
+use App\Models\Unit;
+use App\Service\StockCalculatorService as UnitConverter;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
-
+// TODO: Implement Stock Calculator Service for unit conversions and calculations
 class StockOperationService
 {
+    protected $unitConverter;
+    public function __construct(UnitConverter $unitConverter)
+    {
+        $this->unitConverter = $unitConverter;
+    }
     public function createInitialStock($product, $stockData)
     {
         return DB::transaction(function () use ($product, $stockData) {
@@ -46,7 +54,7 @@ class StockOperationService
             return $operation;
         });
     }
-    public function createOutboundOperation($product, $stockData)
+    public function createOutboundOperation($product, $stockData, $unit = null)
     {
         return DB::transaction(function () use ($product, $stockData) {
             $operation = $this->createOperation(
@@ -55,11 +63,21 @@ class StockOperationService
                 $stockData,
                 $stockData['remarks'] ?? null
             );
-            $this->decrementStock(
-                $product,
-                $stockData,
-                $stockData['quantity']
-            );
+            if (isset($unit)) {
+                $this->decrementStock(
+                    $product,
+                    $stockData,
+                    $stockData['quantity'],
+                    $unit
+                );
+            } else {
+                $this->decrementStock(
+                    $product,
+                    $stockData,
+                    $stockData['quantity'],
+                    $product->unit
+                );
+            }
             return $operation;
         });
     }
@@ -76,7 +94,8 @@ class StockOperationService
             $this->decrementStock(
                 $product,
                 ['location_id' => $stockData['source_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
-                $stockData['quantity']
+                $stockData['quantity'],
+                $product->unit
             );
             // Increment stock to destination location
             $this->incrementStock(
@@ -155,6 +174,9 @@ class StockOperationService
 
     private function incrementStock($product, $stockData, $quantity)
     {
+
+        // Use unit conversion service to convert quantity to base unit
+
         $stock = Stock::firstOrCreate(
             [
                 'product_id' => $product->id,
@@ -165,17 +187,42 @@ class StockOperationService
         );
     }
 
-    private function decrementStock($product, $stockData, $quantity)
+    private function decrementStock($product, $stockData, $quantity, $unit)
     {
         $stock = Stock::where('product_id', $product->id)
             ->where('location_id', $stockData['location_id'])
             ->where('batch_id', $stockData['batch_id'] ?? null)
             ->first();
+        $stockUnit = $stock->unit ?? 'item';
+        $quantityUnit = $unit ?? $product->unit;
 
-        if (!$stock || $stock->quantity < $quantity) {
+        $stockUnitRecord = Cache::remember("unit_$stockUnit", 3600, fn() => Unit::findOrFail($stockUnit));
+        $quantityUnitRecord = Cache::remember("unit_$quantityUnit", 3600, fn() => Unit::findOrFail($quantityUnit));
+
+        if ($stockUnitRecord !== $quantityUnitRecord) {
+            throw new \Exception('Unit mismatch: Stock unit (' . $stockUnit . ') does not match quantity unit (' . $quantityUnit . ')');
+        }
+
+        $stockInBaseUnit = $stockUnit === 'item' ? $stock->quantity : $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
+
+
+        $quantityInBaseUnit = $quantityUnit === 'item' ? $quantity : $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
+
+        if (!$stock || $stockInBaseUnit < $quantityInBaseUnit) {
             throw new \Exception('Insufficient stock for product: ' . $product->name);
         }
-        $stock->quantity -= $quantity;
-        $stock->save();
+
+        $remainingQuantity = $stockInBaseUnit - $quantityInBaseUnit;
+        if ($remainingQuantity <= 0) {
+            $stock->update([
+                'quantity' => 0,
+                'status' => 'out_of_stock'
+            ]);
+        } else {
+            $stock->update([
+                'quantity' => $this->unitConverter->fromBaseUnit($remainingQuantity, $stockUnit),
+                'status' => $remainingQuantity > 0 ? 'available' : 'out_of_stock'
+            ]);
+        }
     }
 }
