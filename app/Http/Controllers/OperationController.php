@@ -13,7 +13,9 @@ class OperationController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia('Operations/Index', [
+            'operations' => Operation::with(['product'])->latest()->get(),
+        ]);
     }
 
     /**
@@ -21,7 +23,11 @@ class OperationController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia('Operations/Create', [
+            'products' => \App\Models\Product::all(),
+            'locations' => \App\Models\Location::all(),
+            'batches' => \App\Models\Batch::all(),
+        ]);
     }
 
     /**
