@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Operation;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
+use App\Service\StockOperationService;
+use Illuminate\Http\Request;
 
 class OperationController extends Controller
 {
@@ -23,19 +25,63 @@ class OperationController extends Controller
      */
     public function create()
     {
+        $stock = \App\Models\Stock::with(['product'])
+            ->where('status', 'available')
+            ->where('quantity', '>', 0)
+            ->select(['id', 'product_id', 'batch_id', 'location_id', 'quantity', 'unit', 'sku'])
+            ->get();
         return Inertia('Operations/Create', [
-            'products' => \App\Models\Product::all(),
-            'locations' => \App\Models\Location::all(),
-            'batches' => \App\Models\Batch::all(),
+            'stocks' => $stock,
+            'batches' => \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']),
+            'locations' => \App\Models\Location::all(['id', 'name']),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreOperationRequest $request)
+    public function store(StoreOperationRequest $request, StockOperationService $operationService)
     {
-        //
+        $validatedData = $request->validate([
+            'operationType' => 'required|in:inbound,outbound',
+            'product' => 'required|exists:products,id',
+            'location' => 'required|exists:locations,id',
+            'batch' => 'nullable|exists:batches,id',
+            'quantity' => 'required|numeric|min:0',
+            'remarks' => 'nullable|string|max:255',
+        ]);
+
+        $stockData = \App\Models\Stock::with(['product'])->where('product_id', $validatedData['product'])
+            ->where('location_id', $validatedData['location'])
+            ->when($validatedData['batch'], function ($query) use ($validatedData) {
+                return $query->where('batch_id', $validatedData['batch']);
+            })
+            ->firstOrFail();
+
+        $usageQuantity = $validatedData['quantity'];
+        $operationType = $validatedData['operationType'];
+
+        if ($operationType === 'inbound') {
+            // For inbound operations, call the service for inbound operations
+            $operationService->createInboundOperation(
+                $stockData->product,
+                $stockData,
+                $usageQuantity,
+                $validatedData['remarks']
+            );
+        } elseif ($operationType === 'outbound') {
+            // For outbound operations, we decrement the stock
+            $operationService->createOutboundOperation(
+                $stockData->product,
+                $stockData,
+                $usageQuantity,
+                $validatedData['remarks']
+            );
+        } else {
+            return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
+        }
+
+        return redirect()->route('operations.index')->with('success', 'Operation created successfully.');
     }
 
     /**
