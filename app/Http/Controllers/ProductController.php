@@ -73,7 +73,8 @@ class ProductController extends Controller
                     'quantity' => ['required', 'numeric', 'min:0'],
                 ]
             );
-            (new StockOperationService())->createInitialStock($product, $stockData);
+            $stockOperationService = app(StockOperationService::class);
+            $stockOperationService->createInitialStock($product, $stockData);
         }
 
         return redirect()->route('products.index')
