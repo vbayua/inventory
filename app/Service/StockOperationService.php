@@ -9,7 +9,8 @@ use App\Service\StockCalculatorService as UnitConverter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
-// TODO: Implement Stock Calculator Service for unit conversions and calculations
+// DONE: Implement Stock Calculator Service for unit conversions and calculations
+// TODO: Default batch creation on initial stock creation
 class StockOperationService
 {
     protected $unitConverter;

@@ -65,7 +65,7 @@ class ProductController extends Controller
             'updated_at' => now(),
         ]);
 
-
+        //  Create a default batch for the product
         if ($request->with_begin_stock) {
             $stockData = $request->validate(
                 [
