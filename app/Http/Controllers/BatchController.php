@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Batch;
 use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
+use Inertia\Inertia;
 
 class BatchController extends Controller
 {
@@ -13,7 +14,10 @@ class BatchController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Batches/Index', [
+            'batches' => Batch::with('product:id,name')->orderBy('created_at', 'desc')->get(),
+            'count' => Batch::count(),
+        ]);
     }
 
     /**
@@ -21,7 +25,9 @@ class BatchController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Batches/Create', [
+            'products' => \App\Models\Product::select('id', 'name')->get(),
+        ]);
     }
 
     /**
@@ -29,7 +35,9 @@ class BatchController extends Controller
      */
     public function store(StoreBatchRequest $request)
     {
-        //
+        $batch = Batch::create($request->validated());
+
+        return redirect()->route('batch.index')->with('success', 'Batch created successfully.');
     }
 
     /**
