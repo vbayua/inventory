@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList, CommandItem } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,7 +9,6 @@ import AppLayout from "@/layouts/app-layout";
 import { cn } from "@/lib/utils";
 import { BreadcrumbItem } from "@/types";
 import { Head, router, useForm } from "@inertiajs/react";
-import { CommandItem } from "cmdk";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { FormEventHandler, useState } from "react";
 import { format } from "date-fns";
