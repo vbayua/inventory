@@ -74,7 +74,7 @@ export default function Create({ products }: { products: { id: number, name: str
             <form onSubmit={createBatch} className='space-y-6 p-4 mt-12 w-full max-w-2xl mx-auto shadow-md rounded-lg'>
 
                 <div className='grid gap-2'>
-                    <Label htmlFor='product_id'>Product</Label>
+                    <Label htmlFor='product_id'>Product <span className='text-red-500'>*</span></Label>
 
                     <Popover>
                         <PopoverTrigger asChild>
@@ -110,7 +110,7 @@ export default function Create({ products }: { products: { id: number, name: str
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor='name'>Batch Name</Label>
+                    <Label htmlFor='name'>Batch Number <span className='text-red-500'>*</span></Label>
 
                     <Input
                         id='batch_number'
@@ -119,6 +119,7 @@ export default function Create({ products }: { products: { id: number, name: str
                         onChange={(e) => setData('batch_number', e.target.value)}
                         className='mt-1 block w-full'
                         placeholder='Batch Number'
+                        required
                     />
 
                     <InputError message={errors.batch_number} />
