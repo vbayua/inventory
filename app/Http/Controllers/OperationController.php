@@ -33,6 +33,7 @@ class OperationController extends Controller
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'batches' => \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']),
+            'units' => \App\Models\Unit::all(['name', 'unit_type']),
             'locations' => \App\Models\Location::all(['id', 'name']),
         ]);
     }
@@ -58,7 +59,7 @@ class OperationController extends Controller
             })
             ->firstOrFail();
 
-        $usageQuantity = $validatedData['quantity'];
+        $operationQuantity = $validatedData['quantity'];
         $operationType = $validatedData['operationType'];
 
         if ($operationType === 'inbound') {
@@ -66,7 +67,7 @@ class OperationController extends Controller
             $operationService->createInboundOperation(
                 $stockData->product,
                 $stockData,
-                $usageQuantity,
+                $operationQuantity,
                 $validatedData['remarks']
             );
         } elseif ($operationType === 'outbound') {
@@ -74,7 +75,7 @@ class OperationController extends Controller
             $operationService->createOutboundOperation(
                 $stockData->product,
                 $stockData,
-                $usageQuantity,
+                $operationQuantity,
                 $validatedData['remarks']
             );
         } else {
