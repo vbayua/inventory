@@ -19,7 +19,7 @@ class ProductFactory extends Factory
         return [
             'name' => fake()->text(10),
             'sku' => fake()->unique()->word(),
-            'unit' => fake()->randomElement(['kg', 'g', 'l', 'ml', 'pcs']),
+            'unit' => fake()->randomElement(['kg', 'g', 'liter', 'ml', 'pcs']),
             'price' => fake()->randomFloat(2, 1, 1000),
         ];
     }
