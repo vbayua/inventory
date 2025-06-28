@@ -7,6 +7,7 @@ use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class OperationController extends Controller
 {
@@ -25,16 +26,31 @@ class OperationController extends Controller
      */
     public function create()
     {
-        $stock = \App\Models\Stock::with(['product'])
-            ->where('status', 'available')
-            ->where('quantity', '>', 0)
-            ->select(['id', 'product_id', 'batch_id', 'location_id', 'quantity', 'unit', 'sku'])
-            ->get();
+        // Caches
+
+        $stock = Cache::remember('stocks', 60, function () {
+            return \App\Models\Stock::with(['product'])
+                ->where('status', 'available')
+                ->where('quantity', '>', 0)
+                ->select(['id', 'product_id', 'batch_id', 'location_id', 'quantity', 'unit', 'sku'])
+                ->get();
+        });
+
+        $batches = Cache::remember('batches', 60, function () {
+            return \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
+        });
+
+        $units = Cache::remember('units', 60, function () {
+            return \App\Models\Unit::all(['name', 'unit_type']);
+        });
+        $locations = Cache::remember('locations', 60, function () {
+            return \App\Models\Location::all(['id', 'name']);
+        });
         return Inertia('Operations/Create', [
             'stocks' => $stock,
-            'batches' => \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']),
-            'units' => \App\Models\Unit::all(['name', 'unit_type']),
-            'locations' => \App\Models\Location::all(['id', 'name']),
+            'batches' => $batches,
+            'units' => $units,
+            'locations' => $locations,
         ]);
     }
 
