@@ -18,7 +18,7 @@ class BatchFactory extends Factory
     {
         return [
             'product_id' => \App\Models\Product::factory(),
-            'batch_number' => $this->faker->unique()->numerify('BATCH-####'),
+            'batch_number' => $this->faker->unique()->numerify('25KOS####'),
             'manufacture_date' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'expiry_date' => $this->faker->dateTimeBetween('now', '+1 year'),
         ];

@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             // Create a default batch for each product
             $batch = \App\Models\Batch::factory()->create([
                 'product_id' => $product->id,
+                'batch_number' => '25' . $product->sku,
                 'expiry_date' => now()->addYear(),
             ]);
             // Create initial stock for each product
