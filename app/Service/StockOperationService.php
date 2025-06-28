@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 // DONE: Implement Stock Calculator Service for unit conversions and calculations
-// TODO: Default batch creation on initial stock creation
 class StockOperationService
 {
     protected $unitConverter;
@@ -47,13 +46,14 @@ class StockOperationService
                 $product,
                 $stockData,
                 $receiveQuantity,
+                $unit,
                 $remarks
             );
             $this->incrementStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
-                $unit ?? $product->unit
+                $unit
             );
             return $operation;
         });
@@ -67,6 +67,7 @@ class StockOperationService
                 $product,
                 $stockData,
                 $usageQuantity,
+                $unit,
                 $remarks
             );
             if (isset($unit)) {
@@ -149,14 +150,14 @@ class StockOperationService
     }
 
     // Helper methods
-    private function createOperation($type, $product, $stockData, $usageQuantity, $remarks = null)
+    private function createOperation($type, $product, $stockData, $usageQuantity, $unit = null,  $remarks = null)
     {
         return Operation::create([
             'operation_type' => $type,
             'product_id' => $product->id ?? $product,
             'location_id' => $stockData['location_id'],
             'batch_id' => $stockData['batch_id'] ?? null,
-            'unit' => $product->unit,
+            'unit' => $unit ?? $product->unit,
             'quantity' => $usageQuantity,
             'operation_date' => now(),
             'remarks' => $remarks
