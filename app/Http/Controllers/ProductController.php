@@ -65,7 +65,7 @@ class ProductController extends Controller
             'updated_at' => now(),
         ]);
 
-
+        //  Create a default batch for the product
         if ($request->with_begin_stock) {
             $stockData = $request->validate(
                 [
@@ -73,7 +73,8 @@ class ProductController extends Controller
                     'quantity' => ['required', 'numeric', 'min:0'],
                 ]
             );
-            (new StockOperationService())->createInitialStock($product, $stockData);
+            $stockOperationService = app(StockOperationService::class);
+            $stockOperationService->createInitialStock($product, $stockData);
         }
 
         return redirect()->route('products.index')
