@@ -29,23 +29,33 @@ class OperationController extends Controller
         // Caches
 
         $stock = Cache::remember('stocks', 60, function () {
-            return \App\Models\Stock::with(['product'])
-                ->where('status', 'available')
-                ->where('quantity', '>', 0)
-                ->select(['id', 'product_id', 'batch_id', 'location_id', 'quantity', 'unit', 'sku'])
+            return \App\Models\Stock::with(['product.unit'])
+                ->select([
+                    "id",
+                    "product_id",
+                    "batch_id",
+                    "location_id",
+                    "quantity",
+                    "unit",
+                    "sku"
+                ])
                 ->get();
         });
+
+        // // // Ensure products are unique by ID only the products
+        // $stock = $stock->unique('batch_id')->values();
 
         $batches = Cache::remember('batches', 60, function () {
             return \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
         });
 
         $units = Cache::remember('units', 60, function () {
-            return \App\Models\Unit::all(['name', 'unit_type']);
+            return \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
         });
         $locations = Cache::remember('locations', 60, function () {
             return \App\Models\Location::all(['id', 'name']);
         });
+
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'batches' => $batches,
@@ -65,6 +75,8 @@ class OperationController extends Controller
             'location' => 'required|exists:locations,id',
             'batch' => 'nullable|exists:batches,id',
             'quantity' => 'required|numeric|min:0',
+            'unit' => 'required|exists:units,name',
+            'date' => 'required|date',
             'remarks' => 'nullable|string|max:255',
         ]);
 
@@ -73,18 +85,35 @@ class OperationController extends Controller
             ->when($validatedData['batch'], function ($query) use ($validatedData) {
                 return $query->where('batch_id', $validatedData['batch']);
             })
-            ->firstOrFail();
+            ->first();
 
         $operationQuantity = $validatedData['quantity'];
         $operationType = $validatedData['operationType'];
 
         if ($operationType === 'inbound') {
+            if (!$stockData) {
+                $stockData = $operationService->createInitialStock(
+                    $validatedData['product'],
+                    [
+                        'location_id' => $validatedData['location'],
+                        'batch_id' => $validatedData['batch'],
+                        'quantity' => $operationQuantity,
+                        'unit' => $validatedData['unit'],
+                        'status' => 'available',
+                        'remarks' => $validatedData['remarks'] ?? null,
+                        'date' => $validatedData['date'],
+                    ]
+                );
+            }
+
             // For inbound operations, call the service for inbound operations
             $operationService->createInboundOperation(
                 $stockData->product,
                 $stockData,
                 $operationQuantity,
-                $validatedData['remarks']
+                $validatedData['unit'],
+                $validatedData['remarks'],
+                $validatedData['date'],
             );
         } elseif ($operationType === 'outbound') {
             // For outbound operations, we decrement the stock
@@ -92,7 +121,9 @@ class OperationController extends Controller
                 $stockData->product,
                 $stockData,
                 $operationQuantity,
-                $validatedData['remarks']
+                $validatedData['unit'],
+                $validatedData['remarks'],
+                // $validatedData['date'],
             );
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
