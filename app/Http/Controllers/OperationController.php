@@ -89,7 +89,7 @@ class OperationController extends Controller
 
         $operationQuantity = $validatedData['quantity'];
         $operationType = $validatedData['operationType'];
-
+        // dd(!$stockData ? 'No stock data found for the given product, location, and batch.' : 'Stock data found: ', $stockData);
         if ($operationType === 'inbound') {
             if (!$stockData) {
                 $stockData = $operationService->createInitialStock(
@@ -100,21 +100,21 @@ class OperationController extends Controller
                         'quantity' => $operationQuantity,
                         'unit' => $validatedData['unit'],
                         'status' => 'available',
-                        'remarks' => $validatedData['remarks'] ?? null,
+                        'remarks' => 'Initial stock created',
                         'date' => $validatedData['date'],
                     ]
                 );
+            } else {
+                // For inbound operations, call the service for inbound operations
+                $operationService->createInboundOperation(
+                    $stockData->product,
+                    $stockData,
+                    $operationQuantity,
+                    $validatedData['unit'],
+                    $validatedData['remarks'],
+                    $validatedData['date'],
+                );
             }
-
-            // For inbound operations, call the service for inbound operations
-            $operationService->createInboundOperation(
-                $stockData->product,
-                $stockData,
-                $operationQuantity,
-                $validatedData['unit'],
-                $validatedData['remarks'],
-                $validatedData['date'],
-            );
         } elseif ($operationType === 'outbound') {
             // For outbound operations, we decrement the stock
             $operationService->createOutboundOperation(
