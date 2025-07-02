@@ -211,7 +211,10 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                             <Label className="block mb-2">
                                 Batches
                             </Label>
-                            <Select onValueChange={(value) => setData('batch', value)} value={data.batch}
+                            <Select onValueChange={(value) => {
+                                setData('batch', value);
+                                setData('location', '');
+                            }} value={data.batch}
                                 disabled={!filteredBatches.length}>
                                 <SelectTrigger className={cn("w-full", errors.batch && "border-red-500 text-muted-foreground")}>
                                     <SelectValue placeholder="Select a batch" />
