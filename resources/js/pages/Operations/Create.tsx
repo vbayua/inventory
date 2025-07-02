@@ -1,21 +1,16 @@
-// TODO: Fix Unit Selection.
-// Desc: Usage Operation unt selection is not working properly.
-// It should allow select the usage unit.
-// Receive operation should only allow select the unit of the product.
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList, CommandItem } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea";
 import AppLayout from "@/layouts/app-layout";
 import { cn } from "@/lib/utils";
 import { BreadcrumbItem } from "@/types";
-import { Head, router, useForm } from "@inertiajs/react";
+import { Head, useForm } from "@inertiajs/react";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
-import { FormEventHandler, useState } from "react";
+import { FormEventHandler } from "react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -111,7 +106,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
     const createOperation: FormEventHandler = (e) => {
         e.preventDefault();
-        console.log("Submitting form with data:", data);
+
         post('/operations', {
             onSuccess: () => {
                 reset()

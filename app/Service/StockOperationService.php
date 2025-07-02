@@ -9,7 +9,6 @@ use App\Service\StockCalculatorService as UnitConverter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
-// DONE: Implement Stock Calculator Service for unit conversions and calculations
 class StockOperationService
 {
     protected $unitConverter;

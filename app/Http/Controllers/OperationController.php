@@ -89,7 +89,7 @@ class OperationController extends Controller
 
         $operationQuantity = $validatedData['quantity'];
         $operationType = $validatedData['operationType'];
-        // dd(!$stockData ? 'No stock data found for the given product, location, and batch.' : 'Stock data found: ', $stockData);
+
         if ($operationType === 'inbound') {
             if (!$stockData) {
                 $stockData = $operationService->createInitialStock(
@@ -123,7 +123,7 @@ class OperationController extends Controller
                 $operationQuantity,
                 $validatedData['unit'],
                 $validatedData['remarks'],
-                // $validatedData['date'],
+                $validatedData['date'],
             );
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
