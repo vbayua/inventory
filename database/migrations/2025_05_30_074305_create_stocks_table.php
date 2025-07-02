@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('unit')->default('pcs'); // Assuming 'pcs' as the default unit
             $table->decimal('container_capacity', 10, 2)->nullable(); // Optional field for container capacity
             $table->string('container_unit')->nullable(); // Optional field for container unit
-            $table->enum('status', ['available', 'reserved', 'expired'])->default('available');
+            $table->enum('status', ['available', 'reserved', 'expired', 'out_of_stock'])->default('available');
             $table->string('remarks')->nullable();
             $table->timestamps();
         });

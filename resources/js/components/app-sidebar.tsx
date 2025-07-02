@@ -14,11 +14,7 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
-    {
-        title: 'Operations',
-        href: '/operations',
-        icon: Cog,
-    }
+
 ];
 
 const productNavItems: MainNavItem[] = [
@@ -71,6 +67,16 @@ const stockNavItems: NavItem[] = [
         href: '/stocks',
         icon: ChartBar,
     },
+    {
+        title: 'Batches',
+        href: '/batches',
+        icon: Boxes,
+    },
+    {
+        title: 'Operations',
+        href: '/operations',
+        icon: Cog,
+    },
 ]
 const footerNavItems: NavItem[] = [
     {
@@ -114,3 +120,4 @@ export function AppSidebar() {
         </Sidebar>
     );
 }
+

@@ -63,4 +63,14 @@ class Product extends Model
     {
         return $this->belongsTo(Unit::class, 'unit', 'name');
     }
+
+    public function getUnitTypeAttribute()
+    {
+        return $this->unit ? $this->unit->unit_type : null;
+    }
+
+    public function getBaseUnitAttribute()
+    {
+        return $this->unit ? $this->unit->base_unit : null;
+    }
 }
