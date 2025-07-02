@@ -6,32 +6,35 @@ import { FormEventHandler, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Warehouses',
-        href: '/warehouse',
+        title: 'Locations',
+        href: '/location',
     },
     {
-        title: 'Create New Warehouse',
-        href: '/warehouse/create',
+        title: 'Create New Location',
+        href: '/location/create',
     },
 ];
-type CreateWarehouseForm = {
-    name?: string
+type CreateLocationForm = {
+    name?: string,
+    warehouse_id?: string,
 }
-export default function Create() {
+export default function Create({ warehouses }: { warehouses: any[] }) {
 
-    const warehouseName = useRef<HTMLInputElement>(null)
-    const { data, setData, post, reset, processing, errors } = useForm<Required<CreateWarehouseForm>>({
+    const locationName = useRef<HTMLInputElement>(null)
+    const { data, setData, post, reset, processing, errors } = useForm<Required<CreateLocationForm>>({
         name: '',
+        warehouse_id: '',
     })
 
-    const createWarehouse: FormEventHandler = (e) => {
+    const createLocation: FormEventHandler = (e) => {
         e.preventDefault()
 
-        post(route('warehouse.store'), {
+        post(route('location.store'), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
@@ -40,7 +43,7 @@ export default function Create() {
             onError: (errors) => {
                 if (errors.name) {
                     reset('name')
-                    warehouseName.current?.focus()
+                    locationName.current?.focus()
                 }
             }
         })
@@ -48,25 +51,42 @@ export default function Create() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create New Warehouse" />
-            <form onSubmit={createWarehouse} className='space-y-6 mt-8 p-4'>
+            <Head title="Create New Location" />
+            <form onSubmit={createLocation} className='space-y-6 mt-8 p-4'>
+                <div className='grid gap-2'>
+                    <Label htmlFor='warehouse'>Warehouse</Label>
+                    <Select onValueChange={(value) => setData('warehouse_id', value)} value={data.warehouse_id}>
+                        <SelectTrigger className='w-full'>
+                            <SelectValue placeholder='Select a warehouse' />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {warehouses.map((warehouse) => (
+                                    <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                                        {warehouse.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="grid gap-2">
-                    <Label htmlFor='name'>Warehouse Name</Label>
+                    <Label htmlFor='name'>Location Name</Label>
 
                     <Input
                         id='name'
-                        ref={warehouseName}
+                        ref={locationName}
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         className='mt-1 block w-full'
-                        placeholder='Warehouse Name'
+                        placeholder='Location Name'
                     />
 
                     <InputError message={errors.name} />
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <Button disabled={processing}>Create Warehouse</Button>
+                    <Button disabled={processing}>Create Location</Button>
                 </div>
             </form>
         </AppLayout >
