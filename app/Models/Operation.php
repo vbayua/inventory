@@ -11,7 +11,7 @@ class Operation extends Model
     /** @use HasFactory<\Database\Factories\OperationFactory> */
     use HasFactory;
 
-    protected $fillable = ['operation_type', 'product_id', 'batch_id', 'location_id', 'quantity', 'operation_date', 'remarks'];
+    protected $fillable = ['operation_type', 'product_id', 'batch_id', 'location_id', 'quantity', 'operation_date', 'remarks', 'unit'];
 
     protected $casts = [
         'operation_type' => 'string',

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Batch;
 use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class BatchController extends Controller
 {
@@ -13,7 +15,10 @@ class BatchController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Batches/Index', [
+            'batches' => Batch::with('product:id,name')->orderBy('created_at', 'desc')->get(),
+            'count' => Batch::count(),
+        ]);
     }
 
     /**
@@ -21,7 +26,9 @@ class BatchController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Batches/Create', [
+            'products' => \App\Models\Product::select('id', 'name', 'sku')->get(),
+        ]);
     }
 
     /**
@@ -29,7 +36,26 @@ class BatchController extends Controller
      */
     public function store(StoreBatchRequest $request)
     {
-        //
+        DB::transaction(function () use ($request) {
+            $batch = $request->validated();
+            // $product = \App\Models\Product::findOrFail($batch['product_id']);
+
+            $originalBatchNumber = $batch['batch_number'];
+            $newBatchNumber = $originalBatchNumber;
+            $counter = 1;
+
+            while (Batch::where('batch_number', $newBatchNumber)->exists()) {
+                $newBatchNumber = $originalBatchNumber . $counter;
+                $counter++;
+            }
+
+            $batch['batch_number'] = $newBatchNumber;
+
+            Batch::create($batch);
+        });
+
+
+        return redirect()->route('batch.index')->with('success', 'Batch created successfully.');
     }
 
     /**

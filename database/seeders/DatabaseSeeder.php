@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Main Location',
             'warehouse_id' => $warehouse->id,
         ]);
+
         \App\Models\Category::factory()->count(5)->create();
         \App\Models\Supplier::factory()->count(5)->create();
 
@@ -34,10 +35,17 @@ class DatabaseSeeder extends Seeder
         Product::factory()->count(10)->create()->each(function ($product) {
             $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
 
+            // Create a default batch for each product
+            $batch = \App\Models\Batch::factory()->create([
+                'product_id' => $product->id,
+                'batch_number' => '25' . $product->sku,
+                'expiry_date' => now()->addYear(),
+            ]);
             // Create initial stock for each product
-            (new StockOperationService)->createInitialStock($product, [
+            $service =  app(StockOperationService::class);
+            $service->createInitialStock($product, [
                 'location_id' => \App\Models\Location::first()->id,
-                'batch_id' => null,
+                'batch_id' => $batch->id,
                 'quantity' => rand(10, 100),
             ]);
         });
