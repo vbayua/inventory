@@ -17,7 +17,7 @@ class OperationController extends Controller
     public function index()
     {
         return Inertia('Operations/Index', [
-            'operations' => Operation::with(['product'])->latest()->get(),
+            'operations' => Operation::with(['product', 'batch', 'location'])->latest()->get(),
         ]);
     }
 
@@ -137,7 +137,9 @@ class OperationController extends Controller
      */
     public function show(Operation $operation)
     {
-        //
+        return Inertia('Operations/Show', [
+            'operation' => $operation->load(['product', 'batch', 'location']),
+        ]);
     }
 
     /**
