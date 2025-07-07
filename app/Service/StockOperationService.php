@@ -33,6 +33,7 @@ class StockOperationService
                 $product,
                 $stockData,
                 $stockData['quantity'],
+                $stockData['minimum_quantity'] ?? 0,
                 $stockData['remarks'] ?? 'Initial stock',
                 'available'
             );
@@ -167,7 +168,18 @@ class StockOperationService
         ]);
     }
 
-    private function setStock($product, $stockData, $quantity, $remarks = null, $status = 'available')
+    private function setStockStatus(float $quantity, float $minimum_quantity = 0)
+    {
+        if ($quantity <= 0) {
+            return 'out_of_stock';
+        } elseif ($quantity < $minimum_quantity) {
+            return 'low_stock';
+        } else {
+            return 'available';
+        }
+    }
+
+    private function setStock($product, $stockData, $quantity, $minimum_quantity = 0, $remarks = null, $status = 'available')
     {
         Stock::updateOrCreate(
             [
@@ -177,8 +189,9 @@ class StockOperationService
             ],
             [
                 'quantity' => $quantity,
+                'minimum_quantity' => $minimum_quantity,
                 'unit' => $stockData['unit'] ?? $product->unit,
-                'status' => $status,
+                'status' => $this->setStockStatus($quantity, $minimum_quantity),
                 'remarks' => $remarks
             ]
         );
@@ -195,9 +208,9 @@ class StockOperationService
                 'batch_id' => $stockData['batch_id'] ?? null,
             ],
             [
-                'quantity' => $quantity, // Initialize quantity to 0 if stock does not exist
+                'quantity' => $quantity,
                 'unit' => $unit ?? $product->unit,
-                'status' => 'out_of_stock',
+                'status' => $this->setStockStatus($quantity, $stockData['minimum_quantity'] ?? 0),
             ]
         );
 
@@ -222,7 +235,7 @@ class StockOperationService
             $newQuantity = $this->unitConverter->fromBaseUnit($newQuantityInBaseUnit, $stockUnit);
             $stock->update([
                 'quantity' => $newQuantity,
-                'status' => 'available'
+                'status' => $this->setStockStatus($newQuantity, $stock['minimum_quantity'] ?? 0),
             ]);
         } else {
             throw new \Exception('Stock not found for product: ' . $product->name ?? $product);
@@ -258,9 +271,10 @@ class StockOperationService
 
         // dd("quantity $quantity", "remaining quantity: $remainingQuantity", "stock in base unit: $stockInBaseUnit", "usage quantity in base unit: $quantityInBaseUnit");
         if ($remainingQuantity > 0) {
+            $updatedQuantity = $this->unitConverter->fromBaseUnit($remainingQuantity, $stockUnit);
             $stock->update([
-                'quantity' => $this->unitConverter->fromBaseUnit($remainingQuantity, $stockUnit),
-                'status' => $remainingQuantity > 0 ? 'available' : 'out_of_stock'
+                'quantity' => $updatedQuantity,
+                'status' => $this->setStockStatus($updatedQuantity, $stock['minimum_quantity'] ?? 0),
             ]);
         } else {
             $stock->update([
