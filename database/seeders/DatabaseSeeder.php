@@ -15,6 +15,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            // Add other seeders here
+            // \Database\Seeders\RoleSeeder::class,
+            // \Database\Seeders\PermissionSeeder::class,
+            // \Database\Seeders\RolePermissionSeeder::class,
+            // \Database\Seeders\UserSeeder::class,
+            \Database\Seeders\UnitSeeder::class,
+        ]);
         $warehouse = \App\Models\Warehouse::factory()->create([
             'name' => 'Main Warehouse',
         ]);
@@ -47,6 +55,7 @@ class DatabaseSeeder extends Seeder
                 'location_id' => \App\Models\Location::first()->id,
                 'batch_id' => $batch->id,
                 'quantity' => rand(10, 100),
+                'minimum_quantity' => rand(1, 15),
             ]);
         });
     }
