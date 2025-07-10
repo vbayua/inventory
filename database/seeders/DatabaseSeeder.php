@@ -39,8 +39,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
         ]);
+        $service =  app(StockOperationService::class);
 
-        Product::factory()->count(10)->create()->each(function ($product) {
+        Product::factory()->count(10)->create()->each(function ($product) use ($service) {
             $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
 
             // Create a default batch for each product
@@ -50,7 +51,6 @@ class DatabaseSeeder extends Seeder
                 'expiry_date' => now()->addYear(),
             ]);
             // Create initial stock for each product
-            $service =  app(StockOperationService::class);
             $service->createInitialStock($product, [
                 'location_id' => \App\Models\Location::first()->id,
                 'batch_id' => $batch->id,
