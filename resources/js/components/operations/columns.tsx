@@ -25,13 +25,17 @@ type OperationIndex = {
     unit: string;
     quantity: number;
     created_at: string;
-    updated_at: string;
+    operation_date: string;
 }
 
 export const columns: ColumnDef<OperationIndex>[] = [
     {
-        accessorKey: "operation_type",
-        header: "Operation Type",
+        id: "batch_number",
+        accessorFn: row => row.batch?.batch_number,
+        header: "Batch Number",
+        meta: {
+            filterVariant: 'select',
+        },
     },
     {
         id: "product_name",
@@ -42,6 +46,10 @@ export const columns: ColumnDef<OperationIndex>[] = [
         },
     },
     {
+        accessorKey: "operation_type",
+        header: "Operation Type",
+    },
+    {
         id: "location_name",
         accessorFn: row => row.location?.name,
         header: "Location",
@@ -50,15 +58,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
         },
     },
     {
-        id: "batch_number",
-        accessorFn: row => row.batch?.batch_number,
-        header: "Batch Number",
-        meta: {
-            filterVariant: 'select',
-        },
-    },
-    {
-        accessorKey: "created_at",
+        accessorKey: "operation_date",
         header: ({ column }) => {
             return (
                 <DataTableColumnHeader
@@ -68,31 +68,18 @@ export const columns: ColumnDef<OperationIndex>[] = [
             )
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.created_at)
-            return date.toLocaleDateString('en-US', {
+            const date = new Date(row.original.operation_date)
+            const localeDateString = date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
+                hour: '2-digit',
             })
-        }
-    },
-    {
-        accessorKey: "updated_at",
-        header: ({ column }) => {
             return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Updated At"
-                />
+                <span className="text-sm text-muted-foreground">
+                    {localeDateString}
+                </span>
             )
-        },
-        cell: ({ row }) => {
-            const date = new Date(row.original.updated_at)
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            })
         }
     },
     {

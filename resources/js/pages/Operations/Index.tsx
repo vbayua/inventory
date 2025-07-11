@@ -1,14 +1,10 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { columns } from '@/components/operations/columns';
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { PaginationIndex } from '@/components/ui/pagination-index';
+import { Head, Link } from '@inertiajs/react';
+import { buttonVariants } from '@/components/ui/button';
 import { DataTable } from '@/components/operations/data-table';
-import { FormEventHandler, useRef } from 'react';
-import { Input } from '@/components/ui/input';
-import { SearchIcon, PlusIcon } from 'lucide-react';
+import { PlusIcon } from 'lucide-react';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -18,23 +14,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type SearchProductForm = {
-    name?: string
-}
-
 export default function Index({ operations }: { operations: any[] }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Operation List" />
-            {/* <h1>TODO INDEX OPERATIONS</h1> */}
-            <div className={'mt-8 p-4'}>
-                <Link className={buttonVariants({ variant: 'outline' })} href={`/operations/create`}>
-                    <PlusIcon className='w-4 h-4 mr-2' />
-                    Create Operation
-                </Link>
-            </div>
-            <div className={'p-4'}>
-                <DataTable columns={columns} data={operations} clientSide={true} />
+
+            <div className={'py-12'}>
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                    <Link className={buttonVariants({ variant: 'default' })} href={`/operations/create`}>
+                        <PlusIcon className='w-4 h-4 mr-2' />
+                        New Stock Operation
+                    </Link>
+                    <DataTable columns={columns} data={operations} clientSide={true} />
+                </div>
             </div>
         </AppLayout>
     );

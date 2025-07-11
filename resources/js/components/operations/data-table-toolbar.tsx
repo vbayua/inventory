@@ -30,33 +30,26 @@ export function DataTableToolbar<TData>({
             }))
             : [];
 
-    const locationColumn = table.getColumn("location_name")
-        ? Array.from(table.getColumn("location_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
-            label: value,
-            value: value,
-        }))
-        : [];
-
+    const operationType = [
+        { label: "All", value: "" },
+        { label: "Add Stock", value: "inbound" },
+        { label: "Remove Stock", value: "outbound" },
+        { label: "Transfer Stock", value: "transfer_stock" },
+        { label: "Adjust Stock", value: "adjust_stock" },
+    ]
     const productFacetedFilter: Options[] = [
         { label: "All", value: "" },
         ...productColumn,
     ];
 
-    const locationFacetedFilter: Options[] = [
+    const operationTypeFacetedFilter: Options[] = [
         { label: "All", value: "" },
-        ...locationColumn,
+        ...operationType,
     ];
 
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                {/* <Input
-                    placeholder="Filter tasks..."
-                    value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("title")?.setFilterValue(event.target.value)
-                    }
-                /> */}
                 <Input
                     placeholder="Filter Batch Number..."
                     value={(table.getColumn("batch_number")?.getFilterValue() as string) ?? ""}
@@ -72,11 +65,11 @@ export function DataTableToolbar<TData>({
                         options={productFacetedFilter}
                     />
                 )}
-                {table.getColumn("location_name") && (
+                {table.getColumn("operation_type") && (
                     <DataTableFacetedFilter
-                        column={table.getColumn("location_name")}
-                        title="Location"
-                        options={locationFacetedFilter}
+                        column={table.getColumn("operation_type")}
+                        title="Operation Type"
+                        options={operationTypeFacetedFilter}
                     />
                 )}
                 {isFiltered && (
@@ -90,7 +83,6 @@ export function DataTableToolbar<TData>({
                     </Button>
                 )}
             </div>
-            <DataTableViewOptions table={table} />
         </div>
     )
 }
