@@ -1,16 +1,16 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { columns } from '@/components/stocks/columns';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     Card,
     CardHeader,
     CardTitle,
     CardContent,
 } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle, Clock, Package } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Cog, Package, PlusIcon } from 'lucide-react';
 import { DataTable } from '@/components/stocks/data-table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 
 
 
@@ -76,6 +76,16 @@ export default function Index({ stocks, stats }: { stocks: any[], stats: { total
                                 <p className="text-xs text-muted-foreground mt-2">Urgent attention needed</p>
                             </CardContent>
                         </Card>
+                    </div>
+                    <div className={'flex items-center justify-between mt-6'}>
+                        <Link className={buttonVariants({ variant: 'default' })} href={`/operations/create`}>
+                            <PlusIcon className='w-4 h-4 mr-2' />
+                            New Stock Operation
+                        </Link>
+                        <Link className={buttonVariants({ variant: 'secondary' })} href={`/operations`}>
+                            <Cog className='w-4 h-4 mr-2' />
+                            Stock Operations
+                        </Link>
                     </div>
                     <DataTable columns={columns} data={stocks} clientSide={true} />
                 </div>
