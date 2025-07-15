@@ -34,20 +34,50 @@ class DatabaseSeeder extends Seeder
         \App\Models\Category::factory()->count(5)->create();
         \App\Models\Supplier::factory()->count(5)->create();
 
+
+        $rawMaterial =  \App\Models\ProductType::factory()->create([
+            'name' => 'Raw Material',
+            'description' => 'This is a raw material product type.',
+            'prefix' => 'RMP',
+        ]);
+
+        $packagingMaterial1 = \App\Models\ProductType::factory()->create([
+            'name' => 'Primary Packaging Material',
+            'description' => 'This is a Primary Packaging product type.',
+            'prefix' => 'PP',
+        ]);
+
+        $packagingMaterial2 = \App\Models\ProductType::factory()->create([
+            'name' => 'Secondary Packaging Material',
+            'description' => 'This is a Secondary Packaging product type.',
+            'prefix' => 'PS',
+        ]);
+
+        $productTypes = [
+            $rawMaterial,
+            $packagingMaterial1,
+            $packagingMaterial2,
+        ];
+
+
         User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
         ]);
         $service =  app(StockOperationService::class);
-
-        Product::factory()->count(10)->create()->each(function ($product) use ($service) {
+        // Raw Material Products
+        Product::factory()->count(10)->create()->each(function ($product) use ($service, $productTypes) {
             $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
+            $product->productType()->associate($productTypes['0']); // Raw Material
+            $product->brand_name = 'Brand ' . $product->name;
+            $product->scientific_name = 'Scientific ' . $product->name;
+            $product->save();
 
             // Create a default batch for each product
             $batch = \App\Models\Batch::factory()->create([
                 'product_id' => $product->id,
-                'batch_number' => '25' . $product->sku,
+                'batch_number' => '25' . 'RMP' . $product->sku,
                 'expiry_date' => now()->addYear(),
             ]);
             // Create initial stock for each product
@@ -58,5 +88,48 @@ class DatabaseSeeder extends Seeder
                 'minimum_quantity' => rand(1, 15),
             ]);
         });
+
+        // Packaging Material Products
+        Product::factory()->count(10)->create()->each(function ($product) use ($service, $productTypes) {
+            $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
+            $product->productType()->associate($productTypes['1']); // Primary Packaging Material
+            $product->brand_name = 'Brand ' . $product->name;
+            $product->scientific_name = 'Scientific ' . $product->name;
+            $product->unit = 'pcs'; // Assuming unit is 'pcs' for packaging materials
+            $product->save();
+
+            // Create a default batch for each product
+            $batch = \App\Models\Batch::factory()->create([
+                'product_id' => $product->id,
+                'batch_number' => '25' . 'PP' . $product->sku,
+                'expiry_date' => now()->addYear(),
+            ]);
+            // Create initial stock for each product
+            $service->createInitialStock($product, [
+                'location_id' => \App\Models\Location::first()->id,
+                'batch_id' => $batch->id,
+                'quantity' => rand(10, 100),
+                'minimum_quantity' => rand(1, 15),
+            ]);
+        });
+        // Product::factory()->count(10)->create()->each(function ($product) use ($service, $productTypes) {
+        //     $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
+        //     $product->productType()->associate($productTypes[array_rand($productTypes)]);
+        //     $product->save();
+
+        //     // Create a default batch for each product
+        //     $batch = \App\Models\Batch::factory()->create([
+        //         'product_id' => $product->id,
+        //         'batch_number' => '25' . $product->sku,
+        //         'expiry_date' => now()->addYear(),
+        //     ]);
+        //     // Create initial stock for each product
+        //     $service->createInitialStock($product, [
+        //         'location_id' => \App\Models\Location::first()->id,
+        //         'batch_id' => $batch->id,
+        //         'quantity' => rand(10, 100),
+        //         'minimum_quantity' => rand(1, 15),
+        //     ]);
+        // });
     }
 }
