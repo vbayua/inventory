@@ -19,6 +19,7 @@ class ProductTypeFactory extends Factory
         return [
             'name' => $this->faker->unique()->word(),
             'description' => $this->faker->sentence(),
+            'type_code' => $this->faker->unique()->word(),
         ];
     }
 }

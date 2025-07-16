@@ -38,19 +38,19 @@ class DatabaseSeeder extends Seeder
         $rawMaterial =  \App\Models\ProductType::factory()->create([
             'name' => 'Raw Material',
             'description' => 'This is a raw material product type.',
-            'prefix' => 'RMP',
+            'type_code' => 'RMP',
         ]);
 
         $packagingMaterial1 = \App\Models\ProductType::factory()->create([
             'name' => 'Primary Packaging Material',
             'description' => 'This is a Primary Packaging product type.',
-            'prefix' => 'PP',
+            'type_code' => 'PP',
         ]);
 
         $packagingMaterial2 = \App\Models\ProductType::factory()->create([
             'name' => 'Secondary Packaging Material',
             'description' => 'This is a Secondary Packaging product type.',
-            'prefix' => 'PS',
+            'type_code' => 'PS',
         ]);
 
         $productTypes = [
