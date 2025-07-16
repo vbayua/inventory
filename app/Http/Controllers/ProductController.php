@@ -15,7 +15,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products =  Product::with(['categories:id,name', 'suppliers:id,name'])->orderBy('created_at', 'desc')->get();
+        $products =  Product::with(['categories:id,name', 'suppliers:id,name', 'productType:id,type_code'])->orderBy('created_at', 'desc')->get();
         // dd($products);
         return Inertia::render('Products/Index', [
             'products' => $products,

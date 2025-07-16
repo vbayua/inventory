@@ -21,7 +21,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 type SearchProductForm = {
     name?: string
 }
-
 export default function Index({ products }: { products: any }) {
     const productName = useRef<HTMLInputElement>(null)
 
