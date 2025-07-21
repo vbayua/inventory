@@ -32,7 +32,8 @@ class ProductController extends Controller
         return Inertia::render('Products/Create', [
             'categories' => \App\Models\Category::select('id', 'name')->get(),
             'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
-            'units' => \App\Models\Unit::select('name')->get()
+            'units' => \App\Models\Unit::select('name')->get(),
+            'product_types' => \App\Models\ProductType::select('id', 'name', 'type_code')->get(),
         ]);
     }
 
@@ -46,6 +47,7 @@ class ProductController extends Controller
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
             'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
+            'product_type_id' => $request->product_type_id === 'none' ? null : $request->product_type_id,
         ]);
 
 
@@ -57,6 +59,9 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'is_active' => ['nullable', 'boolean'],
+            'product_type_id' => ['nullable', 'exists:product_types,id'],
+            'brand_name' => ['nullable', 'string'],
+            'scientific_name' => ['nullable', 'string'],
         ]));
 
         $product->suppliers()->attach($request->supplier_id, [
