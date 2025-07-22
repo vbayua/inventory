@@ -43,7 +43,8 @@ type CreateProductForm = {
     with_begin_stock?: boolean,
     quantity?: number,
     minimum_stock?: number,
-    location_id?: number,
+    warehouse_id?: string | null,
+    location_id?: string | null,
     status?: string,
     product_type_id?: string | null,
     is_active?: boolean,
@@ -69,11 +70,24 @@ type ProductType = {
     type_code?: string,
 }
 
-export default function Create({ categories, suppliers, units, product_types }: {
+type Location = {
+    id?: number,
+    warehouse_id?: number;
+    name?: string,
+}
+
+type Warehouse = {
+    id?: number,
+    name?: string,
+}
+
+export default function Create({ categories, suppliers, units, product_types, warehouses, locations }: {
     categories: Category[],
     suppliers: Supplier[],
     units: Unit[],
     product_types: ProductType[],
+    warehouses: Warehouse[],
+    locations: Location[],
 }) {
 
     const productSku = useRef<HTMLInputElement>(null)
@@ -92,14 +106,14 @@ export default function Create({ categories, suppliers, units, product_types }: 
         with_begin_stock: false,
         quantity: 0,
         minimum_stock: 0,
-        location_id: 1,
+        warehouse_id: '',
+        location_id: '',
         status: 'available',
         product_type_id: '',
         brand_name: '',
         scientific_name: '',
         is_active: true,
     })
-
     const createProduct: FormEventHandler = (e) => {
         e.preventDefault()
         if (data.category_id === 'none') setData('category_id', null);
@@ -121,9 +135,11 @@ export default function Create({ categories, suppliers, units, product_types }: 
         })
     }
     const brandNameIsChecked = !!data.brand_name;
-
     const productIsRawMaterial = data.product_type_id && product_types.find(type => type.id?.toString() === data.product_type_id)?.name?.toLowerCase() === 'raw material';
     const supplierIdIsNotNone = data.supplier_id && data.supplier_id !== 'none';
+    const filteredLocations = locations.filter(location => location.warehouse_id === (data.warehouse_id ? Number(data.warehouse_id) : undefined));
+
+
     const generateSku = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault()
         const randomNumber = Math.floor(Math.random() * 10000) + 1000;
@@ -136,6 +152,7 @@ export default function Create({ categories, suppliers, units, product_types }: 
             }
         }
     }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Product" />
@@ -359,6 +376,52 @@ export default function Create({ categories, suppliers, units, product_types }: 
                         )}
                         {data.with_begin_stock && (
                             <>
+                                <div className={`grid gap-2 ${filteredLocations.length > 0 ? 'md:grid-cols-2' : ''}`}>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor='warehouse_id'>Warehouse</Label>
+                                        <Select
+                                            onValueChange={(value) => {
+                                                setData('warehouse_id', String(value));
+                                            }}
+                                            value={String(data.warehouse_id)}
+                                            defaultValue={String(data.warehouse_id)}
+                                        >
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select a warehouse" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {warehouses.map((warehouse) => (
+                                                    <SelectItem key={warehouse.id} value={String(warehouse.id)}>
+                                                        {warehouse.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError message={errors.warehouse_id} />
+                                    </div>
+                                    {filteredLocations.length > 0 && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor='location_id'>Location</Label>
+                                            <Select
+                                                onValueChange={(value) => setData('location_id', String(value))}
+                                                value={String(data.location_id)}
+                                                defaultValue={String(data.location_id)}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Select a location" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {filteredLocations.map((location) => (
+                                                        <SelectItem key={location.id} value={String(location.id)}>
+                                                            {location.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <InputError message={errors.location_id} />
+                                        </div>
+                                    )}
+                                </div>
                                 <div className='grid md:grid-cols-2 gap-4 md:gap-2'>
                                     <div className="grid gap-2">
                                         <Label htmlFor='quantity'>Set Initial Quantity</Label>

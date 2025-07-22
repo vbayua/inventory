@@ -34,6 +34,8 @@ class ProductController extends Controller
             'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
             'units' => \App\Models\Unit::select('name')->get(),
             'product_types' => \App\Models\ProductType::select('id', 'name', 'type_code')->get(),
+            'warehouses' => \App\Models\Warehouse::select('id', 'name')->get(),
+            'locations' => \App\Models\Location::select('id', 'name', 'warehouse_id')->get(),
         ]);
     }
 
@@ -47,7 +49,6 @@ class ProductController extends Controller
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
             'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
-            'product_type_id' => $request->product_type_id === 'none' ? null : $request->product_type_id,
         ]);
 
 
@@ -58,8 +59,8 @@ class ProductController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'is_active' => ['nullable', 'boolean'],
-            'product_type_id' => ['nullable', 'exists:product_types,id'],
+            'is_active' => ['required', 'boolean'],
+            'product_type_id' => ['required', 'exists:product_types,id'],
             'brand_name' => ['nullable', 'string'],
             'scientific_name' => ['nullable', 'string'],
         ]));
@@ -76,8 +77,11 @@ class ProductController extends Controller
                 [
                     'location_id' => ['required', 'exists:locations,id'],
                     'quantity' => ['required', 'numeric', 'min:0'],
+                    'minimum_stock' => ['numeric', 'min:0'],
                 ]
             );
+            $stockData['minimum_quantity'] = $stockData['minimum_stock'];
+            unset($stockData['minimum_stock']);
             $stockOperationService = app(StockOperationService::class);
             $stockOperationService->createInitialStock($product, $stockData);
         }
