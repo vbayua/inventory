@@ -70,18 +70,15 @@ class ProductController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
         //  Create a default batch for the product
         if ($request->with_begin_stock) {
             $stockData = $request->validate(
                 [
                     'location_id' => ['required', 'exists:locations,id'],
                     'quantity' => ['required', 'numeric', 'min:0'],
-                    'minimum_stock' => ['numeric', 'min:0'],
+                    'minimum_quantity' => ['required', 'numeric', 'min:0'],
                 ]
             );
-            $stockData['minimum_quantity'] = $stockData['minimum_stock'];
-            unset($stockData['minimum_stock']);
             $stockOperationService = app(StockOperationService::class);
             $stockOperationService->createInitialStock($product, $stockData);
         }
@@ -125,6 +122,8 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'is_active' => ['nullable', 'boolean'],
+            'brand_name' => ['nullable', 'string'],
+            'scientific_name' => ['nullable', 'string'],
         ]));
         $product->suppliers()->syncWithoutDetaching([
             $request->supplier_id => [

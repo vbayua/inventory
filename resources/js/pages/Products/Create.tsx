@@ -42,7 +42,7 @@ type CreateProductForm = {
     supplier_id?: string | null,
     with_begin_stock?: boolean,
     quantity?: number,
-    minimum_stock?: number,
+    minimum_quantity?: number,
     warehouse_id?: string | null,
     location_id?: string | null,
     status?: string,
@@ -105,7 +105,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
         supplier_id: '',
         with_begin_stock: false,
         quantity: 0,
-        minimum_stock: 0,
+        minimum_quantity: 0,
         warehouse_id: '',
         location_id: '',
         status: 'available',
@@ -126,7 +126,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
             },
             onError: (errors) => {
                 if (errors.name) {
-                    reset('sku', 'unit', 'price', 'category_id', 'supplier_id', 'with_begin_stock', 'quantity', 'minimum_stock', 'location_id', 'status', 'product_type_id', 'brand_name', 'scientific_name');
+                    reset('sku', 'unit', 'price', 'category_id', 'supplier_id', 'with_begin_stock', 'quantity', 'minimum_quantity', 'location_id', 'status', 'product_type_id', 'brand_name', 'scientific_name');
                     setData('with_begin_stock', false);
                     toast.error(errors.name)
                     productName.current?.focus()
@@ -437,17 +437,17 @@ export default function Create({ categories, suppliers, units, product_types, wa
                                         <InputError message={errors.quantity} />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor='minimum_stock'>Set Minimum Stock (Buffer Stock)</Label>
+                                        <Label htmlFor='minimum_quantity'>Minimum Stock Quantity</Label>
                                         <Input
-                                            id='minimum_stock'
+                                            id='minimum_quantity'
                                             type='number'
                                             min={0}
-                                            value={data.minimum_stock}
-                                            onChange={(e) => setData('minimum_stock', Number(e.target.value))}
+                                            value={data.minimum_quantity}
+                                            onChange={(e) => setData('minimum_quantity', Number(e.target.value))}
                                             className='mt-1 block w-full'
                                         />
 
-                                        <InputError message={errors.minimum_stock} />
+                                        <InputError message={errors.minimum_quantity} />
                                     </div>
                                 </div>
                             </>
