@@ -16,7 +16,7 @@ class Stock extends Model
         'location_id',
         'batch_id',
         'quantity',
-        'minuimum_quantity',
+        'minimum_quantity',
         'unit',
         'container_capacity',
         'container_unit',
