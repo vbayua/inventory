@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -15,7 +16,11 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products =  Product::with(['categories:id,name', 'suppliers:id,name', 'productType:id,type_code'])->orderBy('created_at', 'desc')->get();
+        $products =  Cache::remember('products_index', 3600, function () {
+            return Product::with(['categories:id,name', 'suppliers:id,name', 'productType:id,type_code'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        });
         // dd($products);
         return Inertia::render('Products/Index', [
             'products' => $products,
@@ -29,13 +34,31 @@ class ProductController extends Controller
      */
     public function create()
     {
+        $categories = Cache::remember('categories_list', 3600, function () {
+            return \App\Models\Category::select('id', 'name')->get();
+        });
+        $warehouses = Cache::remember('warehouses_list', 3600, function () {
+            return \App\Models\Warehouse::select('id', 'name')->get();
+        });
+        $locations = Cache::remember('locations_list', 3600, function () {
+            return \App\Models\Location::select('id', 'name')->get();
+        });
+        $suppliers = Cache::remember('suppliers_list', 3600, function () {
+            return \App\Models\Supplier::select('id', 'name')->get();
+        });
+        $units = Cache::remember('units_list', 3600, function () {
+            return \App\Models\Unit::select('name')->get();
+        });
+        $product_types = Cache::remember('product_type_list', 3600, function () {
+            return \App\Models\ProductType::select('id', 'name', 'type_code')->get();
+        });
         return Inertia::render('Products/Create', [
-            'categories' => \App\Models\Category::select('id', 'name')->get(),
-            'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
-            'units' => \App\Models\Unit::select('name')->get(),
-            'product_types' => \App\Models\ProductType::select('id', 'name', 'type_code')->get(),
-            'warehouses' => \App\Models\Warehouse::select('id', 'name')->get(),
-            'locations' => \App\Models\Location::select('id', 'name', 'warehouse_id')->get(),
+            'categories' => $categories,
+            'suppliers' => $suppliers,
+            'units' => $units,
+            'product_types' => $product_types,
+            'warehouses' => $warehouses,
+            'locations' => $locations,
         ]);
     }
 
@@ -100,12 +123,24 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        $categories = Cache::remember('categories_list', 3600, function () {
+            return \App\Models\Category::select('id', 'name')->get();
+        });
+        $locations = Cache::remember('locations_list', 3600, function () {
+            return \App\Models\Location::select('id', 'name')->get();
+        });
+        $suppliers = Cache::remember('suppliers_list', 3600, function () {
+            return \App\Models\Supplier::select('id', 'name')->get();
+        });
+        $units = Cache::remember('units_list', 3600, function () {
+            return \App\Models\Unit::select('name')->get();
+        });
         return Inertia::render('Products/Edit', [
             'product' => $product,
-            'categories' => \App\Models\Category::select('id', 'name')->get(),
-            'locations' => \App\Models\Location::select('id', 'name')->get(),
-            'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
-            'units' => \App\Models\Unit::select('name')->get()
+            'categories' => $categories,
+            'locations' => $locations,
+            'suppliers' => $suppliers,
+            'units' => $units
         ]);
     }
 
