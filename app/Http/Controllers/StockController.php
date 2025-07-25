@@ -13,7 +13,16 @@ class StockController extends Controller
      */
     public function index()
     {
-        //
+        // Check parameter for filtering stocks by status
+        $stocksQuery = Stock::with(['product', 'location.warehouse', 'batch']);
+
+        return Inertia('Stocks/Index', [
+            'stocks' => $stocksQuery->get(),
+            'stats' => [
+                'total_items' => Stock::count(),
+                'total_locations' => Stock::distinct('location_id')->count(),
+            ],
+        ]);
     }
 
     /**
