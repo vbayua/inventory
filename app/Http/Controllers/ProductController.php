@@ -21,7 +21,7 @@ class ProductController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
         });
-        // dd($products);
+
         return Inertia::render('Products/Index', [
             'products' => $products,
             'name' => request()->name,
@@ -105,7 +105,7 @@ class ProductController extends Controller
             $stockOperationService = app(StockOperationService::class);
             $stockOperationService->createInitialStock($product, $stockData);
         }
-
+        Cache::forget('products_index');
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
     }
@@ -140,7 +140,8 @@ class ProductController extends Controller
             'categories' => $categories,
             'locations' => $locations,
             'suppliers' => $suppliers,
-            'units' => $units
+            'units' => $units,
+            'productHasStock' => $product->stocks()->exists(),
         ]);
     }
 
@@ -163,11 +164,10 @@ class ProductController extends Controller
         $product->suppliers()->syncWithoutDetaching([
             $request->supplier_id => [
                 'price' => $request->price,
-                'created_at' => now(),
                 'updated_at' => now(),
             ]
         ]);
-
+        Cache::forget('products_index');
         return redirect()->route('products.index')
             ->with('success', 'Product Updated Sucessfully!');
     }
