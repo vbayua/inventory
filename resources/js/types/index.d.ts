@@ -58,10 +58,13 @@ export interface User {
 export interface Product {
     id: number;
     name: string;
+    brand_name?: string;
+    scientific_name?: string;
     sku: string;
     unit: string;
     price: number;
-    category_id: number;
+    category_id?: number;
+    supplier_id?: number;
     created_at: string;
     updated_at: string;
 }

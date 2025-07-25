@@ -33,7 +33,7 @@ class StockOperationService
                 $product,
                 $stockData,
                 $stockData['quantity'],
-                $stockData['minimum_quantity'] ?? 0,
+                $stockData['minimum_quantity'],
                 $stockData['remarks'] ?? 'Initial stock',
                 'available'
             );
@@ -168,7 +168,7 @@ class StockOperationService
         ]);
     }
 
-    private function setStockStatus(float $quantity, float $minimum_quantity = 0)
+    private function setStockStatus(float $quantity, float $minimum_quantity)
     {
         if ($quantity <= 0) {
             return 'out_of_stock';
@@ -179,7 +179,7 @@ class StockOperationService
         }
     }
 
-    private function setStock($product, $stockData, $quantity, $minimum_quantity = 0, $remarks = null, $status = 'available')
+    private function setStock($product, $stockData, $quantity, $minimum_quantity, $remarks = null, $status = 'available')
     {
         Stock::updateOrCreate(
             [

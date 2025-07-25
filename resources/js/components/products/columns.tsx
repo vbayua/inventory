@@ -15,8 +15,27 @@ type ProductIndex = {
         id: number;
         [key: string]: any; // Adjust this type based on your category structure
     };
+    product_type?: {
+        id: number;
+        type_code: string;
+    };
     created_at: string;
     updated_at: string;
+}
+
+const productTypeConfig = {
+    RMP: {
+        color: 'bg-blue-100 text-blue-800',
+        label: 'Raw Material',
+    },
+    PP: {
+        color: 'bg-green-100 text-green-800',
+        label: 'Primary Packaging',
+    },
+    PS: {
+        color: 'bg-yellow-100 text-yellow-800',
+        label: 'Secondary Packaging',
+    },
 }
 export const columns: ColumnDef<ProductIndex>[] = [
     {
@@ -39,6 +58,23 @@ export const columns: ColumnDef<ProductIndex>[] = [
     {
         accessorKey: "unit",
         header: "Unit"
+    },
+    {
+        id: "product_type",
+        accessorFn: row => row.product_type?.type_code,
+        header: "Product Type",
+        meta: {
+            filterVariant: 'select',
+        },
+        cell: ({ row }) => {
+            const productType = row.original.product_type?.type_code;
+            const config = productTypeConfig[productType as keyof typeof productTypeConfig] || { color: 'bg-gray-200', label: 'Unknown' };
+            return (
+                <span className={`${config.color} text-gray-800 px-2 py-1 rounded`}>
+                    {config.label}
+                </span>
+            );
+        }
     },
     {
         id: "categories_name",

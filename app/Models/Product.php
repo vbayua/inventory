@@ -64,6 +64,11 @@ class Product extends Model
         return $this->belongsTo(Unit::class, 'unit', 'name');
     }
 
+    public function productType()
+    {
+        return $this->belongsTo(ProductType::class, 'product_type_id', 'id');
+    }
+
     public function getUnitTypeAttribute()
     {
         return $this->unit ? $this->unit->unit_type : null;
