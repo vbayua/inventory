@@ -1,10 +1,16 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button, buttonVariants } from '../ui/button'
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
+import { MoreHorizontal, ArrowUpDown, BadgeInfo } from 'lucide-react'
 import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 import { DataTableColumnHeader } from '../data-table-column-header'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 
 type UnitIndex = {
     name: string;
@@ -17,6 +23,37 @@ export const columns: ColumnDef<UnitIndex>[] = [
     {
         accessorKey: "name",
         header: "Unit Name",
+        cell: ({ cell }) => {
+            const unit = cell.row.original;
+            const isBase = unit.base_unit === unit.name; // Assuming base unit is the one with the same name
+            return isBase ? (
+                <div className="flex">
+                    <Link
+                        href={route('units.show', { name: unit.name })}
+                        className='font-semibold hover:underline'
+                    >
+                        {cell.getValue() as string}
+                    </Link>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <BadgeInfo className='ml-1.5' size={12} />
+                        </TooltipTrigger>
+                        <TooltipContent side='right'>
+                            <span className="text-sm text-muted-foreground">
+                                This is a base unit
+                            </span>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            ) : (
+                <Link
+                    href={route('units.show', { name: unit.name })}
+                    className='hover:underline'
+                >
+                    {cell.getValue() as string}
+                </Link>
+            )
+        }
     },
     {
         accessorKey: "conversion_to_base",
@@ -44,12 +81,12 @@ export const columns: ColumnDef<UnitIndex>[] = [
                     <DropdownMenuContent align='end'>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
-                            <Link href={viewUnit} className={'w-full'}>
+                            <Link href={viewUnit} className={buttonVariants({ variant: 'ghost' })}>
                                 View Unit
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                            <Link href={editUnit} className={'w-full'}>
+                            <Link href={editUnit} className={buttonVariants({ variant: 'ghost' })}>
                                 Edit Unit
                             </Link>
                         </DropdownMenuItem>
