@@ -7,7 +7,7 @@ import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { Table } from "@tanstack/react-table"
 import { X } from "lucide-react"
 
-interface WarehouseOption {
+interface Option {
     label: string
     value: string
     icon?: React.ComponentType<{ className?: string }>
@@ -15,26 +15,14 @@ interface WarehouseOption {
 
 interface DataTableToolbarProps<TData> {
     table: Table<TData>,
-    options?: WarehouseOption[]
+    options?: Option[]
 }
 
 export function DataTableToolbar<TData>({
     table,
 }: DataTableToolbarProps<TData>) {
     const isFiltered = table.getState().columnFilters.length > 0
-    const warehouseColumn =
-        table.getColumn("warehouse_name")
-            ? Array.from(table.getColumn("warehouse_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
-                label: value,
-                value: value,
-            }))
-            : [];
-    // console.log("Warehouse Column:", warehouseColumn)
 
-    const facetedFilter: WarehouseOption[] = [
-        { label: "All", value: "" },
-        ...warehouseColumn,
-    ];
 
     return (
         <div className="flex items-center justify-between">
@@ -47,7 +35,7 @@ export function DataTableToolbar<TData>({
                     }
                 /> */}
                 <Input
-                    placeholder="Filter locaton name..."
+                    placeholder="Filter Category name..."
                     value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                     onChange={(event) =>
                         table.getColumn("name")?.setFilterValue(event.target.value)
@@ -55,13 +43,6 @@ export function DataTableToolbar<TData>({
                     className="h-8 w-[150px] lg:w-[250px]"
                 // className="max-w-sm"
                 />
-                {table.getColumn("warehouse_name") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("warehouse_name")}
-                        title="Warehouses"
-                        options={facetedFilter}
-                    />
-                )}
                 {isFiltered && (
                     <Button
                         variant="ghost"
@@ -73,7 +54,6 @@ export function DataTableToolbar<TData>({
                     </Button>
                 )}
             </div>
-            <DataTableViewOptions table={table} />
         </div>
     )
 }
