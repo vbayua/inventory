@@ -7,7 +7,7 @@ import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { Table } from "@tanstack/react-table"
 import { X } from "lucide-react"
 
-interface BatchOptions {
+interface Options {
     label: string
     value: string
     icon?: React.ComponentType<{ className?: string }>
@@ -15,45 +15,36 @@ interface BatchOptions {
 
 interface DataTableToolbarProps<TData> {
     table: Table<TData>,
-    options?: BatchOptions[]
+    options?: Options[]
 }
 
 export function DataTableToolbar<TData>({
     table,
 }: DataTableToolbarProps<TData>) {
     const isFiltered = table.getState().columnFilters.length > 0
-    const batchColumn =
+    const productColumn =
         table.getColumn("product_name")
             ? Array.from(table.getColumn("product_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
                 label: value,
                 value: value,
             }))
             : [];
-    // console.log("Warehouse Column:", batchColumn)
 
-    const facetedFilter: BatchOptions[] = [
+    const facetedFilter: Options[] = [
         { label: "All", value: "" },
-        ...batchColumn,
+        ...productColumn,
     ];
 
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                {/* <Input
-                    placeholder="Filter tasks..."
-                    value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("title")?.setFilterValue(event.target.value)
-                    }
-                /> */}
                 <Input
-                    placeholder="Filter product name..."
-                    value={(table.getColumn("product_name")?.getFilterValue() as string) ?? ""}
+                    placeholder="Filter batch number..."
+                    value={(table.getColumn("batch_number")?.getFilterValue() as string) ?? ""}
                     onChange={(event) =>
-                        table.getColumn("product_name")?.setFilterValue(event.target.value)
+                        table.getColumn("batch_number")?.setFilterValue(event.target.value)
                     }
                     className="h-8 w-[150px] lg:w-[250px]"
-                // className="max-w-sm"
                 />
                 {table.getColumn("product_name") && (
                     <DataTableFacetedFilter
@@ -73,7 +64,6 @@ export function DataTableToolbar<TData>({
                     </Button>
                 )}
             </div>
-            <DataTableViewOptions table={table} />
         </div>
     )
 }
