@@ -1,12 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { FormEventHandler, use, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ContainerFormLayout from '@/components/container-form-layout';
+import { PlusIcon } from 'lucide-react';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -63,10 +65,17 @@ export default function Create() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Unit" />
-            <div className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div>
-                    <h1 className="text-2xl font-bold mb-4">Create New Unit</h1>
-                    <p className="text-sm text-muted-foreground mb-6">Create a new unit of measurement to manage your inventory effectively.</p>
+            <ContainerFormLayout>
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold mb-4">Create New Unit</h1>
+                        <p className="text-sm text-muted-foreground mb-6">Create a new unit of measurement to manage your inventory effectively.</p>
+                    </div>
+                    <div>
+                        <Link className={buttonVariants({ variant: 'secondary' })} href={`/units`}>
+                            Back to Units
+                        </Link>
+                    </div>
                 </div>
                 <form onSubmit={createUnit} className='space-y-6'>
                     <div className="grid gap-2">
@@ -135,7 +144,7 @@ export default function Create() {
                         <Button disabled={processing}>Create Unit</Button>
                     </div>
                 </form>
-            </div>
+            </ContainerFormLayout>
         </AppLayout >
     );
 }
