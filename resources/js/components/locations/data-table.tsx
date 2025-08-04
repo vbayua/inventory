@@ -49,7 +49,10 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([])
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+        created_at: false,
+        updated_at: false,
+    })
 
     const table = useReactTable({
         data,
@@ -71,8 +74,11 @@ export function DataTable<TData, TValue>({
     })
     return (
         <div>
-            <div className="flex items-center py-4">
+            <div className="flex items-center justify-between py-4">
                 <DataTableToolbar table={table} />
+                <div>
+                    <DataTableViewOptions table={table} />
+                </div>
             </div>
             <div className="rounded-md border md:p-4 p-2">
                 <Table>

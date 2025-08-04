@@ -8,6 +8,7 @@ import { DataTable } from '@/components/locations/data-table';
 import { FormEventHandler, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { PlusIcon, SearchIcon } from 'lucide-react';
+import ContainerLayout from '@/components/container-layout';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -22,53 +23,23 @@ type SearchLocationForm = {
 }
 
 export default function Index({ locations }: { locations: any }) {
-    const locationName = useRef<HTMLInputElement>(null)
-
-    const { data, setData, get, reset, processing, errors } = useForm<Required<SearchLocationForm>>({
-        name: '',
-    })
-
-
-    const deleteProduct = (id: number) => {
-        if (confirm('are you sure?')) {
-            router.delete(route('location.destroy', { id }))
-            toast.success('Location deleted successfuly')
-        }
-    }
-
-    const filterLocation: FormEventHandler = (e) => {
-        e.preventDefault()
-        get(route('location.index', { 'name': data.name }), {
-            preserveScroll: true,
-        })
-    }
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Location Lists" />
-            <div className={'p-4'}>
-                <Link className={buttonVariants({ variant: 'outline' })} href={`/warehouse/create`}>
-                    <PlusIcon className='w-4 h-4 mr-2' />
-                    Create Location
-                </Link>
-            </div>
-            <div className={'p-4'}>
-                {/* <form onSubmit={filterLocation} className='space-y-6 mb-4'>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Input
-                            placeholder="Filter Location by Name"
-                            ref={locationName}
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                        />
-
-                        <Button type="submit" className='cursor-pointer w-[200px]' disabled={processing}>
-                            <SearchIcon className='w-4 h-4 mr-2' /> Search
-                        </Button>
+            <ContainerLayout>
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold">Locations</h1>
+                        <p className="text-sm text-muted-foreground mb-6">Manage locations. You can create, edit, and delete locations.</p>
                     </div>
-                </form> */}
+                    <Link className={buttonVariants({ variant: 'default' })} href={route('location.create')}>
+                        <PlusIcon className='w-4 h-4 mr-2' />
+                        Create Location
+                    </Link>
+                </div>
                 <DataTable columns={columns} data={locations} clientSide={true} />
-            </div>
+            </ContainerLayout>
+
         </AppLayout>
     );
 }
