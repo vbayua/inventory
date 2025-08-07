@@ -1,0 +1,34 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use App\Models\ProductType;
+
+class ProductTypeSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        ProductType::factory()->create([
+            'name' => 'Raw Material',
+            'description' => 'This is a raw material product type.',
+            'type_code' => 'RMP',
+        ]);
+
+        ProductType::factory()->create([
+            'name' => 'Primary Packaging Material',
+            'description' => 'This is a Primary Packaging product type.',
+            'type_code' => 'PP',
+        ]);
+
+        ProductType::factory()->create([
+            'name' => 'Secondary Packaging Material',
+            'description' => 'This is a Secondary Packaging product type.',
+            'type_code' => 'PS',
+        ]);
+    }
+}
