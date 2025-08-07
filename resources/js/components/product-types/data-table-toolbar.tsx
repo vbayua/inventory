@@ -7,7 +7,7 @@ import { DataTableFacetedFilter } from "./data-table-faceted-filter"
 import { Table } from "@tanstack/react-table"
 import { X } from "lucide-react"
 
-interface WarehouseOption {
+interface Options {
     label: string
     value: string
     icon?: React.ComponentType<{ className?: string }>
@@ -15,39 +15,32 @@ interface WarehouseOption {
 
 interface DataTableToolbarProps<TData> {
     table: Table<TData>,
-    options?: WarehouseOption[]
+    options?: Options[]
 }
 
 export function DataTableToolbar<TData>({
     table,
 }: DataTableToolbarProps<TData>) {
     const isFiltered = table.getState().columnFilters.length > 0
-    const warehouseColumn =
-        table.getColumn("warehouse_name")
-            ? Array.from(table.getColumn("warehouse_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
+    const column =
+        table.getColumn("name")
+            ? Array.from(table.getColumn("name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
                 label: value,
                 value: value,
             }))
             : [];
-    // console.log("Warehouse Column:", warehouseColumn)
+    // console.log("Warehouse Column:", column)
 
-    const facetedFilter: WarehouseOption[] = [
+    const facetedFilter: Options[] = [
         { label: "All", value: "" },
-        ...warehouseColumn,
+        ...column,
     ];
 
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                {/* <Input
-                    placeholder="Filter tasks..."
-                    value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("title")?.setFilterValue(event.target.value)
-                    }
-                /> */}
                 <Input
-                    placeholder="Filter locaton name..."
+                    placeholder="Filter name..."
                     value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                     onChange={(event) =>
                         table.getColumn("name")?.setFilterValue(event.target.value)
@@ -55,13 +48,6 @@ export function DataTableToolbar<TData>({
                     className="h-8 w-[150px] lg:w-[250px]"
                 // className="max-w-sm"
                 />
-                {table.getColumn("warehouse_name") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("warehouse_name")}
-                        title="Warehouses"
-                        options={facetedFilter}
-                    />
-                )}
                 {isFiltered && (
                     <Button
                         variant="ghost"

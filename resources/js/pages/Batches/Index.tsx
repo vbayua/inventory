@@ -17,43 +17,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type SearchBatchForm = {
-    name?: string
-}
-
 export default function Index({ batches }: { batches: any }) {
-    const batchName = useRef<HTMLInputElement>(null)
 
-    const { data, setData, get, reset, processing, errors } = useForm<Required<SearchBatchForm>>({
-        name: '',
-    })
-
-
-    const deleteProduct = (id: number) => {
-        if (confirm('are you sure?')) {
-            router.delete(route('batch.destroy', { id }))
-            toast.success('Batch deleted successfuly')
-        }
-    }
-
-    const filterBatch: FormEventHandler = (e) => {
-        e.preventDefault()
-        get(route('batch.index', { 'name': data.name }), {
-            preserveScroll: true,
-        })
-    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Batch Lists" />
-            <div className={'p-4'}>
-                <Link className={buttonVariants({ variant: 'outline' })} href={`/batches/create`}>
-                    <PlusIcon className='w-4 h-4 mr-2' />
-                    Create Batch
-                </Link>
-            </div>
-            <div className={'p-4'}>
-                <DataTable columns={columns} data={batches} clientSide={true} />
+
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className='flex items-center justify-between mb-4'>
+                        <div>
+                            <h1 className="text-2xl font-bold mb-4">Batches</h1>
+                            <p className="text-sm text-muted-foreground mb-6">Manage your batches here. You can create, edit, and delete batches.</p>
+                        </div>
+                        <Link className={buttonVariants({ variant: 'default' })} href={`/batches/create`}>
+                            <PlusIcon className='w-4 h-4 mr-2' />
+                            Create Batch
+                        </Link>
+                    </div>
+                    <DataTable columns={columns} data={batches} clientSide={true} />
+                </div>
             </div>
         </AppLayout>
     );

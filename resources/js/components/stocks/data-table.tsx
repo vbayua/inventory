@@ -27,11 +27,7 @@ import {
 import { PaginationIndex } from "../ui/pagination-index"
 import { DataTableViewOptions } from "../data-table-view-options"
 import { DataTablePagination } from "../data-table-pagination"
-import { Input } from "../ui/input"
 import { DataTableToolbar } from "./data-table-toolbar"
-// import { DataTablePagination } from "../data-table-pagination"
-// import { Input } from "../ui/input"
-
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]

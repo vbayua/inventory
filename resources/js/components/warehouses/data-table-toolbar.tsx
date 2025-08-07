@@ -23,8 +23,8 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
     const isFiltered = table.getState().columnFilters.length > 0
     const warehouseColumn =
-        table.getColumn("warehouse_name")
-            ? Array.from(table.getColumn("warehouse_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
+        table.getColumn("name")
+            ? Array.from(table.getColumn("name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
                 label: value,
                 value: value,
             }))
@@ -47,7 +47,7 @@ export function DataTableToolbar<TData>({
                     }
                 /> */}
                 <Input
-                    placeholder="Filter locaton name..."
+                    placeholder="Filter warehouse name..."
                     value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                     onChange={(event) =>
                         table.getColumn("name")?.setFilterValue(event.target.value)
@@ -55,13 +55,6 @@ export function DataTableToolbar<TData>({
                     className="h-8 w-[150px] lg:w-[250px]"
                 // className="max-w-sm"
                 />
-                {table.getColumn("warehouse_name") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("warehouse_name")}
-                        title="Warehouses"
-                        options={facetedFilter}
-                    />
-                )}
                 {isFiltered && (
                     <Button
                         variant="ghost"

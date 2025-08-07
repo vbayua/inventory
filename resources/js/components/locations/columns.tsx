@@ -28,11 +28,27 @@ export const columns: ColumnDef<LocationIndex>[] = [
                 />
             )
         },
+        cell: ({ row }) => {
+            const location = row.original
+            return (
+                <Link href={route('location.show', { id: location.id })}>
+                    {location.name}
+                </Link>
+            )
+        }
     },
     {
         id: "warehouse_name",
         accessorFn: row => row.warehouse?.name,
         header: "Warehouse Name",
+        cell: ({ row }) => {
+            const warehouse = row.original.warehouse
+            return (
+                <Link href={route('warehouse.show', { id: warehouse.id })}>
+                    {warehouse.name}
+                </Link >
+            )
+        },
         meta: {
             filterVariant: 'select',
         },
@@ -62,8 +78,10 @@ export const columns: ColumnDef<LocationIndex>[] = [
             const date = new Date(row.original.created_at)
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
-                month: 'long',
+                month: 'short',
                 day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
             })
         }
     },
@@ -81,8 +99,10 @@ export const columns: ColumnDef<LocationIndex>[] = [
             const date = new Date(row.original.updated_at)
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
-                month: 'long',
+                month: 'short',
                 day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             })
         }
     },

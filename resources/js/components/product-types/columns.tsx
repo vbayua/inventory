@@ -6,26 +6,47 @@ import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 import { DataTableColumnHeader } from '../data-table-column-header'
 
-type CategoryIndex = {
+type ProductType = {
     id: number;
     name: string;
-    slug?: string;
+    description?: string;
+    type_code: string;
     created_at: string;
     updated_at: string;
 }
 
-export const columns: ColumnDef<CategoryIndex>[] = [
+export const columns: ColumnDef<ProductType>[] = [
     {
         accessorKey: "name",
         header: ({ column }) => {
             return (
                 <DataTableColumnHeader
                     column={column}
-                    title="Category"
+                    title="Product Type Name"
                 />
             )
         },
+        cell: ({ row }) => {
+            const productType = row.original
+            return (
+                <Link href={route('product-types.show', { id: productType.id })}>
+                    {productType.name}
+                </Link>
+            )
+        }
     },
+
+    // {
+    //     accessorKey: "warehouse.name",
+    //     header: ({ column }) => {
+    //         return (
+    //             <DataTableColumnHeader
+    //                 column={column}
+    //                 title="Warehouse Name"
+    //             />
+    //         )
+    //     },
+    // },
     {
         accessorKey: "created_at",
         header: ({ column }) => {
@@ -40,11 +61,15 @@ export const columns: ColumnDef<CategoryIndex>[] = [
             const date = new Date(row.original.created_at)
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
-                month: 'long',
+                month: 'short',
                 day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
             })
         },
-        enableHiding: true
+        enableHiding: true,
+        enableSorting: true,
+        sortingFn: 'datetime',
     },
     {
         accessorKey: "updated_at",
@@ -52,7 +77,7 @@ export const columns: ColumnDef<CategoryIndex>[] = [
             return (
                 <DataTableColumnHeader
                     column={column}
-                    title="Last Updated"
+                    title="Updated At"
                 />
             )
         },
@@ -60,32 +85,22 @@ export const columns: ColumnDef<CategoryIndex>[] = [
             const date = new Date(row.original.updated_at)
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
-                month: 'long',
+                month: 'short',
                 day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             })
-        }
+        },
+        enableHiding: true,
+        enableSorting: true,
+        sortingFn: 'datetime',
     },
     {
         id: "actions",
         cell: ({ row }) => {
-            const category = row.original
-            const viewCategory = route('categories.show', { id: category.id })
-            const editCategory = route('categories.edit', { id: category.id })
-            const deleteCategory = () => {
-                if (confirm('Are you sure you want to delete this category?')) {
-                    router.delete(route('category.destroy', { id: category.id }), {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            toast.success('Category deleted successfully')
-                        },
-                        onError: (errors) => {
-                            if (errors.name) {
-                                toast.error(errors.name)
-                            }
-                        }
-                    })
-                }
-            }
+            const productType = row.original
+            const viewProductType = route('product-types.show', { id: productType.id })
+            const editProductType = route('product-types.edit', { id: productType.id })
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -97,13 +112,13 @@ export const columns: ColumnDef<CategoryIndex>[] = [
                     <DropdownMenuContent align='end'>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
-                            <Link href={viewCategory} className={'w-full'}>
-                                View Category
+                            <Link href={viewProductType} className={'w-full'}>
+                                View Product Type
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                            <Link href={editCategory} className={'w-full'}>
-                                Edit Category
+                            <Link href={editProductType} className={'w-full'}>
+                                Edit Product Type
                             </Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
