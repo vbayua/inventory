@@ -38,4 +38,9 @@ class Batch extends Model
     {
         return $this->hasMany(StockAdjustment::class);
     }
+
+    public function isExpired(): bool
+    {
+        return $this->expiry_date && $this->expiry_date < now();
+    }
 }
