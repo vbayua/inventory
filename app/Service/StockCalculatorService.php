@@ -7,16 +7,21 @@ use Illuminate\Support\Facades\Cache;
 
 class StockCalculatorService
 {
+
+    /** @var array<string,unit> */
+    private array $memo = [];
     /**
      * Convert quantity to base unit (ml, g, or item).
      */
     public function toBaseUnit(float $quantity, string $unitName): float
     {
-        $unitRecord = Cache::remember("unit:{$unitName}", 3600, function () use ($unitName) {
-            return Unit::where('name', $unitName)->firstOrFail();
-        });
+        $unit = $this->getUnitByName($unitName);
 
-        return $quantity * $unitRecord->conversion_to_base;
+        if ($unit->conversion_to_base <= 0) {
+            throw new \Exception("Invalid conversion_to_base for unit '{$unit->name}'.");
+        }
+
+        return $quantity * $unit->conversion_to_base;
     }
 
     /**
@@ -24,11 +29,41 @@ class StockCalculatorService
      */
     public function fromBaseUnit(float $quantity, string $unitName): float
     {
-        $unitRecord = Cache::remember("unit:{$unitName}", 3600, function () use ($unitName) {
-            return Unit::where('name', $unitName)->firstOrFail();
-        });
+        $unit = $this->getUnitByName($unitName);
 
-        return $quantity / $unitRecord->conversion_to_base;
+        if ($unit->conversion_to_base <= 0) {
+            throw new \Exception("Invalid conversion_to_base for unit '{$unit->name}'.");
+        }
+
+        return $quantity / $unit->conversion_to_base;
+    }
+
+    /**
+     * Get unit by its name
+     *
+     */
+    private function getUnitByName(string $unitName): Unit
+    {
+        $key = $this->normalizeKey($unitName);
+
+        // Per-request memoization first(fast path)
+        if (isset($this->memo[$key])) {
+            return $this->memo[$key];
+        }
+
+        // Cache (cross-request)
+        $unit = Cache::tags(['units'])->remember(
+            "unit:name:{$key}",
+            config('cache.ttl.units', 3600),
+            fn() => Unit::where('name', $key)->firstOrFail()
+        );
+
+        return $this->memo[$key] = $unit;
+    }
+
+    private function normalizeKey(string $name): string
+    {
+        return strtolower(trim($name));
     }
 
     public function usageExample()
