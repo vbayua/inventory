@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Unit extends Model
 {
@@ -28,10 +29,13 @@ class Unit extends Model
         return $this->hasMany(Product::class, 'unit', 'name');
     }
 
-    public static function booted(): void
+    protected static function booted(): void
     {
         static::creating(function ($unit) {
             $unit->name = strtolower($unit->name);
         });
+
+        static::saved(fn() => Cache::tags(['units'])->flush());
+        static::deleted(fn() => Cache::tags(['units'])->flush());
     }
 }
