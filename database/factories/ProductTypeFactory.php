@@ -20,6 +20,7 @@ class ProductTypeFactory extends Factory
             'name' => $this->faker->unique()->word(),
             'description' => $this->faker->sentence(),
             'type_code' => $this->faker->unique()->word(),
+            'batch_interval_days' => 0
         ];
     }
 }
