@@ -6,7 +6,9 @@ use App\Models\Product;
 use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -40,9 +42,7 @@ class ProductController extends Controller
         $warehouses = Cache::remember('warehouses_list', 3600, function () {
             return \App\Models\Warehouse::select('id', 'name')->get();
         });
-        $locations = Cache::remember('locations_list', 3600, function () {
-            return \App\Models\Location::select('id', 'name')->get();
-        });
+        $locations = \App\Models\Location::select('id', 'name', 'warehouse_id')->get();
         $suppliers = Cache::remember('suppliers_list', 3600, function () {
             return \App\Models\Supplier::select('id', 'name')->get();
         });
@@ -65,7 +65,7 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProductRequest $request, StockOperationService $stockOperationService)
+    public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
 
 
@@ -75,7 +75,7 @@ class ProductController extends Controller
         ]);
 
 
-        $product = Product::create($request->validate([
+        $product = $request->validate([
             'name' => ['required'],
             'sku' => ['nullable', 'string'],
             'unit' => ['nullable', 'string'],
@@ -86,14 +86,12 @@ class ProductController extends Controller
             'product_type_id' => ['required', 'exists:product_types,id'],
             'brand_name' => ['nullable', 'string'],
             'scientific_name' => ['nullable', 'string'],
-        ]));
-
-        $product->suppliers()->attach($request->supplier_id, [
-            'price' => $request->price,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
+
+        DB::beginTransaction();
         //  Create a default batch for the product
+        $newProduct = new Product($product);
+        $newProduct->save();
         if ($request->with_begin_stock) {
             $stockData = $request->validate(
                 [
@@ -102,10 +100,18 @@ class ProductController extends Controller
                     'minimum_quantity' => ['required', 'numeric', 'min:0'],
                 ]
             );
-            $stockOperationService = app(StockOperationService::class);
-            $stockOperationService->createInitialStock($product, $stockData);
+            $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
+            if (!$stock) {
+                DB::rollback();
+                throw new \Exception("Failed to create stock");
+            }
         }
-        Cache::forget('products_index');
+        $newProduct->suppliers()->attach($request->supplier_id, [
+            'price' => $request->price,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::commit();
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
     }
