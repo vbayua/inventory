@@ -7,63 +7,36 @@ use Illuminate\Support\Facades\Cache;
 
 class StockCalculatorService
 {
-
-    /** @var array<string,unit> */
-    private array $memo = [];
+    /**
+     * Resolve a Unit by name using the same cache namespace as Unit model boot hooks.
+     */
+    private function getUnitByNameCached(string $unitName): Unit
+    {
+        $normalized = strtolower($unitName);
+        $unit = Cache::remember("unit:name:{$normalized}", 3600, function () use ($normalized) {
+            return Unit::where('name', $normalized)->first();
+        });
+        return $unit;
+    }
     /**
      * Convert quantity to base unit (ml, g, or item).
      */
-    public function toBaseUnit(float $quantity, string $unitName): float
+    public function toBaseUnit(float $quantity, Unit|string $unit): float
     {
-        $unit = $this->getUnitByName($unitName);
+        $unitName = $unit instanceof Unit ? $unit->name : $unit;
+        $unitRecord = $this->getUnitByNameCached($unitName);
 
-        if ($unit->conversion_to_base <= 0) {
-            throw new \Exception("Invalid conversion_to_base for unit '{$unit->name}'.");
-        }
-
-        return $quantity * $unit->conversion_to_base;
+        return $quantity * $unitRecord->conversion_to_base;
     }
 
     /**
      * Convert from base unit to target unit.
      */
-    public function fromBaseUnit(float $quantity, string $unitName): float
+    public function fromBaseUnit(float $quantity, Unit|string $unit): float
     {
-        $unit = $this->getUnitByName($unitName);
-
-        if ($unit->conversion_to_base <= 0) {
-            throw new \Exception("Invalid conversion_to_base for unit '{$unit->name}'.");
-        }
-
-        return $quantity / $unit->conversion_to_base;
-    }
-
-    /**
-     * Get unit by its name
-     *
-     */
-    private function getUnitByName(string $unitName): Unit
-    {
-        $key = $this->normalizeKey($unitName);
-
-        // Per-request memoization first(fast path)
-        if (isset($this->memo[$key])) {
-            return $this->memo[$key];
-        }
-
-        // Cache (cross-request)
-        $unit = Cache::tags(['units'])->remember(
-            "unit:name:{$key}",
-            config('cache.ttl.units', 3600),
-            fn() => Unit::where('name', $key)->firstOrFail()
-        );
-
-        return $this->memo[$key] = $unit;
-    }
-
-    private function normalizeKey(string $name): string
-    {
-        return strtolower(trim($name));
+        $unitName = $unit instanceof Unit ? $unit->name : $unit;
+        $unitRecord = $this->getUnitByNameCached($unitName);
+        return $quantity / $unitRecord->conversion_to_base;
     }
 
     public function usageExample()

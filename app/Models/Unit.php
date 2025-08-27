@@ -35,7 +35,23 @@ class Unit extends Model
             $unit->name = strtolower($unit->name);
         });
 
-        static::saved(fn() => Cache::tags(['units'])->flush());
-        static::deleted(fn() => Cache::tags(['units'])->flush());
+        // Capture original name before update to invalidate
+        static::updating(function (Unit $unit) {
+            $unit->old_name = strtolower((string) $unit->getOriginal('name'));
+        });
+
+        static::saved(function (Unit $unit) {
+            $current = strtolower($unit->name);
+            Cache::forget("unit:name:{$current}");
+
+            // If renamed, forget the old key
+            if (!empty($unit->old_name) && $unit->old_name !== $current) {
+                Cache::forget("unit:name:{$unit->old_name}");
+            }
+        });
+        static::deleted(function (Unit $unit) {
+            $current = strtolower($unit->name);
+            Cache::forget("unit:name:{$current}");
+        });
     }
 }
