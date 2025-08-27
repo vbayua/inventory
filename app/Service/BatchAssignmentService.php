@@ -7,7 +7,7 @@ use App\Models\Product;
 use App\Service\BatchPolicies\BatchPolicyInterface;
 use Illuminate\Support\Arr;
 
-class BatchAssigmentService
+class BatchAssignmentService
 {
     protected array $policies;
     protected string $defaultPolicy;
@@ -29,13 +29,14 @@ class BatchAssigmentService
         return app($policyClass);
     }
 
-    public function determineBatch(int $productId, ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null): ?int
+    public function determineBatch(Product|int $product, ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null): ?int
     {
+        $productId = $product instanceof Product ? $product->id : (int) $product;
         $product = Product::with(['productType', 'batches', 'operations'])->findOrFail($productId);
 
         $policy = $this->resolvePolicy($product);
 
-        if ($operationType === 'inbound' || $requestedBatchId) {
+        if ($operationType !== 'inbound' || $requestedBatchId) {
             return $policy->determineBatch($product, $requestedBatchId);
         }
 
@@ -54,7 +55,7 @@ class BatchAssigmentService
             }
         }
 
-        $proposedNumber = ($product->productType->type_code ?? 'DEFAULT') . '-' . $product->id;
+        $proposedNumber = ($product->productType->type_code ?? 'DEFAULT') . '-' . $product->sku;
         $batchNumber = $policy->generateBatchNumber($product, $proposedNumber);
         $expiryDate = $product->productType->defaultExpiryDate();
 
@@ -68,7 +69,7 @@ class BatchAssigmentService
             'expiry_date' => $expiryDate ?? null,
         ]);
 
-        dd($newBatch);
+        // dd($newBatch);
 
         return $policy->determineBatch($product, $newBatch->id);
     }
