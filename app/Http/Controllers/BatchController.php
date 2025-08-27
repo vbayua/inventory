@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Batch;
 use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
-use App\Service\BatchAssigmentService;
+use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -35,7 +35,7 @@ class BatchController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBatchRequest $request, BatchAssigmentService $batchAssigmentService)
+    public function store(StoreBatchRequest $request, BatchAssignmentService $batchAssigmentService)
     {
         DB::transaction(function () use ($request, $batchAssigmentService) {
             $batch = $request->validated();

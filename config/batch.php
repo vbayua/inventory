@@ -10,6 +10,7 @@ return [
     */
     'default' => \App\Service\BatchPolicies\DefaultBatchPolicy::class,
     'policies' => [
+        'RMP' => \App\Service\BatchPolicies\RawMaterialBatchPolicy::class,
         // 'PERISHABLE' => \App\Service\BatchPolicies\PerishableBatchPolicy::class,
         // Add more product type codes and their corresponding policies here
     ],
