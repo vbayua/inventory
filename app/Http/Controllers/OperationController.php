@@ -101,18 +101,19 @@ class OperationController extends Controller
 
         if ($operationType === 'inbound') {
             if (!$stockData) {
-                $stockData = $operationService->createInitialStock(
+                $stockData = [
+                    'location_id' => $validatedData['location'],
+                    'batch_id' => $validatedData['batch'],
+                    'quantity' => $operationQuantity,
+                    'minimum_quantity' => 0,
+                    'unit' => $validatedData['unit'],
+                    'status' => 'available',
+                    'remarks' => 'Initial stock created',
+                    'date' => $validatedData['date'],
+                ];
+                $operationService->createInitialStock(
                     $validatedData['product'],
-                    [
-                        'location_id' => $validatedData['location'],
-                        'batch_id' => $validatedData['batch'],
-                        'quantity' => $operationQuantity,
-                        'minimum_quantity' => 0,
-                        'unit' => $validatedData['unit'],
-                        'status' => 'available',
-                        'remarks' => 'Initial stock created',
-                        'date' => $validatedData['date'],
-                    ]
+                    $stockData
                 );
             } else {
                 // For inbound operations, call the service for inbound operations
