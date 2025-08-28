@@ -123,6 +123,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
         post(route('products.store'), {
             preserveScroll: true,
             onSuccess: () => {
+                console.log("create post with data:", data)
                 reset()
             },
             onError: (errors) => {
@@ -139,7 +140,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
     const productIsRawMaterial = data.product_type_id && product_types.find(type => type.id?.toString() === data.product_type_id)?.name?.toLowerCase() === 'raw material';
     const supplierIdIsNotNone = data.supplier_id && data.supplier_id !== 'none';
     const filteredLocations = locations.filter(location => location.warehouse_id === (data.warehouse_id ? Number(data.warehouse_id) : undefined));
-
+    // console.log('Filtered locations:', filteredLocations);
 
     const generateSku = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault()

@@ -47,7 +47,7 @@ type Location = {
 }
 
 
-export default function Create({ stocks, locations, batches, units }: { stocks: any[], locations: any[], batches: any[], units: any[] }) {
+export default function Create({ stocks, products, locations, batches, units }: { stocks: any[], products: any[], locations: any[], batches: any[], units: any[] }) {
     const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
         product: '',
         batch: '',
@@ -61,16 +61,23 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
     // Ensure products are unique by ID only
     const uniqueProductIds = new Set();
-    const products = stocks.reduce((acc, stock) => {
-        if (!uniqueProductIds.has(stock.product.id)) {
-            uniqueProductIds.add(stock.product.id);
-            acc.push(stock.product);
+    const productList = products.reduce((acc, item) => {
+        if (!uniqueProductIds.has(item.id)) {
+            uniqueProductIds.add(item.id);
+            acc.push(item);
         }
         return acc;
     }, []);
+    // const products = stocks.reduce((acc, stock) => {
+    //     if (!uniqueProductIds.has(stock.product.id)) {
+    //         uniqueProductIds.add(stock.product.id);
+    //         acc.push(stock.product);
+    //     }
+    //     return acc;
+    // }, []);
 
     // Product selection
-    const selectedProduct = products.find((product: any) => product.id.toString() === data.product);
+    const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
     const selectedBatch = batches.find(batch => batch.id.toString() === data.batch);
 
     // Batch filtering based on selected product
@@ -106,7 +113,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
     const createOperation: FormEventHandler = (e) => {
         e.preventDefault();
-
+        console.log("Creating operation with data:", data);
         post('/operations', {
             onSuccess: () => {
                 reset()
@@ -157,7 +164,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className={"col-span-1"}>
                             <Label className="block mb-2">
-                                Product
+                                Product Name
                             </Label>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -175,7 +182,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                                         <CommandList>
                                             <CommandEmpty>No products found</CommandEmpty>
                                             <CommandGroup>
-                                                {products.map((product: any) => (
+                                                {productList.map((product: any) => (
                                                     <CommandItem
                                                         key={product.id}
                                                         value={product.id.toString()}
@@ -204,30 +211,43 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
                         <div>
                             <Label className="block mb-2">
-                                Batches
+                                Batch
                             </Label>
-                            <Select onValueChange={(value) => {
-                                setData('batch', value);
-                                setData('location', '');
-                            }} value={data.batch}
-                                disabled={!filteredBatches.length}>
-                                <SelectTrigger className={cn("w-full", errors.batch && "border-red-500 text-muted-foreground")}>
-                                    <SelectValue placeholder="Select a batch" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {filteredBatches.length > 0 ? (
-                                            filteredBatches.map((batch: Batch) => (
-                                                <SelectItem key={batch.id} value={batch.id.toString()}>
-                                                    {batch.batch_number}
-                                                </SelectItem>
-                                            ))
-                                        ) : (
-                                            <div className="px-2 py-2 text-muted-foreground">No batches available</div>
-                                        )}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className={cn("justify-between w-full", errors.batch && "border-red-500 text-muted-foreground")}>
+                                        {selectedBatch?.batch_number ?? "Select a batch"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search batch..." />
+                                        <CommandList>
+                                            <CommandEmpty>No batch found</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredBatches.map((batch: any) => (
+                                                    <CommandItem
+                                                        key={batch.id}
+                                                        value={batch.id.toString()}
+                                                        onSelect={(value) => {
+                                                            setData('batch', value);
+                                                            setData('location', '');
+                                                        }}
+                                                        className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                    >
+                                                        <Check className={cn("mr-2 h-4 w-4", data.batch === batch.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                        {batch.batch_number}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         {data.operationType === 'outbound' && (
                             <>
@@ -338,12 +358,12 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
                                             min={1}
                                             step={0.01}
-                                            disabled={!selectedBatch}
+
                                         />
                                         <Select
                                             onValueChange={(value) => setData('unit', value)}
                                             value={data.unit}
-                                            disabled={!selectedBatch}
+
                                         >
                                             <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
                                                 <SelectValue placeholder="Select unit" />
@@ -425,14 +445,26 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                         </div>
 
                     </div>
-                    <Button
-                        variant="default"
-                        type="submit"
-                        className="w-full sm:w-auto"
-                        disabled={processing || !data.product || !data.batch || !data.location || !data.quantity || Number(data.quantity) <= 0}
-                    >
-                        {data.operationType === 'outbound' ? 'Create Usage Operation' : 'Create Receive Operation'}
-                    </Button>
+                    {data.operationType === 'outbound' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.batch || !data.location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            {data.operationType === 'outbound' ? 'Create Usage Operation' : 'Create Receive Operation'}
+                        </Button>
+                    )}
+                    {data.operationType === 'inbound' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            {data.operationType === 'inbound' ? 'Create Usage Operation' : 'Create Receive Operation'}
+                        </Button>
+                    )}
                 </form>
 
             </div>

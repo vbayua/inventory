@@ -80,8 +80,6 @@ export default function Create({ products }: { products: Product[] }) {
         }
     }
 
-
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Batch" />
@@ -104,7 +102,7 @@ export default function Create({ products }: { products: Product[] }) {
                             <Command>
                                 <CommandInput placeholder="Search products..." />
                                 <CommandList>
-                                    <CommandEmpty>No products found. <Link href='#' className='text-sky-800'>Create Product</Link> </CommandEmpty>
+                                    <CommandEmpty>No products found. <Link href={route('products.create')} className='text-sky-800'>Create Product</Link> </CommandEmpty>
                                     <CommandGroup>
                                         {products.map((product) => (
                                             <CommandItem
