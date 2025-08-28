@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Operation;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
+use App\Models\Stock;
+use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -41,7 +43,7 @@ class OperationController extends Controller
                 ])
                 ->get();
         });
-
+        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
         // // // Ensure products are unique by ID only the products
         // $stock = $stock->unique('batch_id')->values();
 
@@ -58,6 +60,7 @@ class OperationController extends Controller
 
         return Inertia('Operations/Create', [
             'stocks' => $stock,
+            'products' => $products,
             'batches' => $batches,
             'units' => $units,
             'locations' => $locations,
@@ -67,7 +70,7 @@ class OperationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreOperationRequest $request, StockOperationService $operationService)
+    public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
         $validatedData = $request->validate([
             'operationType' => 'required|in:inbound,outbound',
@@ -80,7 +83,13 @@ class OperationController extends Controller
             'remarks' => 'nullable|string|max:255',
         ]);
 
-        $stockData = \App\Models\Stock::with(['product'])->where('product_id', $validatedData['product'])
+        $validatedData['batch'] = $batchAssignmentService->determineBatch(
+            $validatedData['product'],
+            $validatedData['batch'],
+            $validatedData['operationType'],
+            $validatedData['date']
+        );
+        $stockData = Stock::with(['product'])->where('product_id', $validatedData['product'])
             ->where('location_id', $validatedData['location'])
             ->when($validatedData['batch'], function ($query) use ($validatedData) {
                 return $query->where('batch_id', $validatedData['batch']);
@@ -98,6 +107,7 @@ class OperationController extends Controller
                         'location_id' => $validatedData['location'],
                         'batch_id' => $validatedData['batch'],
                         'quantity' => $operationQuantity,
+                        'minimum_quantity' => 0,
                         'unit' => $validatedData['unit'],
                         'status' => 'available',
                         'remarks' => 'Initial stock created',
@@ -111,7 +121,7 @@ class OperationController extends Controller
                     $stockData,
                     $operationQuantity,
                     $validatedData['unit'],
-                    $validatedData['remarks'],
+                    $validatedData['remarks'] ?? '',
                     $validatedData['date'],
                 );
             }
@@ -122,7 +132,7 @@ class OperationController extends Controller
                 $stockData,
                 $operationQuantity,
                 $validatedData['unit'],
-                $validatedData['remarks'],
+                $validatedData['remarks'] ?? '',
                 $validatedData['date'],
             );
         } else {
