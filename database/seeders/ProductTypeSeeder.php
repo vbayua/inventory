@@ -24,7 +24,7 @@ class ProductTypeSeeder extends Seeder
             'name' => 'Primary Packaging Material',
             'description' => 'This is a Primary Packaging product type.',
             'type_code' => 'PP',
-            'batch_inteval_days' => 0, // No batch interval for primary packaging
+            'batch_interval_days' => 0, // No batch interval for primary packaging
         ]);
 
         ProductType::factory()->create([

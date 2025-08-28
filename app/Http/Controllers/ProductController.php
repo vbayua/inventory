@@ -112,6 +112,7 @@ class ProductController extends Controller
             'updated_at' => now(),
         ]);
         DB::commit();
+        Cache::forget('products_index');
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
     }
