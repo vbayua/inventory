@@ -12,7 +12,8 @@ class ProductType extends Model
     protected $fillable = [
         'name',
         'description',
-        'type_code'
+        'type_code',
+        'batch_interval_days'
     ];
 
     public function products()
