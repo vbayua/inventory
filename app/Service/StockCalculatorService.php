@@ -8,13 +8,23 @@ use Illuminate\Support\Facades\Cache;
 class StockCalculatorService
 {
     /**
+     * Resolve a Unit by name using the same cache namespace as Unit model boot hooks.
+     */
+    private function getUnitByNameCached(string $unitName): Unit
+    {
+        $normalized = strtolower($unitName);
+        $unit = Cache::remember("unit:name:{$normalized}", 3600, function () use ($normalized) {
+            return Unit::where('name', $normalized)->first();
+        });
+        return $unit;
+    }
+    /**
      * Convert quantity to base unit (ml, g, or item).
      */
-    public function toBaseUnit(float $quantity, string $unitName): float
+    public function toBaseUnit(float $quantity, Unit|string $unit): float
     {
-        $unitRecord = Cache::remember("unit:{$unitName}", 3600, function () use ($unitName) {
-            return Unit::where('name', $unitName)->firstOrFail();
-        });
+        $unitName = $unit instanceof Unit ? $unit->name : $unit;
+        $unitRecord = $this->getUnitByNameCached($unitName);
 
         return $quantity * $unitRecord->conversion_to_base;
     }
@@ -22,12 +32,10 @@ class StockCalculatorService
     /**
      * Convert from base unit to target unit.
      */
-    public function fromBaseUnit(float $quantity, string $unitName): float
+    public function fromBaseUnit(float $quantity, Unit|string $unit): float
     {
-        $unitRecord = Cache::remember("unit:{$unitName}", 3600, function () use ($unitName) {
-            return Unit::where('name', $unitName)->firstOrFail();
-        });
-
+        $unitName = $unit instanceof Unit ? $unit->name : $unit;
+        $unitRecord = $this->getUnitByNameCached($unitName);
         return $quantity / $unitRecord->conversion_to_base;
     }
 

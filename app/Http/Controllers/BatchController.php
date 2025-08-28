@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Batch;
 use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
+use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -34,23 +35,14 @@ class BatchController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBatchRequest $request)
+    public function store(StoreBatchRequest $request, BatchAssignmentService $batchAssigmentService)
     {
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $batchAssigmentService) {
             $batch = $request->validated();
-            // $product = \App\Models\Product::findOrFail($batch['product_id']);
-
-            $originalBatchNumber = $batch['batch_number'];
-            $newBatchNumber = $originalBatchNumber;
-            $counter = 1;
-
-            while (Batch::where('batch_number', $newBatchNumber)->exists()) {
-                $newBatchNumber = $originalBatchNumber . $counter;
-                $counter++;
-            }
-
-            $batch['batch_number'] = $newBatchNumber;
-
+            $batch['batch_number'] = $batchAssigmentService->generateBatchNumber(
+                $batch['product_id'],
+                $batch['batch_number']
+            );
             Batch::create($batch);
         });
 

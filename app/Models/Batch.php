@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Batch extends Model
 {
@@ -37,5 +38,33 @@ class Batch extends Model
     public function stockAdjustments(): HasMany
     {
         return $this->hasMany(StockAdjustment::class);
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expiry_date && $this->expiry_date < now();
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (Batch $batch) {
+            $batch->old_batch_number = (string) $batch->batch_number;
+        });
+
+        static::saved(function (Batch $batch) {
+            $current = (string) $batch->batch_number;
+
+            Cache::forget("batch:{$current}");
+
+            // If renamed, forget the old key
+            if (!empty($batch->old_batch_number) && $batch->old_batch_number !== $current) {
+                Cache::forget("batch:{$batch->old_batch_number}");
+            }
+        });
+
+        static::deleted(function (Batch $batch) {
+            $current = (string) $batch->batch_number;
+            Cache::forget("batch:{$current}");
+        });
     }
 }

@@ -12,11 +12,17 @@ class ProductType extends Model
     protected $fillable = [
         'name',
         'description',
-        'type_code'
+        'type_code',
+        'batch_interval_days'
     ];
 
     public function products()
     {
         return $this->hasMany(Product::class, 'product_type_id', 'id');
+    }
+
+    public function defaultExpiryDate(): int
+    {
+        return (int) config('batch.default_expiry_date');
     }
 }
