@@ -14,7 +14,7 @@ class RawMaterialBatchPolicy implements BatchPolicyInterface
 
     public function generateBatchNumber(Product $product, string $proposedNumber): string
     {
-        $base = 'RMP' . $proposedNumber;
+        $base = $proposedNumber;
         $newNumber = $base;
         $counter = 1;
 
