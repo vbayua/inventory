@@ -52,7 +52,7 @@ class StockOperationService
         });
     }
 
-    public function createInboundOperation($product, $stockData, $receiveQuantity, $unit = null, $remarks = "Inbound Operation", $operationDate = null)
+    public function createInboundOperation(Product|int $product, Stock|array $stockData, float $receiveQuantity, string $unit, string $remarks = "Inbound Operation", $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $receiveQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -64,16 +64,17 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            $this->incrementStock(
+            $this->setStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
-                $unit
+                $unit,
+                'increment'
             );
             return $operation;
         });
     }
-    public function createOutboundOperation($product, $stockData, $usageQuantity, $unit = null, $remarks = "Outbound Operation", $operationDate = null)
+    public function createOutboundOperation(Product|int $product, Stock|array $stockData, float $usageQuantity, string $unit, string $remarks = "Outbound Operation", $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -85,21 +86,13 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            if (isset($unit)) {
-                $this->decrementStock(
-                    $product,
-                    $stockData,
-                    $usageQuantity,
-                    $unit
-                );
-            } else {
-                $this->decrementStock(
-                    $product,
-                    $stockData,
-                    $usageQuantity,
-                    $product->unit
-                );
-            }
+            $this->setStock(
+                $product,
+                $stockData,
+                $usageQuantity,
+                $unit,
+                'decrement'
+            );
             return $operation;
         });
     }
@@ -158,7 +151,7 @@ class StockOperationService
         }
     }
 
-    private function setStock(Product|int $product, array $stockData, float $quantity, ?string $unit, string $mode): Stock
+    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode): Stock
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode) {
             $productId = $product instanceof Product ? $product->id : $product;
