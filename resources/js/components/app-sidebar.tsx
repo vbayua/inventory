@@ -17,48 +17,71 @@ const mainNavItems: NavItem[] = [
 
 ];
 
-const productNavItems: MainNavItem[] = [
+const productNavItems: NavItem[] = [
     {
-        title: 'Products',
+        title: 'Product Master',
+        href: '/products',
         icon: Box,
-        subItems: [
-            {
-                title: 'Product Master',
-                href: '/products',
-                icon: Box,
-            },
-
-            {
-                title: 'Categories',
-                href: '/categories',
-                icon: Boxes,
-            },
-            {
-                title: 'Unit',
-                href: '/units',
-                icon: Cog,
-            },
-        ]
     },
-]
 
-const warehouseNavItems: MainNavItem[] = [
+    {
+        title: 'Categories',
+        href: '/categories',
+        icon: Boxes,
+    },
+    {
+        title: 'Unit',
+        href: '/units',
+        icon: Cog,
+    },
+    {
+        title: 'Product Types',
+        href: '/product-types',
+        icon: Box
+    }
+];
+
+// const productNavItems: MainNavItem[] = [
+//     {
+//         title: 'Products',
+//         icon: Box,
+//         subItems: [
+//             {
+//                 title: 'Product Master',
+//                 href: '/products',
+//                 icon: Box,
+//             },
+
+//             {
+//                 title: 'Categories',
+//                 href: '/categories',
+//                 icon: Boxes,
+//             },
+//             {
+//                 title: 'Unit',
+//                 href: '/units',
+//                 icon: Cog,
+//             },
+//             {
+//                 title: 'Product Types',
+//                 href: '/product-types',
+//                 icon: Box
+//             }
+//         ]
+//     },
+// ]
+
+const warehouseNavItems: NavItem[] = [
     {
         title: 'Warehouse',
-        icon: Building,
-        subItems: [
-            {
-                title: 'Warehouse',
-                href: '/warehouse',
-                icon: Building2,
-            },
-            {
-                title: 'Location',
-                href: '/location',
-                icon: MapPin,
-            },
-        ]
-    }
+        href: '/warehouse',
+        icon: Building2,
+    },
+    {
+        title: 'Location',
+        href: '/location',
+        icon: MapPin,
+    },
 ]
 
 const stockNavItems: NavItem[] = [
@@ -108,8 +131,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMainSingle items={mainNavItems} group='Menu' />
-                <NavMain items={warehouseNavItems} groupTitle="Warehouse" />
-                <NavMain items={productNavItems} groupTitle="Product" />
+                <NavMainSingle items={warehouseNavItems} group="Warehouse" />
+                <NavMainSingle items={productNavItems} group="Product" />
                 <NavMainSingle items={stockNavItems} group='Stock' />
             </SidebarContent>
 
