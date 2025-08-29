@@ -41,36 +41,6 @@ const productNavItems: NavItem[] = [
     }
 ];
 
-// const productNavItems: MainNavItem[] = [
-//     {
-//         title: 'Products',
-//         icon: Box,
-//         subItems: [
-//             {
-//                 title: 'Product Master',
-//                 href: '/products',
-//                 icon: Box,
-//             },
-
-//             {
-//                 title: 'Categories',
-//                 href: '/categories',
-//                 icon: Boxes,
-//             },
-//             {
-//                 title: 'Unit',
-//                 href: '/units',
-//                 icon: Cog,
-//             },
-//             {
-//                 title: 'Product Types',
-//                 href: '/product-types',
-//                 icon: Box
-//             }
-//         ]
-//     },
-// ]
-
 const warehouseNavItems: NavItem[] = [
     {
         title: 'Warehouse',
