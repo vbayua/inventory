@@ -18,6 +18,8 @@ class Unit extends Model
         'name',
         'base_unit',
         'unit_type',
+        'container_capacity',
+        'container_unit',
         'conversion_to_base',
     ];
     protected $casts = [
