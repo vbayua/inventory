@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Models\Stock;
 use App\Models\Unit;
 use Illuminate\Support\Facades\Cache;
 
@@ -55,20 +56,20 @@ class StockCalculatorService
      * Converts a container quantity to its equivalent in base units.
      *
      * @param float $containerQuantity The number of containers.
-     * @param Unit|string $unit The unit or unit name representing the container.
-     * @throws \InvalidArgumentException If the unit lacks container settings.
+     * @param Stock|int $stock The stock model or stock id representing the container.
+     * @throws \InvalidArgumentException If the stock lacks container settings.
      * @return float The converted quantity in base units.
      */
-    public function containerToBaseUnit(float $containerQuantity, Unit|string $unit): float
+    public function containerToBaseUnit(float $containerQuantity, Stock|int $stock): float
     {
-        $unitName = $unit instanceof Unit ? $unit->name : $unit;
-        $unitRecord = $this->getUnitByNameCached($unitName);
+        $stockId = $stock instanceof Stock ? $stock->id : $stock;
+        $stockRecord = Stock::findOrFail($stockId);
 
-        if (!$unitRecord->container_capacity || $unitRecord->container_unit) {
-            throw new \InvalidArgumentException("Unit lacks container settings");
+        if (!$stockRecord->container_capacity || $stockRecord->container_unit) {
+            throw new \InvalidArgumentException("Stock lacks container settings");
         }
 
-        return $this->toBaseUnit($containerQuantity * $unitRecord->container_capacity, $unitRecord->container_unit);
+        return $this->toBaseUnit($containerQuantity * $stockRecord->container_capacity, $stockRecord->container_unit);
     }
 
     /**
