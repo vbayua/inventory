@@ -178,16 +178,15 @@ class StockOperationService
 
 
             $stockUnit = $this->getUnitRecord($stock->unit);
-            // dd($stockUnit, $quantityUnit);
+
             if ($stockUnit->base_unit !== $quantityUnit->base_unit) {
                 throw new \Exception("Base unit mismatch: stock unit '{$stockUnit}' vs quantity unit '{$quantityUnit}'.");
             }
-            // dd($quantity, $quantityUnit, $stock->quantity, $stock->unit);
+
             $qtyInBase = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
             $currentStockQtyInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
 
             $newInBase = (float) 0;
-            // dd($stockUnit, $quantityUnit, $qtyInBase, $currentStockQtyInBase, $newInBase);
 
             switch ($mode) {
                 case 'set':
