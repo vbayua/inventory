@@ -12,6 +12,7 @@ interface StockIndex {
     product?: {
         id: number;
         name?: string;
+        sku?: string;
         [key: string]: any;
     };
     location?: {
@@ -91,12 +92,19 @@ export const columns: ColumnDef<StockIndex>[] = [
         cell: ({ row }) => row.original.batch?.batch_number ?? '-',
     },
     {
-        accessorKey: "product.name",
+        id: "product_name",
+        accessorFn: row => row.product?.name,
         header: "Product Name",
         meta: {
             filterVariant: 'select',
         },
         cell: ({ row }) => row.original.product?.name ?? '-',
+    },
+    {
+        id: "product_sku",
+        accessorFn: row => row.product?.sku,
+        header: "SKU",
+        cell: ({ row }) => row.original.product?.sku ?? '-',
     },
     {
         id: "location_name",
@@ -154,7 +162,28 @@ export const columns: ColumnDef<StockIndex>[] = [
                 hour: '2-digit',
                 minute: '2-digit',
             });
-        }
+        },
+        // Enable filtering by a date range passed in the column filter value
+        filterFn: (row, id, value) => {
+            const date = new Date(row.getValue<string>(id));
+            const from = value?.from ? new Date(value.from) : undefined;
+            const to = value?.to ? new Date(value.to) : undefined;
+
+            if (from && to) {
+                const toDate = new Date(to);
+                toDate.setHours(23, 59, 59, 999);
+                return date >= from && date <= toDate;
+            }
+            if (from) {
+                return date >= from;
+            }
+            if (to) {
+                const toDate = new Date(to);
+                toDate.setHours(23, 59, 59, 999);
+                return date <= toDate;
+            }
+            return true;
+        },
     },
     {
         id: 'actions',
