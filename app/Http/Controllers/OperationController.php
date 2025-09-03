@@ -73,7 +73,8 @@ class OperationController extends Controller
     public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
         $validatedData = $request->validate([
-            'operationType' => 'required|in:inbound,outbound',
+            'operationType' => 'required|in:inbound,outbound,adjustment',
+            'adjustmentType' => 'required|in:addition,subtraction',
             'product' => 'required|exists:products,id',
             'location' => 'required|exists:locations,id',
             'batch' => 'nullable|exists:batches,id',
@@ -135,6 +136,14 @@ class OperationController extends Controller
                 $validatedData['unit'],
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
+            );
+        } elseif ($operationType === 'adjustment') {
+            $operationService->adjustStockOperation(
+                $stockData,
+                $operationQuantity,
+                $validatedData['unit'],
+                $validatedData['adjustmentType'],
+                $validatedData['remarks']
             );
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);

@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Models\Operation;
 use App\Models\Product;
 use App\Models\Stock;
+use App\Models\StockAdjustment;
 use App\Models\Unit;
 use App\Service\StockCalculatorService as UnitConverter;
 use App\Service\BatchAssignmentService;
@@ -49,6 +50,60 @@ class StockOperationService
                 'set'
             );
             return $operation;
+        });
+    }
+
+    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks)
+    {
+        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks) {
+            if (is_int($stock)) {
+                $stock = Stock::where('id', $stock)->firstOrFail();
+            }
+
+            $productId = $stock->product_id;
+            $locationId = $stock->location_id;
+            $batchId = $stock->batch_id;
+
+            $operation = $this->createOperation(
+                'adjustment',
+                $productId,
+                $stock,
+                $quantity,
+                $unit,
+                'adjust stock',
+            );
+
+            $stockAdjustment =  StockAdjustment::create([
+                'product_id' => $productId,
+                'location_id' => $stock->location_id,
+                'batch_id' => $stock->batch_id,
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'adjustment_type' => $type,
+                'remarks' => $remarks ?? ''
+            ]);
+
+            if ($type === 'addition') {
+                $this->setStock(
+                    $productId,
+                    $stock,
+                    $quantity,
+                    $unit,
+                    'increment'
+                );
+            } elseif ($type === 'subtraction') {
+                $this->setStock(
+                    $productId,
+                    $stock,
+                    $quantity,
+                    $unit,
+                    'decrement'
+                );
+            } else {
+                throw new \InvalidArgumentException("Stock Adjustment of type {$type} is unknown");
+            }
+
+            return $stockAdjustment;
         });
     }
 
@@ -100,44 +155,50 @@ class StockOperationService
 
     public function createTransferOperation($product, $stockData)
     {
-        return DB::transaction(function () use ($product, $stockData) {
-            $operation = $this->createOperation(
-                'transfer',
-                $product,
-                $stockData,
-                $stockData['remarks'] ?? null
-            );
-            // Decrement stock from source location
-            $this->decrementStock(
-                $product,
-                ['location_id' => $stockData['source_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
-                $stockData['quantity'],
-                $product->unit
-            );
-            // Increment stock to destination location
-            $this->incrementStock(
-                $product,
-                ['location_id' => $stockData['destination_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
-                $stockData['quantity']
-            );
-            return $operation;
-        });
+        // return DB::transaction(function () use ($product, $stockData) {
+        //     $operation = $this->createOperation(
+        //         'transfer',
+        //         $product,
+        //         $stockData,
+        //         $stockData['remarks'] ?? 'null'
+        //     );
+        //     // Decrement stock from source location
+        //     $this->decrementStock(
+        //         $product,
+        //         ['location_id' => $stockData['source_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
+        //         $stockData['quantity'],
+        //         $product->unit
+        //     );
+        //     // Increment stock to destination location
+        //     $this->incrementStock(
+        //         $product,
+        //         ['location_id' => $stockData['destination_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
+        //         $stockData['quantity']
+        //     );
+        //     return $operation;
+        // });
     }
 
 
     // Helper methods
-    private function createOperation($type, $product, $stockData, $usageQuantity, $unit = null, $remarks = null, $operationDate = null)
+    private function createOperation(string $type, Product|int $product, Stock|array $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null)
     {
-        return Operation::create([
-            'operation_type' => $type,
-            'product_id' => $product->id ?? $product,
-            'location_id' => $stockData['location_id'],
-            'batch_id' => $stockData['batch_id'] ?? null,
-            'unit' => $unit ?? $product->unit,
-            'quantity' => $usageQuantity,
-            'operation_date' => $operationDate ?? now(),
-            'remarks' => $remarks
-        ]);
+        return DB::transaction(function () use ($type, $product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
+            $productId = $product instanceof Product ? $product->id : $product;
+            $unitName = $unit instanceof Unit ? $unit->name : $unit;
+            $operation = Operation::create([
+                'operation_type' => $type,
+                'product_id' => $productId,
+                'location_id' => $stockData['location_id'],
+                'batch_id' => $stockData['batch_id'] ?? null,
+                'unit' => $unitName,
+                'quantity' => $usageQuantity,
+                'operation_date' => $operationDate ?? now(),
+                'remarks' => $remarks ?? ''
+            ]);
+
+            return $operation;
+        });
     }
 
     private function setStockStatus(float $quantity, float $minimum_quantity)
@@ -230,8 +291,6 @@ class StockOperationService
             ->lockForUpdate()
             ->firstOrFail();
     }
-
-
 
     private function incrementStock(Product|int $product, array $stockData, float $quantity = 0, ?string $unit = null)
     {

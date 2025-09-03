@@ -33,6 +33,7 @@ type OperationForm = {
     date?: string; // Optional date field,
     unit: string;
     operationType: string;
+    adjustmentType: string;
     remarks: string;
 }
 
@@ -56,6 +57,7 @@ export default function Create({ stocks, products, locations, batches, units }: 
         date: '',
         unit: '',
         operationType: 'outbound',
+        adjustmentType: 'addition',
         remarks: '',
     });
 
@@ -151,11 +153,39 @@ export default function Create({ stocks, products, locations, batches, units }: 
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectItem value="outbound">
-                                        Usage Operation
+                                        Usage Stock
                                     </SelectItem>
                                     <SelectItem value="inbound" >
-                                        Receive Operation
+                                        Receive Stock
                                     </SelectItem>
+                                    <SelectItem value="adjustment" >
+                                        Adjust Stock
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="mb-6">
+                        <Label className="block mb-4">
+                            Adjustment Type
+                        </Label>
+                        <Select onValueChange={(value) => {
+                            setData('adjustmentType', value);
+                            setData('product', '');
+                            setData('batch', '');
+                            setData('location', '');
+                            setData('quantity', 0);
+                            setData('date', '');
+                            setData('remarks', '');
+                        }} value={data.adjustmentType}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select Adjustment Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectItem value="addition">Addition</SelectItem>
+                                    <SelectItem value="subtraction">Subtraction</SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
@@ -388,6 +418,75 @@ export default function Create({ stocks, products, locations, batches, units }: 
                             </>
                         )}
 
+                        {data.operationType === 'adjustment' && (
+                            <>
+                                <div>
+                                    <Label className="block mb-2">
+                                        Location
+                                    </Label>
+                                    <Select onValueChange={(value) => setData('location', value)} value={data.location}>
+                                        <SelectTrigger className={cn("w-full", errors.location && "border-red-500 text-muted-foreground")}>
+                                            <SelectValue placeholder="Select a location" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {locations.length > 0 ? (
+                                                    locations.map((location: Location) => (
+                                                        <SelectItem key={location.id} value={location.id.toString()}>
+                                                            {location.name}
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-2 py-2 text-muted-foreground">No locations available</div>
+                                                )}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label className="block mb-2">
+                                        Quantity
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={data.quantity}
+                                            onChange={(e) => setData('quantity', parseFloat(e.target.value))}
+                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            placeholder="Enter quantity"
+
+                                            min={1}
+                                            step={0.01}
+
+                                        />
+                                        <Select
+                                            onValueChange={(value) => setData('unit', value)}
+                                            value={data.unit}
+
+                                        >
+                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
+                                                <SelectValue placeholder="Select unit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {filteredUnits.map((unit) => (
+                                                        <SelectItem key={unit.name} value={unit.name.toString()}>
+                                                            {unit.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    {selectedBatch && (
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Stock: {stockQuantity} {productUnit?.name || 'units'}
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
                         <div>
                             <Label className="block mb-2">
                                 {data.operationType === 'outbound' ? 'Usage' : 'Receive'} Date
@@ -452,7 +551,7 @@ export default function Create({ stocks, products, locations, batches, units }: 
                             className="w-full sm:w-auto"
                             disabled={processing || !data.product || !data.batch || !data.location || !data.quantity || Number(data.quantity) <= 0}
                         >
-                            {data.operationType === 'outbound' ? 'Create Usage Operation' : 'Create Receive Operation'}
+                            Create Usage Operation
                         </Button>
                     )}
                     {data.operationType === 'inbound' && (
@@ -462,7 +561,17 @@ export default function Create({ stocks, products, locations, batches, units }: 
                             className="w-full sm:w-auto"
                             disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
                         >
-                            {data.operationType === 'inbound' ? 'Create Usage Operation' : 'Create Receive Operation'}
+                            Create Receive Operation
+                        </Button>
+                    )}
+                    {data.operationType === 'adjustment' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            Create Adjust Operation
                         </Button>
                     )}
                 </form>
