@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('operations', function (Blueprint $table) {
             $table->id();
-            $table->enum('operation_type', ['initial', 'inbound', 'outbound', 'transfer'])->default('inbound');
+            $table->enum('operation_type', ['initial', 'inbound', 'outbound', 'transfer', 'adjustment'])->default('inbound');
             $table->foreignId('product_id')->constrained('products')->onDelete('no action');
             $table->foreignId('location_id')->constrained('locations')->onDelete('set null');
             $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('set null');
