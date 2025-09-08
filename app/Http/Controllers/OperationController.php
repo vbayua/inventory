@@ -30,33 +30,25 @@ class OperationController extends Controller
     {
         // Caches
 
-        $stock = Cache::remember('stocks', 60, function () {
-            return \App\Models\Stock::with(['product.unit'])
-                ->select([
-                    "id",
-                    "product_id",
-                    "batch_id",
-                    "location_id",
-                    "quantity",
-                    "unit",
-                    "sku"
-                ])
-                ->get();
-        });
+        $stock = \App\Models\Stock::with(['product.unit'])
+            ->select([
+                "id",
+                "product_id",
+                "batch_id",
+                "location_id",
+                "quantity",
+                "unit",
+                "sku"
+            ])
+            ->get();
         $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
         // // // Ensure products are unique by ID only the products
         // $stock = $stock->unique('batch_id')->values();
 
-        $batches = Cache::remember('batches', 60, function () {
-            return \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
-        });
+        $batches = \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
 
-        $units = Cache::remember('units', 60, function () {
-            return \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
-        });
-        $locations = Cache::remember('locations', 60, function () {
-            return \App\Models\Location::all(['id', 'name']);
-        });
+        $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
+        $locations = \App\Models\Location::all(['id', 'name']);
 
         return Inertia('Operations/Create', [
             'stocks' => $stock,
