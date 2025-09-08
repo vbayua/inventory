@@ -24,11 +24,13 @@ class StockOperationService
         $this->batchService = $batchService;
     }
 
-    public function createInitialStock(Product $product, array $stockData)
+    public function createInitialStock(Product|int $product, array $stockData)
     {
         // dd($product->id, $product, $stockData);
-        return DB::transaction(function () use ($product, $stockData) {
-            $batchId = $this->batchService->determineBatch($product);
+        return DB::transaction(function () use ($product, $stockData) {;
+            $batchId = isset($stockData['batch_id'])
+                ? $this->batchService->determineBatch($product, $stockData['batch_id'])
+                : $this->batchService->determineBatch($product);
 
             if ($batchId) {
                 $stockData['batch_id'] = $batchId;
@@ -46,7 +48,7 @@ class StockOperationService
                 $product,
                 $stockData,
                 $stockData['quantity'],
-                $product->unit,
+                $product->unit ?? $stockData['unit'],
                 'set'
             );
             return $operation;
@@ -231,6 +233,7 @@ class StockOperationService
                 $stock->batch_id = $stockData['batch_id'] ?? null;
                 $stock->unit = $quantityUnit->name;
                 $stock->quantity = 0;
+                $stock->minimum_quantity = $stockData['minimum_quantity'];
                 $stock->status = 'out_of_stock';
                 $stock->save();
                 // Relock newly reted row to be safe in high contention
