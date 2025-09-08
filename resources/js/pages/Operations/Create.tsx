@@ -165,31 +165,32 @@ export default function Create({ stocks, products, locations, batches, units }: 
                             </SelectContent>
                         </Select>
                     </div>
-
-                    <div className="mb-6">
-                        <Label className="block mb-4">
-                            Adjustment Type
-                        </Label>
-                        <Select onValueChange={(value) => {
-                            setData('adjustmentType', value);
-                            setData('product', '');
-                            setData('batch', '');
-                            setData('location', '');
-                            setData('quantity', 0);
-                            setData('date', '');
-                            setData('remarks', '');
-                        }} value={data.adjustmentType}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select Adjustment Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectItem value="addition">Addition</SelectItem>
-                                    <SelectItem value="subtraction">Subtraction</SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {data.operationType === 'adjustment' && (
+                        <div className="mb-6">
+                            <Label className="block mb-4">
+                                Adjustment Type
+                            </Label>
+                            <Select onValueChange={(value) => {
+                                setData('adjustmentType', value);
+                                setData('product', '');
+                                setData('batch', '');
+                                setData('location', '');
+                                setData('quantity', 0);
+                                setData('date', '');
+                                setData('remarks', '');
+                            }} value={data.adjustmentType}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Adjustment Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="addition">Addition</SelectItem>
+                                        <SelectItem value="subtraction">Subtraction</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className={"col-span-1"}>

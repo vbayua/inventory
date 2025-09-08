@@ -36,7 +36,6 @@ export default function Show({ product }: { product: { id: number; name?: string
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
                     <div className="p-4">
                         <h2 className="text-2xl font-semibold mb-4">{product.name}</h2>
-
                         <p className="text-gray-600">product ID: {product.id}</p>
                         <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
                             <h3 className='font-semibold font-lg'>Actions</h3>

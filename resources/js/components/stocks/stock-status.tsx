@@ -14,7 +14,7 @@ export default function StockStatus({ stats }: {
         out_of_stock_stocks: number;
     }
 }) {
-    console.log('stats', stats);
+    // console.log('stats', stats);
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
