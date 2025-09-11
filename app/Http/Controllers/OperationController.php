@@ -26,7 +26,7 @@ class OperationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         // Caches
 
@@ -49,13 +49,14 @@ class OperationController extends Controller
 
         $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
         $locations = \App\Models\Location::all(['id', 'name']);
-
+        $query = $request->all();
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => $products,
             'batches' => $batches,
             'units' => $units,
             'locations' => $locations,
+            'query' => $query,
         ]);
     }
 

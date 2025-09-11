@@ -47,10 +47,14 @@ type Location = {
     name: string;
 }
 
+interface OperationFormQuery {
+    [key: string]: any
+}
 
-export default function Create({ stocks, products, locations, batches, units }: { stocks: any[], products: any[], locations: any[], batches: any[], units: any[] }) {
+export default function Create({ stocks, products, locations, batches, units, query }: { stocks: any[], products: any[], locations: any[], batches: any[], units: any[], query: OperationFormQuery }) {
+    const checkQuery = query.product_id ? String(query.product_id) : '';
     const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
-        product: '',
+        product: checkQuery,
         batch: '',
         quantity: 0,
         location: '',
@@ -140,7 +144,7 @@ export default function Create({ stocks, products, locations, batches, units }: 
                         </Label>
                         <Select onValueChange={(value) => {
                             setData('operationType', value);
-                            setData('product', '');
+                            // setData('product', '');
                             setData('batch', '');
                             setData('location', '');
                             setData('quantity', 0);
