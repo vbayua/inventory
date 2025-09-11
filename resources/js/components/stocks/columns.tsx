@@ -33,10 +33,10 @@ interface StockIndex {
     status?: string;
     unit?: string;
     quantity?: number;
+    minimum_quantity?: number;
     created_at?: string;
     updated_at?: string;
 }
-
 const handleCopyBatchNumber = (batchNumber: string) => {
     return function () {
         navigator.clipboard.writeText(batchNumber)
@@ -49,7 +49,16 @@ const handleCopyBatchNumber = (batchNumber: string) => {
     }
 }
 
-const handleViewStock = (id: number) => {
+const handleViewStock = (id: number, product_name: any) => {
+    return function () {
+        router.get('/', { product_name }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+}
+
+const handleCreateOperation = (id: number, product_name: any) => {
     return function () {
         router.get(`/stocks/${id}`, {}, {
             preserveState: true,
@@ -84,6 +93,7 @@ const statusConfig = {
 export const columns: ColumnDef<StockIndex>[] = [
     {
         id: "batch_number",
+        accessorKey: "Batch Number",
         accessorFn: row => row.batch?.batch_number ?? '-',
         header: "Batch Number",
         meta: {
@@ -91,8 +101,10 @@ export const columns: ColumnDef<StockIndex>[] = [
         },
         cell: ({ row }) => row.original.batch?.batch_number ?? '-',
     },
+
     {
         id: "product_name",
+        accessorKey: "Product Name",
         accessorFn: row => row.product?.name,
         header: "Product Name",
         meta: {
@@ -102,12 +114,14 @@ export const columns: ColumnDef<StockIndex>[] = [
     },
     {
         id: "product_sku",
+        accessorKey: "SKU",
         accessorFn: row => row.product?.sku,
         header: "SKU",
         cell: ({ row }) => row.original.product?.sku ?? '-',
     },
     {
         id: "location_name",
+        accessorKey: "Location",
         accessorFn: row => row.location?.name,
         header: "Location",
         meta: {
@@ -116,6 +130,7 @@ export const columns: ColumnDef<StockIndex>[] = [
     },
     {
         id: "warehouse_name",
+        accessorKey: "Warehouse",
         accessorFn: row => row.location?.warehouse?.name, // for filtering and sorting
         header: "Warehouse",
         meta: {
@@ -123,7 +138,7 @@ export const columns: ColumnDef<StockIndex>[] = [
         },
     },
     {
-        accessorKey: "quantity",
+        accessorKey: "Quantity",
         header: "Quantity",
         cell: ({ row }) => {
             const quantity = row.original.quantity;
@@ -132,7 +147,16 @@ export const columns: ColumnDef<StockIndex>[] = [
         }
     },
     {
-        accessorKey: "status",
+        accessorKey: "minimum_qty",
+        header: "Min. Qty",
+        cell: ({ row }) => {
+            return row.original.minimum_quantity
+        },
+        enableHiding: true,
+    },
+    {
+        id: "status",
+        accessorKey: "Status",
         header: "Status",
         cell: ({ row }) => {
             const status = row.original.status;
@@ -149,7 +173,8 @@ export const columns: ColumnDef<StockIndex>[] = [
         }
     },
     {
-        accessorKey: "updated_at",
+        id: "updated_at",
+        accessorKey: "Last Updated",
         header: ({ column }) => (
             <DataTableColumnHeader column={column} title="Last Updated" />
         ),
@@ -208,11 +233,11 @@ export const columns: ColumnDef<StockIndex>[] = [
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                        onClick={handleViewStock(row.original.id)}
+                        onClick={handleViewStock(row.original.id, row.original.product?.name)}
                     >
                         View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem className='text-emerald-800'>
+                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, row.original.product?.name)}>
                         Create Operation
                     </DropdownMenuItem>
                 </DropdownMenuContent>
