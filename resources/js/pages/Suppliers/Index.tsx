@@ -9,6 +9,7 @@ import { DataTable } from '@/components/suppliers/data-table';
 import { FormEventHandler, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { PlusIcon, SearchIcon } from 'lucide-react';
+import ContainerLayout from '@/components/container-layout';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -23,55 +24,22 @@ type SearchSupplierForm = {
 }
 
 export default function Index({ suppliers }: { suppliers: any }) {
-    // console.log(suppliers);
-    const supplierName = useRef<HTMLInputElement>(null)
-
-    const { data, setData, get, reset, processing, errors } = useForm<Required<SearchSupplierForm>>({
-        name: '',
-    })
-
-
-    const deleteProduct = (id: number) => {
-        if (confirm('are you sure?')) {
-            router.delete(route('supplier.destroy', { id }))
-            toast.success('Product deleted successfuly')
-        }
-    }
-
-    const filterSupplier: FormEventHandler = (e) => {
-        e.preventDefault()
-        const params = data.name ? { name: data.name } : {};
-        get(route('supplier.index', params), {
-            preserveScroll: true,
-        })
-    }
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Supplier Lists" />
-            <div className={'p-4'}>
-                <Link className={buttonVariants({ variant: 'outline' })} href={`/supplier/create`}>
-                    <PlusIcon className='w-4 h-4 mr-2' />
-                    Create Supplier
-                </Link>
-            </div>
-            <div className={'p-4'}>
-                <form onSubmit={filterSupplier} className='space-y-6 mb-4'>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Input
-                            placeholder="Filter Supplier"
-                            ref={supplierName}
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                        />
-
-                        <Button type="submit" className='cursor-pointer w-[200px]' disabled={processing}>
-                            <SearchIcon className='w-4 h-4 mr-2' /> Search
-                        </Button>
+            <ContainerLayout>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="">
+                        <h1 className="text-2xl font-bold mb-4">Suppliers</h1>
+                        <p className='text-sm text-muted-foreground mb-6'>Manage suppliers or vendors. You can create, edit and view suppliers</p>
                     </div>
-                </form>
-                <DataTable columns={columns} data={suppliers.data} links={suppliers.links} />
-            </div>
+                    <Link className={buttonVariants({ variant: 'default' })} href={'/suppliers/create'}>
+                        <PlusIcon className='w-4 h-4 mr-2' />
+                        Create Supplier
+                    </Link>
+                </div>
+                <DataTable data={suppliers} columns={columns} clientSide={true} />
+            </ContainerLayout>
         </AppLayout>
     );
 }

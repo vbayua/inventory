@@ -6,6 +6,8 @@ import {
     VisibilityState,
     flexRender,
     getCoreRowModel,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
     getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
@@ -24,21 +26,22 @@ import {
 
 import { PaginationIndex } from "../ui/pagination-index"
 import { DataTableViewOptions } from "../data-table-view-options"
-// import { DataTablePagination } from "../data-table-pagination"
-// import { Input } from "../ui/input"
-
+import { DataTablePagination } from "../data-table-pagination"
+import { DataTableToolbar } from "./data-table-toolbar"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[],
-    links?: any[]
+    links?: any[],
+    clientSide?: boolean
 }
 
 
 export function DataTable<TData, TValue>({
     columns,
     data,
-    links
+    links,
+    clientSide = false
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([])
@@ -54,25 +57,18 @@ export function DataTable<TData, TValue>({
         onColumnFiltersChange: setColumnFIlters,
         onColumnVisibilityChange: setColumnVisibility,
         getFilteredRowModel: getFilteredRowModel(),
+        getFacetedRowModel: getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
         state: {
             sorting,
             columnFilters,
             columnVisibility
         },
     })
-
     return (
         <div>
             <div className="flex items-center py-4">
-                {/* <Input
-                    placeholder="Filter name..."
-                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("name")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                /> */}
-                <DataTableViewOptions table={table} />
+                <DataTableToolbar table={table} />
             </div>
             <div className="rounded-md border md:p-4 p-2">
                 <Table>
@@ -119,9 +115,17 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
                 <div className="mb-4">
-                    <PaginationIndex links={links} />
+                    {data.length > 0 && links && (
+                        <PaginationIndex links={links} />
+                    )}
+                    {clientSide && (
+                        <DataTablePagination
+                            table={table}
+                        />
+                    )}
                 </div>
             </div>
         </div>
     )
 }
+

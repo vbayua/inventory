@@ -14,20 +14,8 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        $filters = request()->only('name');
         return Inertia::render('Suppliers/Index', [
-            'suppliers' => Supplier::orderBy('created_at', 'desc')->filter($filters)
-                ->paginate(10)
-                ->appends($filters)
-                ->withQueryString()
-                ->through(fn($supplier) => [
-                    'id' => $supplier->id,
-                    'name' => $supplier->name,
-                    'created_at' => $supplier->created_at->diffForHumans(),
-                    'updated_at' => $supplier->updated_at->diffForHumans(),
-                ]),
-            'count' => Supplier::count(),
-            'name' => request()->name,
+            'suppliers' => Supplier::all(),
         ]);
     }
 
