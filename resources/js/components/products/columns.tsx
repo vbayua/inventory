@@ -19,6 +19,7 @@ type ProductIndex = {
         id: number;
         type_code: string;
     };
+    suppliers?: { id: number; name?: string }[];
     created_at: string;
     updated_at: string;
 }
@@ -76,6 +77,22 @@ export const columns: ColumnDef<ProductIndex>[] = [
             )
         },
         enableHiding: true
+    },
+    {
+        id: "supplier_names",
+        accessorKey: "Suppliers",
+        accessorFn: row => (row.suppliers ?? []).map(s => s?.name)
+            .filter(Boolean)
+            .join(", "),
+        header: "Suppliers",
+        meta: { filterVariant: 'select' },
+        cell: ({ row }) => {
+            const names = (row.original.suppliers ?? [])
+                .map(s => s?.name)
+                .filter(Boolean)
+                .join(", ");
+            return names || "-";
+        }
     },
     {
         accessorKey: "scientific_name",
