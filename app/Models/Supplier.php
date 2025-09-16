@@ -21,6 +21,8 @@ class Supplier extends Model
     }
     public function products()
     {
-        return $this->hasMany(Product::class);
+        return $this->belongsToMany(Product::class, 'products_suppliers', 'supplier_id', 'product_id')
+            ->withPivot('price')
+            ->withTimestamps();
     }
 }
