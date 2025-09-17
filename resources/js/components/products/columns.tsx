@@ -46,7 +46,6 @@ export const columns: ColumnDef<ProductIndex>[] = [
             return (
                 <Link
                     href={route('products.show', { id: cell.row.original.id })}
-                    className='underline text-blue-600 hover:text-blue-800 font-medium'
                 >
                     {cell.getValue() as string}
                 </Link >

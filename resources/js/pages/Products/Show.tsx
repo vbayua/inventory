@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 
-export default function Show({ product }: { product: { id: number; name?: string } }) {
+export default function Show({ product }: { product: { id: number; name?: string, suppliers: any } }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Product',
@@ -37,6 +37,19 @@ export default function Show({ product }: { product: { id: number; name?: string
                     <div className="p-4">
                         <h2 className="text-2xl font-semibold mb-4">{product.name}</h2>
                         <p className="text-gray-600">product ID: {product.id}</p>
+                        <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
+                            <h3 className="font-semibold font-lg">Suppliers</h3>
+                            <ul className='list-disc pl-5 mt-2'>
+                                {product.suppliers.length > 0 ? product.suppliers.map((supplier: any) => (
+                                    <li key={supplier.id}>
+                                        {supplier.name}
+                                    </li>
+                                )) :
+                                    (
+                                        <li>No Supplier Found</li>
+                                    )}
+                            </ul>
+                        </div>
                         <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
                             <h3 className='font-semibold font-lg'>Actions</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
