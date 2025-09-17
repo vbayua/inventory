@@ -4,6 +4,7 @@ import { Button, buttonVariants } from '../ui/button'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
+import { DataTableColumnHeader } from '../data-table-column-header'
 
 type ProductIndex = {
     id: number;
@@ -19,7 +20,6 @@ type ProductIndex = {
         id: number;
         type_code: string;
     };
-    suppliers?: { id: number; name?: string }[];
     created_at: string;
     updated_at: string;
 }
@@ -57,12 +57,10 @@ export const columns: ColumnDef<ProductIndex>[] = [
         accessorKey: "name",
         header: ({ column }) => {
             return (
-                <Button
-                    variant={'ghost'}
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Product Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                <DataTableColumnHeader
+                    column={column}
+                    title='Product Name'
+                />
             )
         },
     },
@@ -77,22 +75,6 @@ export const columns: ColumnDef<ProductIndex>[] = [
             )
         },
         enableHiding: true
-    },
-    {
-        id: "supplier_names",
-        accessorKey: "Suppliers",
-        accessorFn: row => (row.suppliers ?? []).map(s => s?.name)
-            .filter(Boolean)
-            .join(", "),
-        header: "Suppliers",
-        meta: { filterVariant: 'select' },
-        cell: ({ row }) => {
-            const names = (row.original.suppliers ?? [])
-                .map(s => s?.name)
-                .filter(Boolean)
-                .join(", ");
-            return names || "-";
-        }
     },
     {
         accessorKey: "scientific_name",
@@ -115,12 +97,10 @@ export const columns: ColumnDef<ProductIndex>[] = [
         accessorFn: row => row.product_type?.type_code,
         header: ({ column }) => {
             return (
-                <Button
-                    variant={'ghost'}
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Product Type
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                <DataTableColumnHeader
+                    column={column}
+                    title='Product Type'
+                />
             )
         },
         meta: {
