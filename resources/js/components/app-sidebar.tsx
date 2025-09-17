@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavItem, type MainNavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar, MapPin } from 'lucide-react';
+import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar, MapPin, BuildingIcon, CheckCheck, FileCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavMainSingle } from './nav-main-single';
 
@@ -71,6 +71,21 @@ const stockNavItems: NavItem[] = [
         icon: Cog,
     },
 ]
+
+const supplierNavItem: NavItem[] = [
+    {
+        title: 'Suppliers',
+        href: '/suppliers',
+        icon: BuildingIcon
+    },
+
+    {
+        title: 'Approved Vendor List',
+        href: '/product-suppliers',
+        icon: FileCheck
+    },
+
+]
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
@@ -102,6 +117,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMainSingle items={mainNavItems} group='Menu' />
                 <NavMainSingle items={warehouseNavItems} group="Warehouse" />
+                <NavMainSingle items={supplierNavItem} group='Supplier & Vendor' />
                 <NavMainSingle items={productNavItems} group="Product" />
                 <NavMainSingle items={stockNavItems} group='Stock' />
             </SidebarContent>

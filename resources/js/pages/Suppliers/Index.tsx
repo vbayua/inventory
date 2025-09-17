@@ -15,7 +15,7 @@ import ContainerLayout from '@/components/container-layout';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Suppliers',
-        href: '/suppliers',
+        href: route('supplier.index'),
     },
 ];
 
@@ -33,7 +33,7 @@ export default function Index({ suppliers }: { suppliers: any }) {
                         <h1 className="text-2xl font-bold mb-4">Suppliers</h1>
                         <p className='text-sm text-muted-foreground mb-6'>Manage suppliers or vendors. You can create, edit and view suppliers</p>
                     </div>
-                    <Link className={buttonVariants({ variant: 'default' })} href={'/suppliers/create'}>
+                    <Link className={buttonVariants({ variant: 'default' })} href={route('supplier.create')}>
                         <PlusIcon className='w-4 h-4 mr-2' />
                         Create Supplier
                     </Link>

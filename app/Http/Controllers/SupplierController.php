@@ -43,13 +43,9 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
+        $supplier->load('products');
         return Inertia::render('Suppliers/Show', [
-            'supplier' => [
-                'id' => $supplier->id,
-                'name' => $supplier->name,
-                'created_at' => $supplier->created_at->diffForHumans(),
-                'updated_at' => $supplier->updated_at->diffForHumans(),
-            ],
+            'supplier' => $supplier
         ]);
     }
 

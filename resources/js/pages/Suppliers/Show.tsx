@@ -4,11 +4,17 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 
-export default function Show({ supplier }: { supplier: { id: number; name?: string } }) {
+export default function Show({ supplier }: {
+    supplier: {
+        id: number;
+        name?: string;
+        products?: any;
+    }
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Supplier',
-            href: '/supplier',
+            title: 'Suppliers',
+            href: '/suppliers',
         },
         {
             title: `${supplier.name}`,
@@ -22,6 +28,7 @@ export default function Show({ supplier }: { supplier: { id: number; name?: stri
             toast.success('Supplier deleted successfuly')
         }
     }
+    console.log(supplier);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${supplier?.name}`} />
@@ -31,6 +38,25 @@ export default function Show({ supplier }: { supplier: { id: number; name?: stri
                         <h2 className="text-2xl font-semibold mb-4">{supplier.name}</h2>
 
                         <p className="text-gray-600">Supplier ID: {supplier.id}</p>
+
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8">
+                                <h3 className="font-semibold">Details</h3>
+                                <p>-</p>
+                            </div>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8">
+                                <h3 className="font-semibold">Products</h3>
+                                <ul className="list-disc pl-5 mt-2">
+                                    {supplier.products.length > 0 ? supplier.products.map((product: any) => (
+                                        <li key={product.id}>
+                                            {product.name}
+                                        </li>
+                                    )) : (
+                                        <li>No Product Found</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <Link href={`/supplier/${supplier.id}/edit`}>
                                 <Button variant="outline" className="cursor-pointer mt-4">
