@@ -42,7 +42,9 @@ export default function Show({ product }: { product: { id: number; name?: string
                             <ul className='list-disc pl-5 mt-2'>
                                 {product.suppliers.length > 0 ? product.suppliers.map((supplier: any) => (
                                     <li key={supplier.id}>
-                                        {supplier.name}
+                                        <Link href={route('supplier.show', supplier.id)}>
+                                            {supplier.name}
+                                        </Link>
                                     </li>
                                 )) :
                                     (

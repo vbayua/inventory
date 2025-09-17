@@ -49,7 +49,9 @@ export default function Show({ supplier }: {
                                 <ul className="list-disc pl-5 mt-2">
                                     {supplier.products.length > 0 ? supplier.products.map((product: any) => (
                                         <li key={product.id}>
-                                            {product.name}
+                                            <Link href={route('products.show', product.id)}>
+                                                {product.name}
+                                            </Link>
                                         </li>
                                     )) : (
                                         <li>No Product Found</li>
