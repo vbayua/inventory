@@ -2,12 +2,18 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { Phone, PhoneIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Show({ supplier }: {
     supplier: {
         id: number;
         name?: string;
+        phone_number?: string;
+        email?: string;
+        contact_person?: string;
+        address?: string;
+        notes?: string;
         products?: any;
     }
 }) {
@@ -28,7 +34,6 @@ export default function Show({ supplier }: {
             toast.success('Supplier deleted successfuly')
         }
     }
-    console.log(supplier);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${supplier?.name}`} />
@@ -40,11 +45,21 @@ export default function Show({ supplier }: {
                         <p className="text-gray-600">Supplier ID: {supplier.id}</p>
 
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8">
-                                <h3 className="font-semibold">Details</h3>
-                                <p>-</p>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="font-semibold">Contact Details</h3>
+                                <ul className='list-disc pl-5 mt-2'>
+                                    <li>Contact Person: {supplier.contact_person}</li>
+                                    <li>Tel: {supplier.phone_number}</li>
+                                    <li>Email: {supplier.email}</li>
+                                </ul>
                             </div>
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8">
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="font-semibold">Notes</h3>
+                                <div className="mt-2">
+                                    <p>{supplier.notes}</p>
+                                </div>
+                            </div>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <h3 className="font-semibold">Products</h3>
                                 <ul className="list-disc pl-5 mt-2">
                                     {supplier.products.length > 0 ? supplier.products.map((product: any) => (
