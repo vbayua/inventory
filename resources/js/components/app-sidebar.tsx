@@ -78,13 +78,6 @@ const supplierNavItem: NavItem[] = [
         href: '/suppliers',
         icon: BuildingIcon
     },
-
-    {
-        title: 'Approved Vendor List',
-        href: '/product-suppliers',
-        icon: FileCheck
-    },
-
 ]
 const footerNavItems: NavItem[] = [
     {
