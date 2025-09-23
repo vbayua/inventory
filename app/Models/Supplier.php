@@ -25,4 +25,9 @@ class Supplier extends Model
             ->withPivot('price')
             ->withTimestamps();
     }
+
+    public function batches()
+    {
+        return $this->hasMany(Batch::class);
+    }
 }
