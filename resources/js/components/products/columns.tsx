@@ -4,6 +4,7 @@ import { Button, buttonVariants } from '../ui/button'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
+import { DataTableColumnHeader } from '../data-table-column-header'
 
 type ProductIndex = {
     id: number;
@@ -45,7 +46,6 @@ export const columns: ColumnDef<ProductIndex>[] = [
             return (
                 <Link
                     href={route('products.show', { id: cell.row.original.id })}
-                    className='underline text-blue-600 hover:text-blue-800 font-medium'
                 >
                     {cell.getValue() as string}
                 </Link >
@@ -56,12 +56,10 @@ export const columns: ColumnDef<ProductIndex>[] = [
         accessorKey: "name",
         header: ({ column }) => {
             return (
-                <Button
-                    variant={'ghost'}
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Product Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                <DataTableColumnHeader
+                    column={column}
+                    title='Product Name'
+                />
             )
         },
     },
@@ -98,12 +96,10 @@ export const columns: ColumnDef<ProductIndex>[] = [
         accessorFn: row => row.product_type?.type_code,
         header: ({ column }) => {
             return (
-                <Button
-                    variant={'ghost'}
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Product Type
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                <DataTableColumnHeader
+                    column={column}
+                    title='Product Type'
+                />
             )
         },
         meta: {

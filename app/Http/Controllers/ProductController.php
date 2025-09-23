@@ -95,11 +95,13 @@ class ProductController extends Controller
         if ($request->with_begin_stock) {
             $stockData = $request->validate(
                 [
+                    'supplier_id' => ['required', 'exists:suppliers,id'],
                     'location_id' => ['required', 'exists:locations,id'],
                     'quantity' => ['required', 'numeric', 'min:0'],
                     'minimum_quantity' => ['required', 'numeric', 'min:0'],
                 ]
             );
+
             $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
             if (!$stock) {
                 DB::rollback();
@@ -122,6 +124,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        $product->load('suppliers:id,name');
         return Inertia::render('Products/Show', ['product' => $product]);
     }
 

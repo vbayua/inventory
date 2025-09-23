@@ -13,8 +13,6 @@ class SupplierSeeder extends Seeder
      */
     public function run(): void
     {
-        Supplier::factory()->create([
-            'name' => 'PT. Imperial Kosmetika Indonesia'
-        ]);
+        Supplier::factory(10)->create();
     }
 }

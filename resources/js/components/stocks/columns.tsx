@@ -28,6 +28,10 @@ interface StockIndex {
     batch?: {
         id: number;
         batch_number?: string;
+        supplier?: {
+            id: number;
+            name?: string;
+        } | null;
         [key: string]: any;
     };
     status?: string;
@@ -111,6 +115,14 @@ export const columns: ColumnDef<StockIndex>[] = [
             filterVariant: 'select',
         },
         cell: ({ row }) => row.original.product?.name ?? '-',
+    },
+    {
+        id: 'supplier_name',
+        accessorKey: 'Supplier',
+        accessorFn: row => row.batch?.supplier?.name ?? '-',
+        header: "Supplier",
+        meta: { filterVariant: 'select' },
+        cell: ({ row }) => row.original.batch?.supplier?.name ?? '-',
     },
     {
         id: "product_sku",

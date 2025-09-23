@@ -2,13 +2,25 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { Phone, PhoneIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function Show({ supplier }: { supplier: { id: number; name?: string } }) {
+export default function Show({ supplier }: {
+    supplier: {
+        id: number;
+        name?: string;
+        phone_number?: string;
+        email?: string;
+        contact_person?: string;
+        address?: string;
+        notes?: string;
+        products?: any;
+    }
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Supplier',
-            href: '/supplier',
+            title: 'Suppliers',
+            href: '/suppliers',
         },
         {
             title: `${supplier.name}`,
@@ -31,6 +43,37 @@ export default function Show({ supplier }: { supplier: { id: number; name?: stri
                         <h2 className="text-2xl font-semibold mb-4">{supplier.name}</h2>
 
                         <p className="text-gray-600">Supplier ID: {supplier.id}</p>
+
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="font-semibold">Contact Details</h3>
+                                <ul className='list-disc pl-5 mt-2'>
+                                    <li>Contact Person: {supplier.contact_person}</li>
+                                    <li>Tel: {supplier.phone_number}</li>
+                                    <li>Email: {supplier.email}</li>
+                                </ul>
+                            </div>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="font-semibold">Notes</h3>
+                                <div className="mt-2">
+                                    <p>{supplier.notes}</p>
+                                </div>
+                            </div>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="font-semibold">Products</h3>
+                                <ul className="list-disc pl-5 mt-2">
+                                    {supplier.products.length > 0 ? supplier.products.map((product: any) => (
+                                        <li key={product.id}>
+                                            <Link href={route('products.show', product.id)}>
+                                                {product.name}
+                                            </Link>
+                                        </li>
+                                    )) : (
+                                        <li>No Product Found</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <Link href={`/supplier/${supplier.id}/edit`}>
                                 <Button variant="outline" className="cursor-pointer mt-4">

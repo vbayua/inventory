@@ -26,10 +26,6 @@ return new class extends Migration
             $table->unique(['product_id', 'supplier_id']); // Prevent duplicate pairs
             $table->index(['product_id', 'supplier_id']); // Index for queries
         });
-
-        Schema::table('products', function (Blueprint $table) {
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
-        });
     }
 
     /**
@@ -38,5 +34,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('suppliers');
+        Schema::dropIfExists('products_suppliers');
     }
 };

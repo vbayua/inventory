@@ -29,8 +29,8 @@ class StockOperationService
         // dd($product->id, $product, $stockData);
         return DB::transaction(function () use ($product, $stockData) {;
             $batchId = isset($stockData['batch_id'])
-                ? $this->batchService->determineBatch($product, $stockData['batch_id'])
-                : $this->batchService->determineBatch($product);
+                ? $this->batchService->determineBatch($product, $stockData['batch_id'], supplierId: (int) $stockData['supplier_id'])
+                : $this->batchService->determineBatch($product, supplierId: (int) $stockData['supplier_id']);
 
             if ($batchId) {
                 $stockData['batch_id'] = $batchId;

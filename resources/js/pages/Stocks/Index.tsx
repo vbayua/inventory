@@ -16,7 +16,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Index({ stocks, stats }: { stocks: any[], stats: { total_items: number; total_locations: number } }) {
-    // console.log('stocks', stocks);
+    console.log('stocks', stocks);
     const availableStocks = stocks.filter(stock => stock.status === 'available').length;
     const lowStockStocks = stocks.filter(stock => stock.status === 'low_stock').length;
     const outOfStockStocks = stocks.filter(stock => stock.status === 'out_of_stock').length;
