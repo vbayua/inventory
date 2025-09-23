@@ -4,8 +4,11 @@ namespace App\Service;
 
 use App\Models\Batch;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Service\BatchPolicies\BatchPolicyInterface;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BatchAssignmentService
 {
@@ -29,10 +32,22 @@ class BatchAssignmentService
         return app($policyClass);
     }
 
-    public function determineBatch(Product|int $product, ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null): ?int
+    public function determineBatch(Product|int $product,  ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null, ?int $supplierId = null): ?int
     {
         $productId = $product instanceof Product ? $product->id : (int) $product;
         $product = Product::with(['productType', 'batches', 'operations'])->findOrFail($productId);
+        // dd($supplierId);
+
+        if ($operationType === 'initial' && $supplierId) {
+            $validSupplier = DB::table('products_suppliers')->where('product_id', $product->id)->where('supplier_id', $supplierId)
+                ->exists();
+
+            if (!$validSupplier) {
+                throw ValidationException::withMessages([
+                    'supplier_id' => 'Supplier is not associated with this product.'
+                ]);
+            }
+        }
 
         $policy = $this->resolvePolicy($product);
 
@@ -69,6 +84,7 @@ class BatchAssignmentService
             'product_id' => $product->id,
             'batch_number' => $batchNumber,
             'expiry_date' => $expiryDate ?? null,
+            'supplier_id' => $supplierId
         ]);
 
         // dd($newBatch);
