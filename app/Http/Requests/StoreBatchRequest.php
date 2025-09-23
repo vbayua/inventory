@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\SupplierBelongsToProduct;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBatchRequest extends FormRequest
@@ -26,6 +27,12 @@ class StoreBatchRequest extends FormRequest
             'product_id' => ['required', 'exists:products,id'],
             'manufacture_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:manufacture_date'],
+            'supplier_id' => [
+                'nullable',
+                'integer',
+                'exists:suppliers,id',
+                new SupplierBelongsToProduct((int) $this->input('product_id'))
+            ]
         ];
     }
 }
