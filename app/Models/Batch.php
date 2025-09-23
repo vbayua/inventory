@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class Batch extends Model
 {
     /** @use HasFactory<\Database\Factories\BatchFactory> */
     use HasFactory;
 
-    protected $fillable = ['product_id', 'batch_number', 'manufacture_date', 'expiry_date'];
+    protected $fillable = ['product_id', 'batch_number', 'supplier_id', 'manufacture_date', 'expiry_date'];
 
     protected $casts = [
         'manufacture_date' => 'date',
