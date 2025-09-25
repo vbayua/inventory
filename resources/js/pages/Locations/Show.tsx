@@ -11,6 +11,10 @@ export default function Show({ location }: { location: any }) {
             href: '/location',
         },
         {
+            title: location.warehouse.name,
+            href: route('warehouse.show', location.warehouse.id)
+        },
+        {
             title: `${location.name}`,
             href: `/location/${location.id}`,
         }

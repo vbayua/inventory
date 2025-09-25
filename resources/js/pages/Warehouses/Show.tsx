@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 
-export default function Show({ warehouse }: { warehouse: { id: number; name?: string } }) {
+export default function Show({ warehouse }: { warehouse: { id: number; name?: string; locations?: any; products?: any; } }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Warehouses',
@@ -22,6 +22,7 @@ export default function Show({ warehouse }: { warehouse: { id: number; name?: st
             toast.success('Warehouse deleted successfuly')
         }
     }
+    console.log(warehouse)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${warehouse?.name}`} />
@@ -31,6 +32,18 @@ export default function Show({ warehouse }: { warehouse: { id: number; name?: st
                         <h2 className="text-2xl font-semibold mb-4">{warehouse.name}</h2>
 
                         <p className="text-gray-600">Warehouse ID: {warehouse.id}</p>
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <h3 className="font-semibold">Locations</h3>
+                                <ul className="list-disc pl-5 mt-2">
+                                    {warehouse.locations.length > 0 ? warehouse.locations.map((location: any) => (
+                                        <li key={location.id}>
+                                            {location.name} - <Link className='text-blue-500 hover:underline' href={route('location.show', location.id)}>View</Link>
+                                        </li>
+                                    )) : <li>No Location.</li>}
+                                </ul>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <Link href={`/warehouse/${warehouse.id}/edit`}>
                                 <Button variant="outline" className="cursor-pointer mt-4">
