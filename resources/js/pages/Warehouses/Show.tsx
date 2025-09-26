@@ -22,7 +22,6 @@ export default function Show({ warehouse }: { warehouse: { id: number; name?: st
             toast.success('Warehouse deleted successfuly')
         }
     }
-    console.log(warehouse)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${warehouse?.name}`} />
