@@ -46,7 +46,6 @@ class BatchController extends Controller
             Batch::create($batch);
         });
 
-
         return redirect()->route('batch.index')->with('success', 'Batch created successfully.');
     }
 
@@ -55,7 +54,8 @@ class BatchController extends Controller
      */
     public function show(Batch $batch)
     {
-        //
+        $batch->load(['product:id,name', 'supplier:id,name']);
+        return Inertia::render('Batches/Show', ['batch' => $batch]);
     }
 
     /**
@@ -63,7 +63,12 @@ class BatchController extends Controller
      */
     public function edit(Batch $batch)
     {
-        //
+        $batch->load('product', 'supplier');
+        return Inertia::render('Batches/Edit', [
+            'product' => $batch->product,
+            'batch' => $batch,
+            'supplier' => $batch->supplier
+        ]);
     }
 
     /**
@@ -71,7 +76,11 @@ class BatchController extends Controller
      */
     public function update(UpdateBatchRequest $request, Batch $batch)
     {
-        //
+        DB::transaction(function () use ($request, $batch) {
+            $validated = $request->validated();
+            $batch->update($validated);
+        });
+        return redirect()->route('batch.show', $batch->id)->with('success', 'Batch Updated Successfuly');
     }
 
     /**
