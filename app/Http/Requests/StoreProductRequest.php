@@ -23,16 +23,19 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name' => ['required'],
-            'sku' => ['nullable', 'string'],
-            'unit' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
+            'sku' => ['required', 'string'],
+            'unit' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['required', 'boolean'],
+            'product_type_id' => ['required', 'exists:product_types,id'],
+            'with_begin_stock' => ['required', 'boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'is_active' => ['nullable', 'boolean'],
-            'with_begin_stock' => ['nullable', 'boolean'],
-            // 'location_id' => ['required_if:with_begin_stock,true', 'exists:locations,id'],
-            // 'quantity' => ['required_if:with_begin_stock,true', 'numeric', 'min:0'],
-            // 'stockUnit' => ['required_if:with_begin_stock,true', 'string'],
+            'brand_name' => ['nullable', 'string'],
+            'scientific_name' => ['nullable', 'string'],
+            'supplier_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:suppliers,id'],
+            'location_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:locations,id'],
+            'quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
+            'minimum_quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
         ];
     }
 }
