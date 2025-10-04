@@ -118,7 +118,12 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load('suppliers:id,name');
-        return Inertia::render('Products/Show', ['product' => $product]);
+        $product->load('stocks');;
+        $totalStock = $product->getAllStockQty();
+        return Inertia::render('Products/Show', [
+            'product' => $product,
+            'total_stock_qty' => $totalStock
+        ]);
     }
 
     /**
