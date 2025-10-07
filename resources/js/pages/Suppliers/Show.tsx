@@ -1,21 +1,42 @@
+import ContainerLayout from '@/components/container-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Phone, PhoneIcon } from 'lucide-react';
+import { ExternalLink, Mail, MapPin, Package, Phone, PhoneIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function Show({ supplier }: {
-    supplier: {
-        id: number;
+
+interface Product {
+    id?: number;
+    name?: string;
+    sku?: string;
+    unit?: string;
+    categories?: {
         name?: string;
-        phone_number?: string;
-        email?: string;
-        contact_person?: string;
-        address?: string;
-        notes?: string;
-        products?: any;
+        slug?: string;
+    };
+    status?: string;
+    pivot?: {
+        price?: number;
     }
+}
+interface Supplier {
+    id: number;
+    name?: string;
+    phone_number?: string;
+    email?: string;
+    contact_person?: string;
+    address?: string;
+    notes?: string;
+}
+export default function Show({ supplier, products, totalProducts }: {
+    supplier: Supplier,
+    products: Product[],
+    totalProducts: number,
 }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -34,62 +55,138 @@ export default function Show({ supplier }: {
             toast.success('Supplier deleted successfuly')
         }
     }
+
+    const getStockBadge = (status: string) => {
+        const colors = {
+            "available": "bg-green-100 text-green-800",
+            "out_of_stock": 'bg-red-100 text-red-800',
+        }
+
+        return colors[status as keyof typeof colors] || colors["available"];
+    }
+    const formatPrice = (amount: number) => {
+        return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(amount);
+    }
+    const total_stock_qty = 0;
+    const stockStatus = total_stock_qty > 0 ? "available" : "out_of_stock";
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${supplier?.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <div className="p-4">
-                        <h2 className="text-2xl font-semibold mb-4">{supplier.name}</h2>
-
-                        <p className="text-gray-600">Supplier ID: {supplier.id}</p>
-
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <h3 className="font-semibold">Contact Details</h3>
-                                <ul className='list-disc pl-5 mt-2'>
-                                    <li>Contact Person: {supplier.contact_person}</li>
-                                    <li>Tel: {supplier.phone_number}</li>
-                                    <li>Email: {supplier.email}</li>
-                                </ul>
+            <ContainerLayout>
+                <div>
+                    {/* <h2 className="text-3xl font-semibold mb-2.5">{supplier.name}</h2>
+                    <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+                    <div className="grid grid-cols-2 gap-4 mt-4"></div> */}
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-start justify-between">
+                                <CardTitle>
+                                    <h2 className="text-3xl font-semibold mb-2.5">{supplier.name}</h2>
+                                </CardTitle>
+                                <Badge variant={"secondary"} className='text-base px-4 py-2'>
+                                    <Package className="mr-2 h-4 w-4" />
+                                    {totalProducts.toString()}
+                                </Badge>
                             </div>
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <h3 className="font-semibold">Notes</h3>
-                                <div className="mt-2">
-                                    <p>{supplier.notes}</p>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <div className="flex items-start gap-3">
+                                    <Mail className='h-5 w-5 text-primary mt-0.5' />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground mb-1">Email</p>
+                                        <a href={supplier.email ? `mailto:${supplier.email}` : "#"} className="text-foreground hover:text-primary transition-colors">
+                                            {supplier.email ?? "-"}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Phone className='h-5 w-5 text-primary mt-0.5' />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground mb-1">Phone</p>
+                                        <a href={supplier.phone_number ? `tel:${supplier.email}` : "#"} className="text-foreground hover:text-primary transition-colors">
+                                            {supplier.phone_number ?? "-"}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <MapPin className='h-5 w-5 text-primary mt-0.5' />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground mb-1">Address</p>
+                                        <p className="text-foreground">
+                                            {supplier.address ?? "-"}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <h3 className="font-semibold">Products</h3>
-                                <ul className="list-disc pl-5 mt-2">
-                                    {supplier.products.length > 0 ? supplier.products.map((product: any) => (
-                                        <li key={product.id}>
-                                            <Link href={route('products.show', product.id)}>
-                                                {product.name}
-                                            </Link>
-                                        </li>
-                                    )) : (
-                                        <li>No Product Found</li>
-                                    )}
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <Link href={`/supplier/${supplier.id}/edit`}>
-                                <Button variant="outline" className="cursor-pointer mt-4">
-                                    Edit Supplier
-                                </Button>
-                            </Link>
-                            <div>
-                                <h3 className='text-md font-semibold'>Danger Zone</h3>
-                                <Button variant="destructive" className="cursor-pointer mt-4" size={"sm"} onClick={() => deleteSupplier(supplier.id)}>
-                                    Delete
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
-            </div>
+                <div>
+                    {/* Products Table */}
+                    <Card>
+                        <CardHeader >
+                            <CardTitle>Products from {supplier.name}</CardTitle>
+                            <CardDescription>View and manage all products supplied by this vendor</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="h-14">
+                                            <TableHead>Product Name</TableHead>
+                                            <TableHead>SKU</TableHead>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead className="text-right">Price</TableHead>
+                                            <TableHead className="text-right">Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {products ? products?.map((product) => (
+                                            <TableRow key={product.id} className="h-16">
+                                                <TableCell>
+                                                    {product.name}
+                                                </TableCell>
+                                                <TableCell className="">{product.sku}</TableCell>
+                                                <TableCell>
+                                                    <Link href={route('products.index', {
+                                                        category: product.categories?.slug
+                                                    })}>
+                                                        <Badge variant="outline">{product.categories?.name}</Badge>
+                                                    </Link>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {(product.pivot?.price ? formatPrice(product.pivot.price) : 0)} / {product.unit}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Badge variant={'secondary'} className={getStockBadge(stockStatus)}>
+                                                        {stockStatus === "available" ? "Available" : "Out Of Stock"}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className='text-right'>
+                                                    <Link href={route('products.show', product.id)}>
+                                                        <Button variant={'ghost'} size={'sm'} className='hover:cursor-pointer'>
+                                                            View
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </Button>
+                                                    </Link>
+                                                </TableCell>
+                                            </TableRow>
+                                        )) :
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="h-24 text-center">
+                                                    No Results.
+                                                </TableCell>
+                                            </TableRow>
+                                        }
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </ContainerLayout>
         </AppLayout>
     );
 }

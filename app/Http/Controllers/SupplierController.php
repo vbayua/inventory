@@ -43,9 +43,13 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        $supplier->load('products');
+        $supplier->load(['products.categories']);
+        $products = $supplier->products;
+        $totalProducts = $products->count();
         return Inertia::render('Suppliers/Show', [
-            'supplier' => $supplier
+            'supplier' => $supplier,
+            'products' => $products,
+            'totalProducts' => $totalProducts
         ]);
     }
 
