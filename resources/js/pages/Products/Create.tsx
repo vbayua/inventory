@@ -115,7 +115,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
         scientific_name: '',
         is_active: true,
     })
-    const createProduct: FormEventHandler = (e) => {
+    const createProductHandler: FormEventHandler = (e) => {
         e.preventDefault()
         if (data.category_id === 'none') setData('category_id', null);
         if (data.supplier_id === 'none') setData('supplier_id', null);
@@ -127,20 +127,13 @@ export default function Create({ categories, suppliers, units, product_types, wa
                 reset()
             },
             onError: (errors) => {
-                if (errors.name) {
-                    reset('sku', 'unit', 'price', 'category_id', 'supplier_id', 'with_begin_stock', 'quantity', 'minimum_quantity', 'location_id', 'status', 'product_type_id', 'brand_name', 'scientific_name');
-                    setData('with_begin_stock', false);
-                    toast.error(errors.name)
-                    productName.current?.focus()
-                }
+                console.log(errors);
+                // reset()
+                setData('with_begin_stock', false);
+                toast.error(String(errors));
             }
         })
     }
-    const brandNameIsChecked = !!data.brand_name;
-    const productIsRawMaterial = data.product_type_id && product_types.find(type => type.id?.toString() === data.product_type_id)?.name?.toLowerCase() === 'raw material';
-    const supplierIdIsNotNone = data.supplier_id && data.supplier_id !== 'none';
-    const filteredLocations = locations.filter(location => location.warehouse_id === (data.warehouse_id ? Number(data.warehouse_id) : undefined));
-    // console.log('Filtered locations:', filteredLocations);
 
     const generateSku = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault()
@@ -155,6 +148,12 @@ export default function Create({ categories, suppliers, units, product_types, wa
         }
     }
 
+    const brandNameIsChecked = !!data.brand_name;
+    const productIsRawMaterial = data.product_type_id && product_types.find(type => type.id?.toString() === data.product_type_id)?.name?.toLowerCase() === 'raw material';
+    const supplierIdIsNotNone = data.supplier_id && data.supplier_id !== 'none';
+    const filteredLocations = locations.filter(location => location.warehouse_id === (data.warehouse_id ? Number(data.warehouse_id) : undefined));
+
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Product" />
@@ -166,7 +165,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
                     </Link>
                 </div>
 
-                <form onSubmit={createProduct} className="space-y-6">
+                <form onSubmit={createProductHandler} className="space-y-6">
                     <div className="grid gap-2">
                         <Label htmlFor='product_type'>Product Type <span className='text-red-500'>*</span></Label>
                         <Select
@@ -271,43 +270,6 @@ export default function Create({ categories, suppliers, units, product_types, wa
                             <InputError message={errors.unit} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor='price'>Price</Label>
-                            <Input
-                                id='price'
-                                ref={productPrice}
-                                type='number'
-                                min={0}
-                                value={data.price}
-                                onChange={(e) => setData('price', Number(e.target.value))}
-                                className='mt-1 block w-full'
-                            />
-                            <InputError message={errors.price} />
-                        </div>
-                    </div>
-
-                    <div className='grid md:grid-cols-2 gap-2'>
-                        <div className="grid gap-2">
-                            <Label htmlFor='supplier'>Supplier</Label>
-                            <Select
-                                onValueChange={(value) => setData('supplier_id', String(value))}
-                                value={String(data.supplier_id)}
-                                defaultValue={String(data.supplier_id)}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select a supplier" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {suppliers.map((supplier) => (
-                                        <SelectItem key={supplier.id} value={String(supplier.id)}>
-                                            {supplier.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.supplier_id} />
-                        </div>
-                        <div className="grid gap-2">
                             <Label htmlFor='category'>Category</Label>
                             <Select
                                 onValueChange={(value) => setData('category_id', String(value))}
@@ -329,6 +291,7 @@ export default function Create({ categories, suppliers, units, product_types, wa
                             <InputError message={errors.category_id} />
                         </div>
                     </div>
+
                     <Separator className='my-4' />
                     <div className='flex items-center gap-4'>
                         <Label htmlFor=''>Options :</Label>
@@ -379,6 +342,27 @@ export default function Create({ categories, suppliers, units, product_types, wa
                         <>
                             <div className={`grid gap-2 ${filteredLocations.length > 0 ? 'md:grid-cols-2' : ''}`}>
                                 <div className="grid gap-2">
+                                    <Label htmlFor='supplier'>Supplier</Label>
+                                    <Select
+                                        onValueChange={(value) => setData('supplier_id', (String(value) === 'none' ? '' : String(value)))}
+                                        value={String(data.supplier_id)}
+                                        defaultValue={String(data.supplier_id)}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select a supplier" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">None</SelectItem>
+                                            {suppliers.map((supplier) => (
+                                                <SelectItem key={supplier.id} value={String(supplier.id)}>
+                                                    {supplier.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.supplier_id} />
+                                </div>
+                                <div className="grid gap-2">
                                     <Label htmlFor='warehouse_id'>Warehouse</Label>
                                     <Select
                                         onValueChange={(value) => {
@@ -422,6 +406,19 @@ export default function Create({ categories, suppliers, units, product_types, wa
                                         <InputError message={errors.location_id} />
                                     </div>
                                 )}
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor='price'>Price Per Unit</Label>
+                                <Input
+                                    id='price'
+                                    ref={productPrice}
+                                    type='number'
+                                    min={0}
+                                    value={data.price}
+                                    onChange={(e) => setData('price', Number(e.target.value))}
+                                    className='mt-1 block w-full'
+                                />
+                                <InputError message={errors.price} />
                             </div>
                             <div className='grid md:grid-cols-2 gap-4 md:gap-2'>
                                 <div className="grid gap-2">
