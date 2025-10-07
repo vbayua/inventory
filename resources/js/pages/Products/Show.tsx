@@ -13,6 +13,9 @@ import { toast } from 'sonner';
 interface Supplier {
     id?: string;
     name?: string;
+    pivot?: {
+        price?: string;
+    };
 }
 interface Product {
     id: number;
@@ -22,9 +25,8 @@ interface Product {
     sku: string;
     unit: string;
     price: number;
-    suppliers: Supplier[];
 }
-export default function Show({ product, total_stock_qty }: { product: Product; total_stock_qty: number; }) {
+export default function Show({ product, suppliers, total_stock_qty }: { product: Product; suppliers: Supplier[]; total_stock_qty: number; }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Product',
@@ -58,7 +60,6 @@ export default function Show({ product, total_stock_qty }: { product: Product; t
 
         return colors[status as keyof typeof colors] || colors["available"];
     }
-
     const stockStatus = total_stock_qty > 0 ? "available" : "out_of_stock";
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -66,7 +67,7 @@ export default function Show({ product, total_stock_qty }: { product: Product; t
             <ContainerLayout>
                 <div className="p-4">
                     <h2 className="text-3xl font-semibold mb-2.5">{product.name}</h2>
-                    <p className="text-foreground">SKU: {product.sku}</p>
+                    <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                     <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         <Card>
@@ -121,13 +122,15 @@ export default function Show({ product, total_stock_qty }: { product: Product; t
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead className='font-semibold'>Supplier Name</TableHead>
+                                            <TableHead>Price</TableHead>
                                             <TableHead className='text-right'>Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {product.suppliers.length > 0 ? product.suppliers.map((supplier: any) => (
+                                        {suppliers.length > 0 ? suppliers.map((supplier: any) => (
                                             <TableRow key={supplier.id}>
                                                 <TableCell className="font-medium text-md">{supplier.name}</TableCell>
+                                                <TableCell>{supplier.pivot.price ?? "-"}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Link href={route('supplier.show', supplier.id)}>
                                                         <Button variant={'ghost'} size={'sm'} className='hover:cursor-pointer'>
