@@ -2,16 +2,48 @@ import ContainerLayout from '@/components/container-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+    Item,
+    ItemActions,
+    ItemContent,
+    ItemDescription,
+    ItemMedia,
+    ItemTitle,
+} from "@/components/ui/item"
+import { cn } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { ExternalLink, Mail, MapPin, Package, Phone, PhoneIcon } from 'lucide-react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { ChevronsUpDown, ExternalLink, Mail, MapPin, Package, Phone, Plus, X } from 'lucide-react';
+import { FormEventHandler, useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { toast } from 'sonner';
 
-
-interface Product {
-    id?: number;
+type Product = {
+    id: number;
     name?: string;
     sku?: string;
     unit?: string;
@@ -24,7 +56,13 @@ interface Product {
         price?: number;
     }
 }
-interface Supplier {
+
+type ProductMin = {
+    id: number;
+    name?: string;
+    sku?: string;
+}
+type Supplier = {
     id: number;
     name?: string;
     phone_number?: string;
@@ -33,11 +71,32 @@ interface Supplier {
     address?: string;
     notes?: string;
 }
+
+type ProductForm = {
+    product_ids?: number[]
+}
+
 export default function Show({ supplier, products, totalProducts }: {
     supplier: Supplier,
     products: Product[],
     totalProducts: number,
 }) {
+
+    const { allProducts } = usePage().props as { allProducts?: Array<ProductMin> }
+    const [isDialogOpen, setDialogOpen] = useState(false)
+    const [isPopoverOpen, setPopoverOpen] = useState(false)
+    const [selectedProducts, setSelectedProducts] = useState<ProductMin[]>([])
+
+    useEffect(() => {
+        if (isDialogOpen && !allProducts) {
+            router.reload({ only: ['allProducts'] })
+        }
+    }, [isDialogOpen, allProducts]);
+
+    // useEffect(() => {
+    //     router.reload()
+    // })
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Suppliers',
@@ -49,11 +108,48 @@ export default function Show({ supplier, products, totalProducts }: {
         }
     ];
 
-    const deleteSupplier = (id: number) => {
-        if (confirm('are you sure?')) {
-            router.delete(route('supplier.destroy', { id }))
-            toast.success('Supplier deleted successfuly')
-        }
+    const handleOpenForm = (e: MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        const openState = isDialogOpen;
+        setDialogOpen(!openState)
+    }
+
+    const { data, setData, put, reset, processing, errors } = useForm<ProductForm>({
+        product_ids: []
+    })
+
+    const availableProducts = useMemo(() => {
+        const selectedIds = new Set(selectedProducts.map((p) => p.id))
+        return allProducts?.filter((p) => !selectedIds.has(p.id))
+    }, [selectedProducts, allProducts])
+
+    const handleSelectProduct = (product: ProductMin) => {
+        const newSelected = [...selectedProducts, product]
+        setSelectedProducts(newSelected)
+        setData('product_ids', newSelected.map((product) => product.id))
+    }
+
+    const handleRemoveProduct = (productId: number) => {
+        const newSelected = selectedProducts.filter((p) => p.id !== productId)
+        setSelectedProducts(newSelected)
+        setData('product_ids', newSelected.map((product) => product.id))
+    }
+
+    const clearSelectedProducts = () => {
+        setSelectedProducts([])
+        setData('product_ids', [])
+    }
+
+    const handleSubmitProducts = (e: MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault()
+        put(route('supplier.assign-products', supplier.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setDialogOpen(false)
+                clearSelectedProducts()
+            },
+            onError: (errors) => console.log(errors),
+        })
     }
 
     const getStockBadge = (status: string) => {
@@ -64,9 +160,11 @@ export default function Show({ supplier, products, totalProducts }: {
 
         return colors[status as keyof typeof colors] || colors["available"];
     }
+
     const formatPrice = (amount: number) => {
         return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(amount);
     }
+
     const total_stock_qty = 0;
     const stockStatus = total_stock_qty > 0 ? "available" : "out_of_stock";
     return (
@@ -104,7 +202,7 @@ export default function Show({ supplier, products, totalProducts }: {
                                     <Phone className='h-5 w-5 text-primary mt-0.5' />
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">Phone</p>
-                                        <a href={supplier.phone_number ? `tel:${supplier.email}` : "#"} className="text-foreground hover:text-primary transition-colors">
+                                        <a href={supplier.phone_number ? `tel:${supplier.phone_number}` : "#"} className="text-foreground hover:text-primary transition-colors">
                                             {supplier.phone_number ?? "-"}
                                         </a>
                                     </div>
@@ -125,9 +223,113 @@ export default function Show({ supplier, products, totalProducts }: {
                 <div>
                     {/* Products Table */}
                     <Card>
-                        <CardHeader >
-                            <CardTitle>Products from {supplier.name}</CardTitle>
-                            <CardDescription>View and manage all products supplied by this vendor</CardDescription>
+                        <CardHeader className='grid grid-cols-2 gap-4 mt-4'>
+                            <div className="">
+                                <CardTitle>Products from {supplier.name}</CardTitle>
+                                <CardDescription>View and manage all products supplied by this vendor</CardDescription>
+                            </div>
+                            <div
+                                data-slot="card-action"
+                                className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
+
+                                {/* PRODUCT FORM DIALOG */}
+                                <Dialog onOpenChange={setDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant={'default'} size={'sm'} className='hover:cursor-pointer'>
+                                            Assign Product
+                                            <Plus className="h-3 w-3" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-fitpy-12">
+                                        <DialogHeader>
+                                            <DialogTitle>Add Products</DialogTitle>
+                                            <DialogDescription>
+                                                {supplier.name}.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4">
+                                            <div className="flex w-full flex-col gap-4 [--radius:1rem]">
+                                                <div className="max-h-64 overflow-y-auto">
+                                                    {selectedProducts?.map(product => (
+                                                        <Item key={product.id} variant="muted" size={'sm'} className='p-1'>
+                                                            <ItemContent>
+                                                                <ItemTitle>{product.sku} - {product.name}</ItemTitle>
+                                                            </ItemContent>
+                                                            <ItemActions>
+                                                                <Button
+                                                                    onClick={() => handleRemoveProduct(product.id)}
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 hover:bg-red-500"
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </ItemActions>
+                                                        </Item>
+                                                    ))}
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Item variant={'default'} size={'default'} className='p-0'>
+                                                        <ItemContent>
+                                                            <Popover open={isPopoverOpen} onOpenChange={setPopoverOpen}>
+                                                                <PopoverTrigger asChild>
+                                                                    <Button
+                                                                        variant={'secondary'}
+                                                                        role="combobox"
+                                                                        aria-expanded={isPopoverOpen}
+                                                                        className='text-start'
+                                                                    >
+                                                                        Add Product
+                                                                        <Plus className='w-4 h-4' />
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent align='start' className='p-0' side='bottom' >
+                                                                    <Command>
+                                                                        <CommandInput placeholder='Search product' />
+                                                                        <CommandList>
+                                                                            <CommandEmpty>No product found.</CommandEmpty>
+                                                                            <CommandGroup>
+                                                                                {availableProducts?.map((product) => (
+                                                                                    <CommandItem
+                                                                                        key={product.id}
+                                                                                        onSelect={() => {
+                                                                                            handleSelectProduct(product)
+                                                                                            setPopoverOpen(false)
+                                                                                        }}
+                                                                                        className='hover:bg-primary'
+                                                                                    >
+                                                                                        {product.name}<span className='text-xs text-gray-500 ml-2'>({product.sku})</span>
+                                                                                    </CommandItem>
+                                                                                ))}
+                                                                            </CommandGroup>
+                                                                        </CommandList>
+                                                                    </Command>
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                        </ItemContent>
+                                                    </Item>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <DialogFooter className='sm:justify-between'>
+                                            <div>
+                                                {selectedProducts.length !== 0 && (
+                                                    <Button variant={'destructive'} onClick={clearSelectedProducts}>Clear All</Button>
+
+                                                )}
+                                            </div>
+                                            <div className='grid gap-2 grid-cols-2'>
+                                                <DialogClose asChild>
+                                                    <Button variant="outline" onClick={clearSelectedProducts}>Cancel</Button>
+                                                </DialogClose>
+                                                <Button onClick={handleSubmitProducts} disabled={processing}>Save changes</Button>
+                                            </div>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="rounded-md border">
