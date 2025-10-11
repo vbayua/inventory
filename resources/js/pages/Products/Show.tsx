@@ -1,10 +1,32 @@
+import ContainerLayout from '@/components/container-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { Currency, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function Show({ product }: { product: { id: number; name?: string, suppliers: any } }) {
+
+interface Supplier {
+    id?: string;
+    name?: string;
+    pivot?: {
+        price?: string;
+    };
+}
+interface Product {
+    id: number;
+    name: string;
+    brand_name?: string;
+    scientific_name?: string;
+    sku: string;
+    unit: string;
+    price: number;
+}
+export default function Show({ product, suppliers, total_stock_qty }: { product: Product; suppliers: Supplier[]; total_stock_qty: number; }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Product',
@@ -29,51 +51,110 @@ export default function Show({ product }: { product: { id: number; name?: string
             });
         }
     };
+
+    const getStockBadge = (status: string) => {
+        const colors = {
+            "available": "bg-green-100 text-green-800",
+            "out_of_stock": 'bg-red-100 text-red-800',
+        }
+
+        return colors[status as keyof typeof colors] || colors["available"];
+    }
+    const stockStatus = total_stock_qty > 0 ? "available" : "out_of_stock";
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${product?.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <div className="p-4">
-                        <h2 className="text-2xl font-semibold mb-4">{product.name}</h2>
-                        <p className="text-gray-600">product ID: {product.id}</p>
-                        <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
-                            <h3 className="font-semibold font-lg">Suppliers</h3>
-                            <ul className='list-disc pl-5 mt-2'>
-                                {product.suppliers.length > 0 ? product.suppliers.map((supplier: any) => (
-                                    <li key={supplier.id}>
-                                        <Link href={route('supplier.show', supplier.id)}>
-                                            {supplier.name}
-                                        </Link>
-                                    </li>
-                                )) :
-                                    (
-                                        <li>No Supplier Found</li>
-                                    )}
-                            </ul>
-                        </div>
-                        <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
-                            <h3 className='font-semibold font-lg'>Actions</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <h3 className='text-md'>Edit</h3>
-                                    <Link href={`/products/${product.id}/edit`}>
-                                        <Button variant="outline" className="cursor-pointer mt-4">
-                                            Edit Product
+            <ContainerLayout>
+                <div className="p-4">
+                    <h2 className="text-3xl font-semibold mb-2.5">{product.name}</h2>
+                    <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                    <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                        <Card>
+                            <CardHeader className="grid grid-cols-2">
+                                <CardTitle className="text-lg font-semibold">
+                                    Stock
+                                </CardTitle>
+                                <div
+                                    data-slot="card-action"
+                                    className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
+                                    <Link href={route('stocks.index')}>
+                                        <Button variant={'ghost'} size={'sm'} className='hover:cursor-pointer'>
+                                            View
+                                            <ExternalLink className="h-3 w-3" />
                                         </Button>
                                     </Link>
                                 </div>
-                                <div>
-                                    <h3 className='text-md'>Danger Zone</h3>
-                                    <Button variant="destructive" className="cursor-pointer mt-4" size={"sm"} onClick={() => deleteProduct(product.id)}>
-                                        Delete
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="text-2xl font-medium text-foreground">
+                                    {total_stock_qty.toString()}
+                                </h3>
+                            </CardContent>
+                            <CardFooter className='space-x-2'>
+                                <span className='text-sm text-foreground text-light'>Status:</span>
+                                <Badge variant={'secondary'} className={getStockBadge(stockStatus)}>
+                                    {stockStatus === "available" ? "Available" : "Out Of Stock"}
+                                </Badge>
+                            </CardFooter>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-lg font-semibold">
+                                    Unit
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="text-2xl font-medium text-foreground">
+                                    {product.unit}
+                                </h3>
+                            </CardContent>
+                        </Card>
                     </div>
+                    <Card className='mt-8'>
+                        <CardHeader>
+                            <CardTitle className='text-xl'>Supplier</CardTitle>
+                            <CardDescription>A list of {product.name} suppliers.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className='font-semibold'>Supplier Name</TableHead>
+                                            <TableHead>Price</TableHead>
+                                            <TableHead className='text-right'>Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {suppliers.length > 0 ? suppliers.map((supplier: any) => (
+                                            <TableRow key={supplier.id}>
+                                                <TableCell className="font-medium text-md">{supplier.name}</TableCell>
+                                                <TableCell>{supplier.pivot.price ?? "-"}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Link href={route('supplier.show', supplier.id)}>
+                                                        <Button variant={'ghost'} size={'sm'} className='hover:cursor-pointer'>
+                                                            View
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </Button>
+                                                    </Link>
+                                                </TableCell>
+                                            </TableRow>
+                                        )) :
+                                            (
+                                                <TableRow>
+                                                    <TableCell colSpan={2} className="h-24 text-center">
+                                                        No Results.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
-            </div>
+            </ContainerLayout>
         </AppLayout>
     );
 }

@@ -62,9 +62,7 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
 
@@ -75,17 +73,11 @@ class ProductController extends Controller
         ]);
 
 
-        $product = $request->validate([
-            'name' => ['required'],
-            'sku' => ['nullable', 'string'],
-            'unit' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'is_active' => ['required', 'boolean'],
-            'product_type_id' => ['required', 'exists:product_types,id'],
-            'brand_name' => ['nullable', 'string'],
-            'scientific_name' => ['nullable', 'string'],
+        $product = $request->safe()->except([
+            'supplier_id',
+            'location_id',
+            'quantity',
+            'minimum_quantity'
         ]);
 
         DB::beginTransaction();
@@ -93,12 +85,12 @@ class ProductController extends Controller
         $newProduct = new Product($product);
         $newProduct->save();
         if ($request->with_begin_stock) {
-            $stockData = $request->validate(
+            $stockData = $request->safe()->only(
                 [
-                    'supplier_id' => ['required', 'exists:suppliers,id'],
-                    'location_id' => ['required', 'exists:locations,id'],
-                    'quantity' => ['required', 'numeric', 'min:0'],
-                    'minimum_quantity' => ['required', 'numeric', 'min:0'],
+                    'supplier_id',
+                    'location_id',
+                    'quantity',
+                    'minimum_quantity'
                 ]
             );
 
@@ -107,12 +99,13 @@ class ProductController extends Controller
                 DB::rollback();
                 throw new \Exception("Failed to create stock");
             }
+            // If with_begin_stock is true and stock is created then attach the product to the supplier.
+            $newProduct->suppliers()->attach($request->supplier_id, [
+                'price' => $request->price,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
-        $newProduct->suppliers()->attach($request->supplier_id, [
-            'price' => $request->price,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
         DB::commit();
         Cache::forget('products_index');
         return redirect()->route('products.index')
@@ -124,8 +117,17 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load('suppliers:id,name');
-        return Inertia::render('Products/Show', ['product' => $product]);
+        $product->load('suppliers');
+        $product->load('stocks');
+
+        $totalStock = $product->getAllStockQty();
+        $suppliers = $product->suppliers;
+        // Product
+        return Inertia::render('Products/Show', [
+            'product' => $product,
+            'suppliers' => $suppliers,
+            'total_stock_qty' => $totalStock
+        ]);
     }
 
     /**

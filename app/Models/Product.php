@@ -78,4 +78,11 @@ class Product extends Model
     {
         return $this->unit ? $this->unit->base_unit : null;
     }
+
+    public function getAllStockQty()
+    {
+        return $this->relationLoaded('stocks')
+            ? (int) $this->stocks->sum('quantity')
+            : (int) $this->stocks()->sum('quantity');
+    }
 }
