@@ -89,11 +89,9 @@ export default function Create({ stocks, products, locations, batches, units, qu
         : [];
 
     const currentStock = stocks.find(stock =>
+        stock.product_id && selectedProduct?.id &&
         stock.batch_id === selectedBatch?.id &&
-        (
-            !data.location ||
-            stock.location_id === parseInt(data.location)
-        )
+        stock.location_id === parseInt(data.location)
     );
 
     const stockQuantity = currentStock?.quantity ?? 0;
@@ -349,7 +347,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Available stock: {stockQuantity} {stockUnit}
+                                            {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
@@ -418,7 +416,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Stock: {stockQuantity} {productUnit?.name || 'units'}
+                                            {currentStock && (`In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`)}
                                         </p>
                                     )}
                                 </div>
