@@ -19,5 +19,5 @@ interface BatchPolicyInterface
      * @param Product $product
      * @return string
      */
-    public function generateBatchNumber(Product $product, string $proposedNumber): string;
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null): string;
 }
