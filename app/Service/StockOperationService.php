@@ -28,9 +28,20 @@ class StockOperationService
     {
         // dd($product->id, $product, $stockData);
         return DB::transaction(function () use ($product, $stockData) {;
+            $supplierId = $stockData['supplier_id'] ?? null;
+
             $batchId = isset($stockData['batch_id'])
-                ? $this->batchService->determineBatch($product, $stockData['batch_id'], supplierId: (int) $stockData['supplier_id'])
-                : $this->batchService->determineBatch($product, supplierId: (int) $stockData['supplier_id']);
+                ? $this->batchService->determineBatch(
+                    $product,
+                    $stockData['batch_id'],
+                    operationType: 'inbound',
+                    supplierId: $supplierId
+                )
+                : $this->batchService->determineBatch(
+                    $product,
+                    operationType: 'inbound',
+                    supplierId: $supplierId
+                );
 
             if ($batchId) {
                 $stockData['batch_id'] = $batchId;
@@ -183,7 +194,29 @@ class StockOperationService
 
 
     // Helper methods
-    private function createOperation(string $type, Product|int $product, Stock|array $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null)
+
+    /**
+     * Create and persist a new Operation record inside a database transaction.
+     *
+     * Resolves the product (accepts a Product model instance or its integer ID) and unit
+     * (accepts a Unit model instance or its string name), then creates an Operation
+     * referencing the specified location and (optionally) batch from the provided stock
+     * data array or Stock-like structure. The operation date defaults to the current
+     * timestamp when not explicitly supplied.
+     *
+     * @param string                 $type           The type/category of the operation (e.g., 'ISSUE', 'ADJUSTMENT', 'RECEIPT').
+     * @param Product|int            $product        Product model instance or its primary key.
+     * @param Stock|array            $stockData      Stock instance or associative array containing at least 'location_id' and optionally 'batch_id'.
+     * @param float                  $usageQuantity  The quantity involved in the operation (stored as given; no unit conversion performed here).
+     * @param Unit|string            $unit           Unit model instance or its name string used for the operation record.
+     * @param string                 $remarks        Free-form remarks or notes (empty string if null/omitted).
+     * @param \DateTimeInterface|string|null $operationDate Explicit operation date/time; if null, current time is used.
+     *
+     * @return Operation The newly created Operation model instance.
+     *
+     * @throws \Throwable If the database transaction fails.
+     */
+    private function createOperation(string $type, Product|int $product, Stock|array $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null): Operation
     {
         return DB::transaction(function () use ($type, $product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $productId = $product instanceof Product ? $product->id : $product;
