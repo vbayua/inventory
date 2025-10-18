@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -94,17 +95,20 @@ class ProductController extends Controller
                 ]
             );
 
-            $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
-            if (!$stock) {
-                DB::rollback();
-                throw new \Exception("Failed to create stock");
-            }
             // If with_begin_stock is true and stock is created then attach the product to the supplier.
             $newProduct->suppliers()->attach($request->supplier_id, [
                 'price' => $request->price,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
+            if (!$stock) {
+                DB::rollback();
+                throw ValidationException::withMessages([
+                    'stock' => 'Failed to create stock'
+                ]);
+            }
         }
         DB::commit();
         Cache::forget('products_index');
