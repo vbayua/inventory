@@ -54,21 +54,6 @@ class Batch extends Model
 
     protected static function booted(): void
     {
-        // static::updating(function (Batch $batch) {
-        //     $batch->old_batch_number = (string) $batch->batch_number;
-        // });
-
-        // static::saved(function (Batch $batch) {
-        //     $current = (string) $batch->batch_number;
-
-        //     Cache::forget("batch:{$current}");
-
-        //     // If renamed, forget the old key
-        //     if (!empty($batch->old_batch_number) && $batch->old_batch_number !== $current) {
-        //         Cache::forget("batch:{$batch->old_batch_number}");
-        //     }
-        // });
-
         static::deleted(function (Batch $batch) {
             $current = (string) $batch->batch_number;
             Cache::forget("batch:{$current}");
