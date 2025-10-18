@@ -26,6 +26,7 @@ class PerishableBatchPolicy implements BatchPolicyInterface
         $counter = 1;
 
         while (Batch::where('batch_number', $newNumber)->exists()) {
+
             $newNumber = $base . '-' . $counter;
             $counter++;
         }
