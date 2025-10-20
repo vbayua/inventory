@@ -28,22 +28,19 @@ class BatchController extends Controller
     public function create()
     {
         return Inertia::render('Batches/Create', [
-            'products' => \App\Models\Product::select('id', 'name', 'sku')->get(),
+            'products' => \App\Models\Product::select('id', 'name', 'sku')->with('suppliers')->get(),
+            'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBatchRequest $request, BatchAssignmentService $batchAssigmentService)
+    public function store(StoreBatchRequest $request, BatchAssignmentService $batchAssignmentService)
     {
-        DB::transaction(function () use ($request, $batchAssigmentService) {
+        DB::transaction(function () use ($request, $batchAssignmentService) {
             $batch = $request->validated();
-            $batch['batch_number'] = $batchAssigmentService->generateBatchNumber(
-                $batch['product_id'],
-                $batch['batch_number']
-            );
-            Batch::create($batch);
+            $batchAssignmentService->determineBatch($batch['product_id'], supplierId: $batch['supplier_id']);
         });
 
         return redirect()->route('batch.index')->with('success', 'Batch created successfully.');

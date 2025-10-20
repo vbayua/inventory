@@ -74,13 +74,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
         }
         return acc;
     }, []);
-    // const products = stocks.reduce((acc, stock) => {
-    //     if (!uniqueProductIds.has(stock.product.id)) {
-    //         uniqueProductIds.add(stock.product.id);
-    //         acc.push(stock.product);
-    //     }
-    //     return acc;
-    // }, []);
+
 
     // Product selection
     const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
@@ -95,16 +89,13 @@ export default function Create({ stocks, products, locations, batches, units, qu
         : [];
 
     const currentStock = stocks.find(stock =>
+        stock.product_id && selectedProduct?.id &&
         stock.batch_id === selectedBatch?.id &&
-        (
-            !data.location ||
-            stock.location_id === parseInt(data.location)
-        )
+        stock.location_id === parseInt(data.location)
     );
 
-
-    const stockQuantity = currentStock ? currentStock.quantity : 0;
-    const stockUnit = currentStock ? currentStock.unit : 'units';
+    const stockQuantity = currentStock?.quantity ?? 0;
+    const stockUnit = currentStock?.unit ?? 'units';
 
     // Filter unit have the same base_unit as the selected product
     const productUnit = selectedProduct?.unit;
@@ -112,10 +103,19 @@ export default function Create({ stocks, products, locations, batches, units, qu
         units.filter((unit) => unit.base_unit === productUnit?.base_unit) :
         units;
 
-    const filteredLocations = selectedProduct ?
-        locations.filter((location) => location.id === currentStock?.location_id) :
-        [];
+    const filteredLocations = selectedProduct && selectedBatch
+        ? locations.filter((location: Location) =>
+            stocks.some( // for some stocks that are...
+                (stock: any) =>
+                    stock.batch_id === selectedBatch.id &&
+                    stock.product_id === selectedProduct.id &&
+                    stock.location_id === location.id &&
+                    stock.quantity > 0
+            )
+        )
+        : [];
 
+    // console.log(filteredLocations)
 
     const createOperation: FormEventHandler = (e) => {
         e.preventDefault();
@@ -347,7 +347,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Available stock: {stockQuantity} {stockUnit}
+                                            {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
@@ -416,7 +416,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Stock: {stockQuantity} {productUnit?.name || 'units'}
+                                            {currentStock && (`In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`)}
                                         </p>
                                     )}
                                 </div>

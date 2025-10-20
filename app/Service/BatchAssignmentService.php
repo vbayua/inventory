@@ -32,37 +32,57 @@ class BatchAssignmentService
         return app($policyClass);
     }
 
+    /**
+     * Determines the appropriate batch ID for a given product and operation context.
+     *
+     * This method selects or creates a batch for a product based on the operation type,
+     * requested batch, supplier association, and batch assignment policy. It handles
+     * inbound, initial, and other operation types, and ensures supplier validity when required.
+     * If a new batch is needed, it generates a batch number and expiry date according to policy.
+     *
+     * @param Product|int $product The product instance or product ID.
+     * @param int|null $requestedBatchId Optional. The specific batch ID requested for the operation.
+     * @param string $operationType Optional. The type of operation ('inbound', 'initial', etc.). Defaults to 'inbound'.
+     * @param string|null $operationDate Optional. The date of the operation. Defaults to current date/time if not provided.
+     * @param int|null $supplierId Optional. The supplier ID to associate with the batch, if applicable.
+     * @return int|null The determined batch ID, or null if no suitable batch is found.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the product is not found.
+     * @throws \Illuminate\Validation\ValidationException If the supplier is not associated with the product.
+     */
     public function determineBatch(Product|int $product,  ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null, ?int $supplierId = null): ?int
     {
         $productId = $product instanceof Product ? $product->id : (int) $product;
         $product = Product::with(['productType', 'batches', 'operations'])->findOrFail($productId);
-        // dd($supplierId);
-
-        if ($operationType === 'initial' && $supplierId) {
-            $validSupplier = DB::table('products_suppliers')->where('product_id', $product->id)->where('supplier_id', $supplierId)
-                ->exists();
-
-            if (!$validSupplier) {
-                throw ValidationException::withMessages([
-                    'supplier_id' => 'Supplier is not associated with this product.'
-                ]);
-            }
-        }
+        $supplierExists = $supplierId ? DB::table('products_suppliers')
+            ->where('product_id', $product->id)
+            ->where('supplier_id', $supplierId)
+            ->exists()
+            : false;
 
         $policy = $this->resolvePolicy($product);
 
-        if ($operationType !== 'inbound' || $requestedBatchId) {
+        if ($operationType === 'inbound' && !$supplierExists && !$requestedBatchId) {
+            throw ValidationException::withMessages([
+                'supplier_id' => 'Supplier is not associated with this product.'
+            ]);
+        }
+
+        if ($requestedBatchId) {
             return $policy->determineBatch($product, $requestedBatchId);
         }
 
+        // Check product interval setting for batch
         $interval = (int) ($product->productType->batch_interval_days ?? 0);
         $operationDate = $operationDate ? \Carbon\Carbon::parse($operationDate) : now();
 
+        // Search last received batch
         $lastInbound = $product->operations()
             ->where('operation_type', 'inbound')
             ->latest('operation_date')
             ->first();
 
+        // If there is interval in the last received stock, check the interval.
         if ($lastInbound && $lastInbound->batch_id && $interval > 0) {
             $diff = $lastInbound->operation_date->diffInDays($operationDate);
             if ($diff < $interval) {
@@ -73,7 +93,7 @@ class BatchAssignmentService
 
         $proposedNumber = $product->sku;
         // $proposedNumber = ($product->productType->type_code ?? 'DEFAULT') . '-' . $product->sku;
-        $batchNumber = $policy->generateBatchNumber($product, $proposedNumber);
+        $batchNumber = $policy->generateBatchNumber($product, $proposedNumber, $supplierId);
         $expiryDate = $product->productType->defaultExpiryDate();
 
         if ($expiryDate) {
@@ -86,8 +106,6 @@ class BatchAssignmentService
             'expiry_date' => $expiryDate ?? null,
             'supplier_id' => $supplierId
         ]);
-
-        // dd($newBatch);
 
         return $policy->determineBatch($product, $newBatch->id);
     }

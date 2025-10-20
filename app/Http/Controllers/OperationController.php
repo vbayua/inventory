@@ -70,7 +70,7 @@ class OperationController extends Controller
             'adjustmentType' => 'required|in:addition,subtraction',
             'product' => 'required|exists:products,id',
             'location' => 'required|exists:locations,id',
-            'batch' => 'nullable|exists:batches,id',
+            'batch' => 'required|exists:batches,id',
             'quantity' => 'required|numeric|min:0',
             'unit' => 'required|exists:units,name',
             'date' => 'required|date',

@@ -6,6 +6,8 @@ use Inertia\Inertia;
 use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
+use App\Models\Product;
+use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
@@ -43,9 +45,21 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        $supplier->load('products');
+        $supplier->load(['products.categories']);
+        $productsFromSupplier = $supplier->products;
+        $totalProducts = $productsFromSupplier->count();
+        $relatedProductIds = $productsFromSupplier->pluck('id')->all();
+
         return Inertia::render('Suppliers/Show', [
-            'supplier' => $supplier
+            'supplier' => $supplier,
+            'products' => $productsFromSupplier,
+            'totalProducts' => $totalProducts,
+            'allProducts' => Inertia::lazy(
+                fn() => Product::select('id', 'name', 'sku')
+                    ->whereNotIn('id', $relatedProductIds)
+                    ->orderBy('name')
+                    ->get()
+            ),
         ]);
     }
 
@@ -60,6 +74,20 @@ class SupplierController extends Controller
                 'name' => $supplier->name
             ],
         ]);
+    }
+
+    public function assignProduct(Request $request, Supplier $supplier)
+    {
+        $request->validate([
+            'product_ids' => 'required|array',
+            'product_ids.*' => 'exists:products,id', // Make sure every product ID is valid
+        ]);
+
+        $productIds = $request->input('product_ids');
+
+        $supplier->products()->syncWithoutDetaching($productIds);
+
+        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added to' . $supplier->name);
     }
 
     /**
