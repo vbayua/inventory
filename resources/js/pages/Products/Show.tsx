@@ -78,12 +78,12 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
                                 <div
                                     data-slot="card-action"
                                     className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
-                                    <Link href={route('stocks.index')}>
-                                        <Button variant={'ghost'} size={'sm'} className='hover:cursor-pointer'>
+                                    <Button variant={'ghost'} size={'sm'} asChild>
+                                        <Link href={route('stocks.index')}>
                                             View
                                             <ExternalLink className="h-3 w-3" />
-                                        </Button>
-                                    </Link>
+                                        </Link>
+                                    </Button>
                                 </div>
                             </CardHeader>
                             <CardContent>
