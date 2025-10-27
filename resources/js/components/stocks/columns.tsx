@@ -7,40 +7,54 @@ import { toast } from 'sonner'
 import { DataTableColumnHeader } from '../data-table-column-header'
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu'
 
-interface StockIndex {
+type ProductType = {
     id: number;
-    product?: {
-        id: number;
-        name?: string;
-        sku?: string;
-        [key: string]: any;
-    };
-    location?: {
-        id: number;
-        name?: string;
-        warehouse?: {
-            id: number;
-            name?: string;
-            [key: string]: any;
-        };
-        [key: string]: any;
-    };
-    batch?: {
-        id: number;
-        batch_number?: string;
-        supplier?: {
-            id: number;
-            name?: string;
-        } | null;
-        [key: string]: any;
-    };
+    name?: string;
+    type_code?: string;
+}
+
+type Supplier = {
+    id: number;
+    name?: string;
+}
+
+type Product = {
+    id: number;
+    name?: string;
+    sku?: string;
+    product_type?: ProductType;
+}
+
+type Batch = {
+    id: number;
+    batch_number?: string;
+    supplier?: Supplier;
+}
+
+type Warehouse = {
+    id: number;
+    name?: string;
+}
+
+type Location = {
+    id: number;
+    name?: string;
+    warehouse?: Warehouse;
+}
+
+type Stock = {
+    id: number;
+    product?: Product;
+    location?: Location;
+    batch?: Batch;
     status?: string;
-    unit?: string;
     quantity?: number;
+    unit?: string;
     minimum_quantity?: number;
     created_at?: string;
     updated_at?: string;
 }
+
 const handleCopyBatchNumber = (batchNumber: string) => {
     return function () {
         navigator.clipboard.writeText(batchNumber)
@@ -72,29 +86,29 @@ const handleCreateOperation = (id: number, product_name: any) => {
 }
 
 const statusConfig = {
-    available: {
+    "available": {
         label: 'Available',
         color: 'bg-green-100 text-green-800',
         variant: 'default' as const,
     },
-    low_stock: {
+    "low_stock": {
         label: 'Low Stock',
         color: 'bg-yellow-100 text-yellow-800',
         variant: 'secondary' as const,
     },
-    out_of_stock: {
+    "out_of_stock": {
         label: 'Out of Stock',
         color: 'bg-red-100 text-red-800',
         variant: 'destructive' as const,
     },
-    reserved: {
+    "reserved": {
         label: 'Reserved',
         color: 'bg-blue-100 text-blue-800',
         variant: 'outline' as const,
     }
 }
 
-export const columns: ColumnDef<StockIndex>[] = [
+export const columns: ColumnDef<Stock>[] = [
     {
         id: "batch_number",
         accessorKey: "Batch Number",
@@ -115,6 +129,16 @@ export const columns: ColumnDef<StockIndex>[] = [
             filterVariant: 'select',
         },
         cell: ({ row }) => row.original.product?.name ?? '-',
+    },
+    {
+        id: "product_type",
+        accessorKey: "Product Type",
+        accessorFn: row => row.product?.product_type?.type_code,
+        header: "Product Type",
+        meta: {
+            filterVariant: 'select',
+        },
+        cell: ({ row }) => row.original.product?.product_type?.type_code ?? '-',
     },
     {
         id: 'supplier_name',
@@ -168,7 +192,8 @@ export const columns: ColumnDef<StockIndex>[] = [
     },
     {
         id: "status",
-        accessorKey: "Status",
+        accessorKey: "status",
+        accessorFn: row => row.status,
         header: "Status",
         cell: ({ row }) => {
             const status = row.original.status;

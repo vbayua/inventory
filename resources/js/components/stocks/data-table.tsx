@@ -36,18 +36,29 @@ interface DataTableProps<TData, TValue> {
     clientSide?: boolean
 }
 
-
 export function DataTable<TData, TValue>({
     columns,
     data,
     links,
     clientSide = false
 }: DataTableProps<TData, TValue>) {
+    const checkQuery = () => {
+        if (typeof window === "undefined") return []
+        const params = new URLSearchParams(window.location.search)
+        const productId = params.get("product_id")
+        return productId ? [{ id: "product_id", value: productId }] : []
+    }
+    //console.log(checkQuery());
     const [sorting, setSorting] = React.useState<SortingState>([])
-    const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([])
+    const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([
+        // product_type: { equals: "" }
+
+    ])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
         warehouse_name: false,
+        location_name: false,
         minimum_qty: false,
+        updated_at: false,
     })
 
     const table = useReactTable({

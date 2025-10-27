@@ -14,7 +14,15 @@ class StockController extends Controller
     public function index()
     {
         // Check parameter for filtering stocks by status
-        $stocks = Stock::with(['product', 'location.warehouse', 'batch.supplier'])->get();
+        // $stocks = Stock::with(['product:id,name,sku.productType:id,name,type_code', 'location:id,name.warehouse:id,name', 'batch:id,batch_number.supplier:id,name'])->get();
+        $stocks = Stock::with([
+            'product:id,name,sku,product_type_id',
+            'product.productType:id,name,type_code',
+            'location:id,name,warehouse_id',
+            'location.warehouse:id,name',
+            'batch:id,batch_number,supplier_id',
+            'batch.supplier:id,name',
+        ])->get();
         return Inertia('Stocks/Index', [
             'stocks' => $stocks,
             'stats' => [

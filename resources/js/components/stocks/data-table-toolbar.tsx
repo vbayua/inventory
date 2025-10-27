@@ -10,6 +10,7 @@ import { Calendar } from "../ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { DateRange } from "react-day-picker"
+import { stat } from "fs"
 
 interface Options {
     label: string
@@ -44,6 +45,18 @@ export function DataTableToolbar<TData>({
         ...productColumn, // Assuming warehouse names are similar to location names
     ];
 
+    const productTypeColumn = table.getColumn("product_type")
+        ? Array.from(table.getColumn("product_type")!.getFacetedUniqueValues().keys()).map((value: string) => ({
+            label: value,
+            value: value,
+        }))
+        : [];
+
+    const productTypes: Options[] = [
+        { label: "All", value: "" },
+        ...productTypeColumn,
+    ];
+
     const status: Options[] = [
         { label: "All", value: "" },
         { label: "Available", value: "available" },
@@ -61,18 +74,16 @@ export function DataTableToolbar<TData>({
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
                 <Input
-                    placeholder="Search batch e.g. BATCH-1234"
-                    value={(table.getColumn("batch_number")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("batch_number")?.setFilterValue(event.target.value)
-                    }
+                    placeholder="Search batch or product"
+                    value={(table.getState().globalFilter as string) ?? ""}
+                    onChange={(event) => table.setGlobalFilter(event.target.value)}
                     className="h-8 w-[150px] lg:w-[250px]"
                 />
-                {table.getColumn("product_name") && (
+                {table.getColumn("product_type") && (
                     <DataTableFacetedFilter
-                        column={table.getColumn("product_name")}
-                        title="Product"
-                        options={products}
+                        column={table.getColumn("product_type")}
+                        title="Product Type"
+                        options={productTypes}
                     />
                 )}
                 {table.getColumn("status") && (
@@ -96,7 +107,7 @@ export function DataTableToolbar<TData>({
                                 {dateRange?.from ? (
                                     dateRange.to ? (
                                         <>
-                                            {format(dateRange.from, "LLL dd, y")} - {" "}
+                                            {format(dateRange.from, "LLL dd, y")} -{" "}
                                             {format(dateRange.to, "LLL dd, y")}
                                         </>
                                     ) : (
@@ -121,7 +132,10 @@ export function DataTableToolbar<TData>({
                 {isFiltered && (
                     <Button
                         variant="ghost"
-                        onClick={handleReset}
+                        onClick={() => {
+                            handleReset()
+                            table.resetGlobalFilter()
+                        }}
                         className="h-8 px-2 lg:px-3"
                     >
                         Reset
