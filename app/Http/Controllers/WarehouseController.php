@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Warehouse;
 use App\Http\Requests\StoreWarehouseRequest;
 use App\Http\Requests\UpdateWarehouseRequest;
+use Illuminate\Support\Facades\Cache;
 
 class WarehouseController extends Controller
 {
@@ -13,21 +14,12 @@ class WarehouseController extends Controller
      */
     public function index()
     {
-        $filters = request()->only(['name']);
-        $warehouses = Warehouse::orderBy('created_at', 'desc')->filter($filters)
-            ->paginate(10)
-            ->appends($filters)
-            ->withQueryString()
-            ->through(fn($warehouse) => [
-                'id' => $warehouse->id,
-                'name' => $warehouse->name,
-                'created_at' => $warehouse->created_at->diffForHumans(),
-                'updated_at' => $warehouse->updated_at->diffForHumans(),
-            ]);
+        $warehouses = Cache::remember('warehouses_index', 3600, function () {
+            return Warehouse::with('locations')->orderBy('created_at', 'desc')->get();
+        });
 
         return Inertia('Warehouses/Index', [
             'warehouses' => $warehouses,
-            'name' => request()->name,
         ]);
     }
 
@@ -46,7 +38,7 @@ class WarehouseController extends Controller
     {
         $validated = $request->validated();
         Warehouse::create($validated);
-
+        Cache::forget('warehouses_index'); // Clear cache after creating a new warehouse
         return redirect()->route('warehouse.index')->with('success', 'Warehouse created successfully.');
     }
 
@@ -56,8 +48,10 @@ class WarehouseController extends Controller
     public function show(Warehouse $warehouse)
     {
         $warehouse->load('locations');
+        $stocks = $warehouse->stocks->count();
         return inertia('Warehouses/Show', [
-            'warehouse' => $warehouse
+            'warehouse' => $warehouse,
+            'stockCount' => $stocks
         ]);
     }
 
@@ -79,7 +73,7 @@ class WarehouseController extends Controller
         // dd($request);
         $validated = $request->validated();
         $warehouse->update($validated);
-
+        Cache::forget('warehouses_index'); // Clear cache after updating a warehouse
         return redirect()->route('warehouse.show', $warehouse->id)
             ->with('success', 'Warehouse updated successfully.');
     }

@@ -31,11 +31,11 @@ export function DataTableToolbar<TData>({
             : [];
 
     const operationType = [
-        { label: "All", value: "" },
-        { label: "Add Stock", value: "inbound" },
-        { label: "Remove Stock", value: "outbound" },
-        { label: "Transfer Stock", value: "transfer_stock" },
-        { label: "Adjust Stock", value: "adjust_stock" },
+        { label: "Initial", value: "initial" },
+        { label: "Inbound", value: "inbound" },
+        { label: "Oubound", value: "outbound" },
+        { label: "Transfer", value: "transfer" },
+        { label: "Adjustment", value: "adjustment" },
     ]
     const productFacetedFilter: Options[] = [
         { label: "All", value: "" },

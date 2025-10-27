@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavItem, type MainNavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar, MapPin } from 'lucide-react';
+import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar, MapPin, BuildingIcon, CheckCheck, FileCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NavMainSingle } from './nav-main-single';
 
@@ -17,48 +17,41 @@ const mainNavItems: NavItem[] = [
 
 ];
 
-const productNavItems: MainNavItem[] = [
+const productNavItems: NavItem[] = [
     {
-        title: 'Products',
+        title: 'Product Master',
+        href: '/products',
         icon: Box,
-        subItems: [
-            {
-                title: 'Product Master',
-                href: '/products',
-                icon: Box,
-            },
-
-            {
-                title: 'Categories',
-                href: '/categories',
-                icon: Boxes,
-            },
-            {
-                title: 'Unit',
-                href: '/units',
-                icon: Cog,
-            },
-        ]
     },
-]
 
-const warehouseNavItems: MainNavItem[] = [
+    {
+        title: 'Categories',
+        href: '/categories',
+        icon: Boxes,
+    },
+    {
+        title: 'Unit',
+        href: '/units',
+        icon: Cog,
+    },
+    {
+        title: 'Product Types',
+        href: '/product-types',
+        icon: Box
+    }
+];
+
+const warehouseNavItems: NavItem[] = [
     {
         title: 'Warehouse',
-        icon: Building,
-        subItems: [
-            {
-                title: 'Warehouse',
-                href: '/warehouse',
-                icon: Building2,
-            },
-            {
-                title: 'Location',
-                href: '/location',
-                icon: MapPin,
-            },
-        ]
-    }
+        href: '/warehouse',
+        icon: Building2,
+    },
+    {
+        title: 'Location',
+        href: '/location',
+        icon: MapPin,
+    },
 ]
 
 const stockNavItems: NavItem[] = [
@@ -76,6 +69,14 @@ const stockNavItems: NavItem[] = [
         title: 'Operations',
         href: '/operations',
         icon: Cog,
+    },
+]
+
+const supplierNavItem: NavItem[] = [
+    {
+        title: 'Suppliers',
+        href: '/suppliers',
+        icon: BuildingIcon
     },
 ]
 const footerNavItems: NavItem[] = [
@@ -108,8 +109,9 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMainSingle items={mainNavItems} group='Menu' />
-                <NavMain items={warehouseNavItems} groupTitle="Warehouse" />
-                <NavMain items={productNavItems} groupTitle="Product" />
+                <NavMainSingle items={warehouseNavItems} group="Warehouse" />
+                <NavMainSingle items={supplierNavItem} group='Supplier & Vendor' />
+                <NavMainSingle items={productNavItems} group="Product" />
                 <NavMainSingle items={stockNavItems} group='Stock' />
             </SidebarContent>
 

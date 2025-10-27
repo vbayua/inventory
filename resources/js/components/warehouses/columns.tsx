@@ -16,14 +16,46 @@ type WarehouseIndex = {
 export const columns: ColumnDef<WarehouseIndex>[] = [
     {
         accessorKey: "name",
-        header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Warehouse Name"
-                />
-            )
+        header: "Warehouse Name",
+    },
+    {
+        accessorKey: "created_at",
+        cell: ({ row }) => {
+            const createdAt = new Date(row.original.created_at)
+            return createdAt.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            })
         },
+        enableSorting: true,
+        enableHiding: true,
+        sortingFn: 'datetime',
+        header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Created At" />
+        ),
+    },
+    {
+        accessorKey: "updated_at",
+        cell: ({ row }) => {
+            const updatedAt = new Date(row.original.updated_at)
+            return updatedAt.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            })
+        },
+        enableSorting: true,
+        enableHiding: true,
+        sortingFn: 'datetime',
+        header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Updated At" />
+        ),
+        enableColumnFilter: false,
     },
     {
         id: "actions",
@@ -31,21 +63,6 @@ export const columns: ColumnDef<WarehouseIndex>[] = [
             const warehouse = row.original
             const viewWarehouse = route('warehouse.show', { id: warehouse.id })
             const editWarehouse = route('warehouse.edit', { id: warehouse.id })
-            const deleteProduct = () => {
-                if (confirm('Are you sure you want to delete this warehouse?')) {
-                    router.delete(route('warehouse.destroy', { id: warehouse.id }), {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            toast.success('Warehouse deleted successfully')
-                        },
-                        onError: (errors) => {
-                            if (errors.name) {
-                                toast.error(errors.name)
-                            }
-                        }
-                    })
-                }
-            }
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

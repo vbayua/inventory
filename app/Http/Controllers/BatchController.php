@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Batch;
 use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
+use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -27,33 +28,20 @@ class BatchController extends Controller
     public function create()
     {
         return Inertia::render('Batches/Create', [
-            'products' => \App\Models\Product::select('id', 'name', 'sku')->get(),
+            'products' => \App\Models\Product::select('id', 'name', 'sku')->with('suppliers')->get(),
+            'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBatchRequest $request)
+    public function store(StoreBatchRequest $request, BatchAssignmentService $batchAssignmentService)
     {
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $batchAssignmentService) {
             $batch = $request->validated();
-            // $product = \App\Models\Product::findOrFail($batch['product_id']);
-
-            $originalBatchNumber = $batch['batch_number'];
-            $newBatchNumber = $originalBatchNumber;
-            $counter = 1;
-
-            while (Batch::where('batch_number', $newBatchNumber)->exists()) {
-                $newBatchNumber = $originalBatchNumber . $counter;
-                $counter++;
-            }
-
-            $batch['batch_number'] = $newBatchNumber;
-
-            Batch::create($batch);
+            $batchAssignmentService->determineBatch($batch['product_id'], supplierId: $batch['supplier_id']);
         });
-
 
         return redirect()->route('batch.index')->with('success', 'Batch created successfully.');
     }
@@ -63,7 +51,8 @@ class BatchController extends Controller
      */
     public function show(Batch $batch)
     {
-        //
+        $batch->load(['product:id,name', 'supplier:id,name']);
+        return Inertia::render('Batches/Show', ['batch' => $batch]);
     }
 
     /**
@@ -71,7 +60,12 @@ class BatchController extends Controller
      */
     public function edit(Batch $batch)
     {
-        //
+        $batch->load('product', 'supplier');
+        return Inertia::render('Batches/Edit', [
+            'product' => $batch->product,
+            'batch' => $batch,
+            'supplier' => $batch->supplier
+        ]);
     }
 
     /**
@@ -79,7 +73,11 @@ class BatchController extends Controller
      */
     public function update(UpdateBatchRequest $request, Batch $batch)
     {
-        //
+        DB::transaction(function () use ($request, $batch) {
+            $validated = $request->validated();
+            $batch->update($validated);
+        });
+        return redirect()->route('batch.show', $batch->id)->with('success', 'Batch Updated Successfuly');
     }
 
     /**

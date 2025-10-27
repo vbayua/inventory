@@ -27,11 +27,7 @@ import {
 import { PaginationIndex } from "../ui/pagination-index"
 import { DataTableViewOptions } from "../data-table-view-options"
 import { DataTablePagination } from "../data-table-pagination"
-import { Input } from "../ui/input"
 import { DataTableToolbar } from "./data-table-toolbar"
-// import { DataTablePagination } from "../data-table-pagination"
-// import { Input } from "../ui/input"
-
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -40,16 +36,30 @@ interface DataTableProps<TData, TValue> {
     clientSide?: boolean
 }
 
-
 export function DataTable<TData, TValue>({
     columns,
     data,
     links,
     clientSide = false
 }: DataTableProps<TData, TValue>) {
+    const checkQuery = () => {
+        if (typeof window === "undefined") return []
+        const params = new URLSearchParams(window.location.search)
+        const productId = params.get("product_id")
+        return productId ? [{ id: "product_id", value: productId }] : []
+    }
+    //console.log(checkQuery());
     const [sorting, setSorting] = React.useState<SortingState>([])
-    const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([])
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+    const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([
+        // product_type: { equals: "" }
+
+    ])
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+        warehouse_name: false,
+        location_name: false,
+        minimum_qty: false,
+        updated_at: false,
+    })
 
     const table = useReactTable({
         data,

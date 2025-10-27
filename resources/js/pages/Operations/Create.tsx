@@ -33,6 +33,7 @@ type OperationForm = {
     date?: string; // Optional date field,
     unit: string;
     operationType: string;
+    adjustmentType: string;
     remarks: string;
 }
 
@@ -46,31 +47,37 @@ type Location = {
     name: string;
 }
 
+interface OperationFormQuery {
+    [key: string]: any
+}
 
-export default function Create({ stocks, locations, batches, units }: { stocks: any[], locations: any[], batches: any[], units: any[] }) {
+export default function Create({ stocks, products, locations, batches, units, query }: { stocks: any[], products: any[], locations: any[], batches: any[], units: any[], query: OperationFormQuery }) {
+    const checkQuery = query.product_id ? String(query.product_id) : '';
     const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
-        product: '',
+        product: checkQuery,
         batch: '',
         quantity: 0,
         location: '',
         date: '',
         unit: '',
         operationType: 'outbound',
+        adjustmentType: 'addition',
         remarks: '',
     });
 
     // Ensure products are unique by ID only
     const uniqueProductIds = new Set();
-    const products = stocks.reduce((acc, stock) => {
-        if (!uniqueProductIds.has(stock.product.id)) {
-            uniqueProductIds.add(stock.product.id);
-            acc.push(stock.product);
+    const productList = products.reduce((acc, item) => {
+        if (!uniqueProductIds.has(item.id)) {
+            uniqueProductIds.add(item.id);
+            acc.push(item);
         }
         return acc;
     }, []);
 
+
     // Product selection
-    const selectedProduct = products.find((product: any) => product.id.toString() === data.product);
+    const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
     const selectedBatch = batches.find(batch => batch.id.toString() === data.batch);
 
     // Batch filtering based on selected product
@@ -82,16 +89,13 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
         : [];
 
     const currentStock = stocks.find(stock =>
+        stock.product_id && selectedProduct?.id &&
         stock.batch_id === selectedBatch?.id &&
-        (
-            !data.location ||
-            stock.location_id === parseInt(data.location)
-        )
+        stock.location_id === parseInt(data.location)
     );
 
-
-    const stockQuantity = currentStock ? currentStock.quantity : 0;
-    const stockUnit = currentStock ? currentStock.unit : 'units';
+    const stockQuantity = currentStock?.quantity ?? 0;
+    const stockUnit = currentStock?.unit ?? 'units';
 
     // Filter unit have the same base_unit as the selected product
     const productUnit = selectedProduct?.unit;
@@ -99,14 +103,23 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
         units.filter((unit) => unit.base_unit === productUnit?.base_unit) :
         units;
 
-    const filteredLocations = selectedProduct ?
-        locations.filter((location) => location.id === currentStock?.location_id) :
-        [];
+    const filteredLocations = selectedProduct && selectedBatch
+        ? locations.filter((location: Location) =>
+            stocks.some( // for some stocks that are...
+                (stock: any) =>
+                    stock.batch_id === selectedBatch.id &&
+                    stock.product_id === selectedProduct.id &&
+                    stock.location_id === location.id &&
+                    stock.quantity > 0
+            )
+        )
+        : [];
 
+    // console.log(filteredLocations)
 
     const createOperation: FormEventHandler = (e) => {
         e.preventDefault();
-
+        console.log("Creating operation with data:", data);
         post('/operations', {
             onSuccess: () => {
                 reset()
@@ -131,7 +144,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                         </Label>
                         <Select onValueChange={(value) => {
                             setData('operationType', value);
-                            setData('product', '');
+                            // setData('product', '');
                             setData('batch', '');
                             setData('location', '');
                             setData('quantity', 0);
@@ -144,20 +157,49 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectItem value="outbound">
-                                        Usage Operation
+                                        Usage Stock
                                     </SelectItem>
                                     <SelectItem value="inbound" >
-                                        Receive Operation
+                                        Receive Stock
+                                    </SelectItem>
+                                    <SelectItem value="adjustment" >
+                                        Adjust Stock
                                     </SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
                     </div>
+                    {data.operationType === 'adjustment' && (
+                        <div className="mb-6">
+                            <Label className="block mb-4">
+                                Adjustment Type
+                            </Label>
+                            <Select onValueChange={(value) => {
+                                setData('adjustmentType', value);
+                                setData('product', '');
+                                setData('batch', '');
+                                setData('location', '');
+                                setData('quantity', 0);
+                                setData('date', '');
+                                setData('remarks', '');
+                            }} value={data.adjustmentType}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Adjustment Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="addition">Addition</SelectItem>
+                                        <SelectItem value="subtraction">Subtraction</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className={"col-span-1"}>
                             <Label className="block mb-2">
-                                Product
+                                Product Name
                             </Label>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -175,7 +217,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                                         <CommandList>
                                             <CommandEmpty>No products found</CommandEmpty>
                                             <CommandGroup>
-                                                {products.map((product: any) => (
+                                                {productList.map((product: any) => (
                                                     <CommandItem
                                                         key={product.id}
                                                         value={product.id.toString()}
@@ -204,30 +246,43 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
                         <div>
                             <Label className="block mb-2">
-                                Batches
+                                Batch
                             </Label>
-                            <Select onValueChange={(value) => {
-                                setData('batch', value);
-                                setData('location', '');
-                            }} value={data.batch}
-                                disabled={!filteredBatches.length}>
-                                <SelectTrigger className={cn("w-full", errors.batch && "border-red-500 text-muted-foreground")}>
-                                    <SelectValue placeholder="Select a batch" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {filteredBatches.length > 0 ? (
-                                            filteredBatches.map((batch: Batch) => (
-                                                <SelectItem key={batch.id} value={batch.id.toString()}>
-                                                    {batch.batch_number}
-                                                </SelectItem>
-                                            ))
-                                        ) : (
-                                            <div className="px-2 py-2 text-muted-foreground">No batches available</div>
-                                        )}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className={cn("justify-between w-full", errors.batch && "border-red-500 text-muted-foreground")}>
+                                        {selectedBatch?.batch_number ?? "Select a batch"}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search batch..." />
+                                        <CommandList>
+                                            <CommandEmpty>No batch found</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredBatches.map((batch: any) => (
+                                                    <CommandItem
+                                                        key={batch.id}
+                                                        value={batch.id.toString()}
+                                                        onSelect={(value) => {
+                                                            setData('batch', value);
+                                                            setData('location', '');
+                                                        }}
+                                                        className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                    >
+                                                        <Check className={cn("mr-2 h-4 w-4", data.batch === batch.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                        {batch.batch_number}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         {data.operationType === 'outbound' && (
                             <>
@@ -292,7 +347,7 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Available stock: {stockQuantity} {stockUnit}
+                                            {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
@@ -338,12 +393,81 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
 
                                             min={1}
                                             step={0.01}
-                                            disabled={!selectedBatch}
+
                                         />
                                         <Select
                                             onValueChange={(value) => setData('unit', value)}
                                             value={data.unit}
-                                            disabled={!selectedBatch}
+
+                                        >
+                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
+                                                <SelectValue placeholder="Select unit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {filteredUnits.map((unit) => (
+                                                        <SelectItem key={unit.name} value={unit.name.toString()}>
+                                                            {unit.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    {selectedBatch && (
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            {currentStock && (`In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`)}
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {data.operationType === 'adjustment' && (
+                            <>
+                                <div>
+                                    <Label className="block mb-2">
+                                        Location
+                                    </Label>
+                                    <Select onValueChange={(value) => setData('location', value)} value={data.location}>
+                                        <SelectTrigger className={cn("w-full", errors.location && "border-red-500 text-muted-foreground")}>
+                                            <SelectValue placeholder="Select a location" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {locations.length > 0 ? (
+                                                    locations.map((location: Location) => (
+                                                        <SelectItem key={location.id} value={location.id.toString()}>
+                                                            {location.name}
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-2 py-2 text-muted-foreground">No locations available</div>
+                                                )}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label className="block mb-2">
+                                        Quantity
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={data.quantity}
+                                            onChange={(e) => setData('quantity', parseFloat(e.target.value))}
+                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            placeholder="Enter quantity"
+
+                                            min={1}
+                                            step={0.01}
+
+                                        />
+                                        <Select
+                                            onValueChange={(value) => setData('unit', value)}
+                                            value={data.unit}
+
                                         >
                                             <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
                                                 <SelectValue placeholder="Select unit" />
@@ -425,14 +549,36 @@ export default function Create({ stocks, locations, batches, units }: { stocks: 
                         </div>
 
                     </div>
-                    <Button
-                        variant="default"
-                        type="submit"
-                        className="w-full sm:w-auto"
-                        disabled={processing || !data.product || !data.batch || !data.location || !data.quantity || Number(data.quantity) <= 0}
-                    >
-                        {data.operationType === 'outbound' ? 'Create Usage Operation' : 'Create Receive Operation'}
-                    </Button>
+                    {data.operationType === 'outbound' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.batch || !data.location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            Create Usage Operation
+                        </Button>
+                    )}
+                    {data.operationType === 'inbound' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            Create Receive Operation
+                        </Button>
+                    )}
+                    {data.operationType === 'adjustment' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            Create Adjust Operation
+                        </Button>
+                    )}
                 </form>
 
             </div>

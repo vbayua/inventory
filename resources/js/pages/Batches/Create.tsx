@@ -26,20 +26,27 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/batches/create',
     },
 ];
-type CreateBatchForm = {
+interface CreateBatchForm {
     batch_number?: string,
     product_id?: number | string,
+    supplier_id?: number | string,
     manufacture_date?: Date | null,
     expiry_date?: Date | null,
 }
 
-type Product = { id: number, name: string, sku: string }
-export default function Create({ products }: { products: Product[] }) {
+interface Supplier {
+    id?: number,
+    name?: string,
+}
+
+type Product = { id: number, name: string, sku: string, suppliers: any }
+export default function Create({ products, suppliers }: { products: Product[], suppliers: Supplier[] }) {
 
     const batchNumber = useRef<HTMLInputElement>(null)
     const { data, setData, post, reset, processing, errors } = useForm<Required<CreateBatchForm>>({
         batch_number: '',
         product_id: '',
+        supplier_id: '',
         manufacture_date: null,
         expiry_date: null,
     })
@@ -70,6 +77,10 @@ export default function Create({ products }: { products: Product[] }) {
         setData('expiry_date', expiryDate);
     }
     const selectedProduct = products.find(p => p.id === data.product_id);
+    const selectedSupplier = suppliers.find((s) => s.id === data.supplier_id);
+
+    const filteredSupplier = data.product_id ? selectedProduct?.suppliers.map((s: Supplier) => s) : [];
+    console.log(filteredSupplier);
 
     const generateBatchNumber = (e: React.MouseEvent<HTMLButtonElement>, product?: Product) => {
         e.preventDefault();
@@ -79,8 +90,6 @@ export default function Create({ products }: { products: Product[] }) {
             setData('batch_number', `${formattedDate}${selectedProduct?.sku}`);
         }
     }
-
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -96,15 +105,15 @@ export default function Create({ products }: { products: Product[] }) {
                                 variant={"outline"}
                                 className={cn("w-full justify-between", errors.product_id && "border-red-500 text-muted-foreground")}
                             >
-                                {data.product_id ? products.find(p => p.id === data.product_id)?.name : <span className="text-muted-foreground">Select a product</span>}
+                                {data.product_id ? `${selectedProduct?.sku} ${selectedProduct?.name}` : <span className="text-muted-foreground">Select a product</span>}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="p-0">
+                        <PopoverContent align='end' className="p-1.5 sm:min-w-[425px]">
                             <Command>
                                 <CommandInput placeholder="Search products..." />
                                 <CommandList>
-                                    <CommandEmpty>No products found. <Link href='#' className='text-sky-800'>Create Product</Link> </CommandEmpty>
+                                    <CommandEmpty>No products found. <Link href={route('products.create')} className='text-sky-800'>Create Product</Link> </CommandEmpty>
                                     <CommandGroup>
                                         {products.map((product) => (
                                             <CommandItem
@@ -127,34 +136,45 @@ export default function Create({ products }: { products: Product[] }) {
                         <InputError message={errors.product_id} />
                     </Popover>
                 </div>
+                <div className='grid gap-2'>
+                    <Label htmlFor='supplier_id'>Supplier <span className='text-red-500'>*</span></Label>
 
-                <div className="grid gap-2">
-                    <Label htmlFor='name'>Batch Number <span className='text-red-500'>*</span></Label>
-                    <div className='flex flex-row items-center gap-1'>
-
-                        <Input
-                            id='batch_number'
-                            ref={batchNumber}
-                            value={data.batch_number}
-                            onChange={(e) => setData('batch_number', e.target.value)}
-                            className='mt-1 block w-full'
-                            placeholder='Batch Number'
-                            required
-                        />
-                        <Button
-                            type='button'
-                            className='mt-2'
-                            onClick={(e) => generateBatchNumber(e, selectedProduct)}
-                            disabled={!selectedProduct}
-                        >
-                            Generate Batch Number
-                        </Button>
-                    </div>
-
-                    <InputError message={errors.batch_number} />
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn("w-full justify-between", errors.supplier_id && "border-red-500 text-muted-foreground")}
+                            >
+                                {data.supplier_id ? `${selectedSupplier?.name}` : <span className="text-muted-foreground">Select supplier</span>}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0">
+                            <Command>
+                                <CommandInput placeholder="Search suppliers..." />
+                                <CommandList>
+                                    <CommandEmpty>No suppliers found. </CommandEmpty>
+                                    <CommandGroup>
+                                        {filteredSupplier.map((supplier: any) => (
+                                            <CommandItem
+                                                key={supplier.id}
+                                                onSelect={() => {
+                                                    setData('supplier_id', supplier.id);
+                                                    setData('batch_number', ''); // Reset batch number when supplier changes
+                                                    batchNumber.current?.focus();
+                                                }}
+                                                className='cursor-pointer select-none relative px-2 py-1.5 hover:bg-gray-100'
+                                            >
+                                                {supplier.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                        <InputError message={errors.supplier_id} />
+                    </Popover>
                 </div>
-
-
 
                 <div className="grid gap-2">
                     <Label className="block mb-2">

@@ -29,6 +29,7 @@ import { DataTablePagination } from "../data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
 // import { DataTableViewOptions } from "../data-table-view-options"
 import { Input } from "../ui/input"
+import { create } from "domain"
 // import { DataTablePagination } from "../data-table-pagination"
 
 
@@ -48,7 +49,9 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([])
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+        created_at: false,
+    })
 
     const table = useReactTable({
         data,
@@ -71,16 +74,8 @@ export function DataTable<TData, TValue>({
     return (
         <div>
             <div className="flex items-center py-4">
-                {/* <DataTableToolbar table={table} /> */}
-                <Input
-                    placeholder="Filter category name..."
-                    value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("name")?.setFilterValue(event.target.value)
-                    }
-                    className="h-8 w-[150px] lg:w-[250px]"
-                // className="max-w-sm"
-                />
+                <DataTableToolbar table={table} />
+
             </div>
             <div className="rounded-md border md:p-4 p-2">
                 <Table>

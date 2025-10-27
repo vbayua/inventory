@@ -64,19 +64,17 @@ class LocationController extends Controller
      */
     public function show(Location $location)
     {
+        $location->load([
+            'warehouse',
+            'stocks' => function ($q) {
+                $q->with([
+                    'product',
+                    'batch',
+                ]);
+            },
+        ]);
         return Inertia('Locations/Show', [
-            'location' => $location->load(['warehouse', 'stocks']),
-            'products' => $location->stocks->map(fn($stock) => [
-                'id' => $stock->product->id,
-                'name' => $stock->product->name,
-                'sku' => $stock->product->sku,
-                'quantity' => $stock->quantity,
-                'batch' => $stock->batch ? [
-                    'id' => $stock->batch->id,
-                    'number' => $stock->batch->number,
-                    'expiry_date' => $stock->batch->expiry_date,
-                ] : null,
-            ]),
+            'location' => $location,
         ]);
     }
 

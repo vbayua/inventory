@@ -1,12 +1,13 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { FormEventHandler, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
+import ContainerFormLayout from '@/components/container-form-layout';
 
 type Warehouse = {
     id?: number;
@@ -62,51 +63,64 @@ export default function Edit({ location, warehouses }: { location: Location, war
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Location" />
-            <form onSubmit={editLocation} className='space-y-6 mt-8 p-4'>
-                <div className="grid gap-2">
-                    <Label htmlFor='name'>Location Name</Label>
-
-                    <Input
-                        id='name'
-                        ref={locationName}
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        name='name'
-                        type='text'
-                        className='mt-1 block w-full'
-                        placeholder='Location Name'
-                    />
-
-                    <InputError message={errors.name} />
+            <ContainerFormLayout>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="">
+                        <h1 className="text-2xl font-bold mb-4">Edit Location</h1>
+                        <p className="text-sm text-muted-foreground mb-6">Edit the details of the location.</p>
+                    </div>
+                    <div className="">
+                        <Link className={buttonVariants({ variant: 'secondary' })} href={`/location/${location.id}`}>
+                            Back to Location
+                        </Link>
+                    </div>
                 </div>
+                <form onSubmit={editLocation} className='space-y-6'>
+                    <div className="grid gap-2">
+                        <Label htmlFor='name'>Location Name</Label>
 
-                <div className="grid gap-2">
-                    <Label htmlFor='warehouse'>Warehouse</Label>
-                    <Select
-                        onValueChange={(value) => setData('warehouse_id', Number(value))}
-                        value={String(data.warehouse_id)}
-                        defaultValue={String(data.warehouse_id)}
-                    >
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a warehouse" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Select a warehouse</SelectItem>
-                            {warehouses.map((warehouse) => (
-                                <SelectItem key={warehouse.id} value={String(warehouse.id)}>
-                                    {warehouse.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        <Input
+                            id='name'
+                            ref={locationName}
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            name='name'
+                            type='text'
+                            className='mt-1 block w-full'
+                            placeholder='Location Name'
+                        />
 
-                    <InputError message={errors.warehouse_id} />
-                </div>
+                        <InputError message={errors.name} />
+                    </div>
 
-                <div className="flex items-center gap-4">
-                    <Button disabled={processing} type='submit'>Edit Location</Button>
-                </div>
-            </form>
+                    <div className="grid gap-2">
+                        <Label htmlFor='warehouse'>Warehouse</Label>
+                        <Select
+                            onValueChange={(value) => setData('warehouse_id', Number(value))}
+                            value={String(data.warehouse_id)}
+                            defaultValue={String(data.warehouse_id)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select a warehouse" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">Select a warehouse</SelectItem>
+                                {warehouses.map((warehouse) => (
+                                    <SelectItem key={warehouse.id} value={String(warehouse.id)}>
+                                        {warehouse.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <InputError message={errors.warehouse_id} />
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Button disabled={processing} type='submit'>Edit Location</Button>
+                    </div>
+                </form>
+            </ContainerFormLayout>
         </AppLayout >
     );
 }

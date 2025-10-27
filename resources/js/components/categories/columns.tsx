@@ -21,7 +21,7 @@ export const columns: ColumnDef<CategoryIndex>[] = [
             return (
                 <DataTableColumnHeader
                     column={column}
-                    title="Category Name"
+                    title="Category"
                 />
             )
         },
@@ -43,7 +43,8 @@ export const columns: ColumnDef<CategoryIndex>[] = [
                 month: 'long',
                 day: 'numeric',
             })
-        }
+        },
+        enableHiding: true
     },
     {
         accessorKey: "updated_at",
@@ -51,7 +52,7 @@ export const columns: ColumnDef<CategoryIndex>[] = [
             return (
                 <DataTableColumnHeader
                     column={column}
-                    title="Updated At"
+                    title="Last Updated"
                 />
             )
         },

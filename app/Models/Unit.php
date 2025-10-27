@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Unit extends Model
 {
@@ -28,10 +29,29 @@ class Unit extends Model
         return $this->hasMany(Product::class, 'unit', 'name');
     }
 
-    public static function booted(): void
+    protected static function booted(): void
     {
         static::creating(function ($unit) {
             $unit->name = strtolower($unit->name);
+        });
+
+        // Capture original name before update to invalidate
+        static::updating(function (Unit $unit) {
+            $unit->old_name = strtolower((string) $unit->getOriginal('name'));
+        });
+
+        static::saved(function (Unit $unit) {
+            $current = strtolower($unit->name);
+            Cache::forget("unit:name:{$current}");
+
+            // If renamed, forget the old key
+            if (!empty($unit->old_name) && $unit->old_name !== $current) {
+                Cache::forget("unit:name:{$unit->old_name}");
+            }
+        });
+        static::deleted(function (Unit $unit) {
+            $current = strtolower($unit->name);
+            Cache::forget("unit:name:{$current}");
         });
     }
 }

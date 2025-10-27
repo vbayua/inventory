@@ -72,6 +72,7 @@ class DatabaseSeeder extends Seeder
             $product->productType()->associate($productTypes['0']); // Raw Material
             $product->brand_name = 'Brand ' . $product->name;
             $product->scientific_name = 'Scientific ' . $product->name;
+            $product->sku = 'RMP' . rand(1000, 9999); // Generate a random SKU
             $product->save();
 
             // Create a default batch for each product
@@ -96,6 +97,7 @@ class DatabaseSeeder extends Seeder
             $product->brand_name = 'Brand ' . $product->name;
             $product->scientific_name = 'Scientific ' . $product->name;
             $product->unit = 'pcs'; // Assuming unit is 'pcs' for packaging materials
+            $product->sku = 'PP' . rand(1000, 9999); // Generate a random SKU
             $product->save();
 
             // Create a default batch for each product

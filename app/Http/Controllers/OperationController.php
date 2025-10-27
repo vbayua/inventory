@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Operation;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
+use App\Models\Stock;
+use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -24,63 +26,64 @@ class OperationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         // Caches
 
-        $stock = Cache::remember('stocks', 60, function () {
-            return \App\Models\Stock::with(['product.unit'])
-                ->select([
-                    "id",
-                    "product_id",
-                    "batch_id",
-                    "location_id",
-                    "quantity",
-                    "unit",
-                    "sku"
-                ])
-                ->get();
-        });
-
+        $stock = \App\Models\Stock::with(['product.unit'])
+            ->select([
+                "id",
+                "product_id",
+                "batch_id",
+                "location_id",
+                "quantity",
+                "unit",
+                "sku"
+            ])
+            ->get();
+        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
         // // // Ensure products are unique by ID only the products
         // $stock = $stock->unique('batch_id')->values();
 
-        $batches = Cache::remember('batches', 60, function () {
-            return \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
-        });
+        $batches = \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
 
-        $units = Cache::remember('units', 60, function () {
-            return \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
-        });
-        $locations = Cache::remember('locations', 60, function () {
-            return \App\Models\Location::all(['id', 'name']);
-        });
-
+        $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
+        $locations = \App\Models\Location::all(['id', 'name']);
+        $query = $request->all();
         return Inertia('Operations/Create', [
             'stocks' => $stock,
+            'products' => $products,
             'batches' => $batches,
             'units' => $units,
             'locations' => $locations,
+            'query' => $query,
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreOperationRequest $request, StockOperationService $operationService)
+    public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
         $validatedData = $request->validate([
-            'operationType' => 'required|in:inbound,outbound',
+            'operationType' => 'required|in:inbound,outbound,adjustment',
+            'adjustmentType' => 'required|in:addition,subtraction',
             'product' => 'required|exists:products,id',
             'location' => 'required|exists:locations,id',
-            'batch' => 'nullable|exists:batches,id',
+            'batch' => 'required|exists:batches,id',
             'quantity' => 'required|numeric|min:0',
             'unit' => 'required|exists:units,name',
             'date' => 'required|date',
             'remarks' => 'nullable|string|max:255',
         ]);
 
-        $stockData = \App\Models\Stock::with(['product'])->where('product_id', $validatedData['product'])
+        $validatedData['batch'] = $batchAssignmentService->determineBatch(
+            $validatedData['product'],
+            $validatedData['batch'],
+            $validatedData['operationType'],
+            $validatedData['date']
+        );
+        $stockData = Stock::with(['product'])->where('product_id', $validatedData['product'])
             ->where('location_id', $validatedData['location'])
             ->when($validatedData['batch'], function ($query) use ($validatedData) {
                 return $query->where('batch_id', $validatedData['batch']);
@@ -92,17 +95,19 @@ class OperationController extends Controller
 
         if ($operationType === 'inbound') {
             if (!$stockData) {
-                $stockData = $operationService->createInitialStock(
+                $stockData = [
+                    'location_id' => $validatedData['location'],
+                    'batch_id' => $validatedData['batch'],
+                    'quantity' => $operationQuantity,
+                    'minimum_quantity' => 0,
+                    'unit' => $validatedData['unit'],
+                    'status' => 'available',
+                    'remarks' => 'Initial stock created',
+                    'date' => $validatedData['date'],
+                ];
+                $operationService->createInitialStock(
                     $validatedData['product'],
-                    [
-                        'location_id' => $validatedData['location'],
-                        'batch_id' => $validatedData['batch'],
-                        'quantity' => $operationQuantity,
-                        'unit' => $validatedData['unit'],
-                        'status' => 'available',
-                        'remarks' => 'Initial stock created',
-                        'date' => $validatedData['date'],
-                    ]
+                    $stockData
                 );
             } else {
                 // For inbound operations, call the service for inbound operations
@@ -111,7 +116,7 @@ class OperationController extends Controller
                     $stockData,
                     $operationQuantity,
                     $validatedData['unit'],
-                    $validatedData['remarks'],
+                    $validatedData['remarks'] ?? '',
                     $validatedData['date'],
                 );
             }
@@ -122,8 +127,16 @@ class OperationController extends Controller
                 $stockData,
                 $operationQuantity,
                 $validatedData['unit'],
-                $validatedData['remarks'],
+                $validatedData['remarks'] ?? '',
                 $validatedData['date'],
+            );
+        } elseif ($operationType === 'adjustment') {
+            $operationService->adjustStockOperation(
+                $stockData,
+                $operationQuantity,
+                $validatedData['unit'],
+                $validatedData['adjustmentType'],
+                $validatedData['remarks']
             );
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
