@@ -48,8 +48,10 @@ class WarehouseController extends Controller
     public function show(Warehouse $warehouse)
     {
         $warehouse->load('locations');
+        $stocks = $warehouse->stocks->count();
         return inertia('Warehouses/Show', [
-            'warehouse' => $warehouse
+            'warehouse' => $warehouse,
+            'stockCount' => $stocks
         ]);
     }
 

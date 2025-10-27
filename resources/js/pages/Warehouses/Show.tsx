@@ -1,10 +1,36 @@
+import ContainerLayout from '@/components/container-layout';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { toast } from 'sonner';
+import {
+    Card,
+    CardHeader,
+    CardContent,
+    CardTitle,
+    CardDescription
+} from '@/components/ui/card';
+import {
+    Table,
+    TableHeader,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell
+} from '@/components/ui/table';
+import { Box, ExternalLink, MapPin } from 'lucide-react';
 
-export default function Show({ warehouse }: { warehouse: { id: number; name?: string; locations?: any; products?: any; } }) {
+export default function Show({ warehouse, stockCount }: {
+    warehouse:
+    {
+        id: number;
+        name?: string;
+        locations?: any[];
+        products?: any[];
+    },
+    stockCount: string;
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Warehouses',
@@ -22,43 +48,83 @@ export default function Show({ warehouse }: { warehouse: { id: number; name?: st
             toast.success('Warehouse deleted successfuly')
         }
     }
+
+    const locationCount = warehouse.locations?.length;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${warehouse?.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <div className="p-4">
-                        <h2 className="text-2xl font-semibold mb-4">{warehouse.name}</h2>
-
-                        <p className="text-gray-600">Warehouse ID: {warehouse.id}</p>
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                <h3 className="font-semibold">Locations</h3>
-                                <ul className="list-disc pl-5 mt-2">
-                                    {warehouse.locations.length > 0 ? warehouse.locations.map((location: any) => (
-                                        <li key={location.id}>
-                                            {location.name} - <Link className='text-blue-500 hover:underline' href={route('location.show', location.id)}>View</Link>
-                                        </li>
-                                    )) : <li>No Location.</li>}
-                                </ul>
+            <ContainerLayout>
+                <Card className='p-2'>
+                    <CardHeader>
+                        <div className="flex items-start justify-between">
+                            <CardTitle>
+                                {warehouse.name}
+                            </CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="flex items-start gap-3">
+                                <MapPin className='h-5 w-5 text-primary mt-0.5' />
+                                <div className="">
+                                    <p className="text-sm text-muted-foreground">Locations</p>
+                                    <p className="text-lg mt-2 font-semibold">
+                                        {`${locationCount}`}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <Box className='h-5 w-5 text-primary mt-0.5' />
+                                <div className="">
+                                    <p className="text-sm text-muted-foreground">Stock Count</p>
+                                    <p className="text-lg mt-2 font-semibold">
+                                        {`${stockCount}`}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <Link href={`/warehouse/${warehouse.id}/edit`}>
-                                <Button variant="outline" className="cursor-pointer mt-4">
-                                    Edit Warehouse
-                                </Button>
-                            </Link>
-                            <div>
-                                <h3 className='text-md font-semibold'>Danger Zone</h3>
-                                <Button variant="destructive" className="cursor-pointer mt-4" size={"sm"} onClick={() => deleteWarehouse(warehouse.id)}>
-                                    Delete
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    </CardContent>
+                </Card>
+                <Card className='p-2'>
+                    <CardHeader>
+                        <CardTitle>Locations</CardTitle>
+                        <CardDescription>View and manage locations inside of {`${warehouse.name}`}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="h-14">
+                                    <TableHead>Location</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {warehouse.locations ? warehouse.locations.map((location) => (
+                                    <TableRow key={location.id}>
+                                        <TableCell>{location.name}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button
+                                                variant={'ghost'}
+                                                asChild>
+                                                <Link href={route('location.show', location.id)}>
+                                                    View
+                                                    <ExternalLink className='h-3 w-3' />
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={2} className="h-26 text-center">
+                                            No Results.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </ContainerLayout>
         </AppLayout>
     );
 }
