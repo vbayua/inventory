@@ -18,6 +18,11 @@ class StockOperationService
 {
     protected $unitConverter;
     protected $batchService;
+    protected const INITIAL = 'initial';
+    protected const INBOUND = 'inbound';
+    protected const OUTBOUND = 'outbound';
+    protected const TRANSFER = 'transfer';
+    protected const ADJUSTMENT = 'adjustment';
     public function __construct(UnitConverter $unitConverter, BatchAssignmentService $batchService)
     {
         $this->unitConverter = $unitConverter;
@@ -29,17 +34,18 @@ class StockOperationService
         // dd($product->id, $product, $stockData);
         return DB::transaction(function () use ($product, $stockData) {;
             $supplierId = $stockData['supplier_id'] ?? null;
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
             $batchId = isset($stockData['batch_id'])
                 ? $this->batchService->determineBatch(
                     $product,
                     $stockData['batch_id'],
-                    operationType: 'inbound',
+                    operationType: self::INBOUND,
                     supplierId: $supplierId
                 )
                 : $this->batchService->determineBatch(
                     $product,
-                    operationType: 'inbound',
+                    operationType: self::INBOUND,
                     supplierId: $supplierId
                 );
 
@@ -47,7 +53,7 @@ class StockOperationService
                 $stockData['batch_id'] = $batchId;
             }
             $operation = $this->createOperation(
-                'initial',
+                self::INITIAL,
                 $product,
                 $stockData,
                 $stockData['quantity'],
@@ -166,30 +172,30 @@ class StockOperationService
     }
 
 
-    public function createTransferOperation($product, $stockData)
+    public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null)
     {
-        // return DB::transaction(function () use ($product, $stockData) {
-        //     $operation = $this->createOperation(
-        //         'transfer',
-        //         $product,
-        //         $stockData,
-        //         $stockData['remarks'] ?? 'null'
-        //     );
-        //     // Decrement stock from source location
-        //     $this->decrementStock(
-        //         $product,
-        //         ['location_id' => $stockData['source_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
-        //         $stockData['quantity'],
-        //         $product->unit
-        //     );
-        //     // Increment stock to destination location
-        //     $this->incrementStock(
-        //         $product,
-        //         ['location_id' => $stockData['destination_location_id'], 'batch_id' => $stockData['batch_id'] ?? null],
-        //         $stockData['quantity']
-        //     );
-        //     return $operation;
-        // });
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
+            $operation = $this->createOperation(
+                'transfer',
+                $product,
+                $stockData,
+                $quantity,
+                $unit,
+                $remarks ?? 'Transfer Operation',
+                $operationDate
+            );
+
+            $this->transferStock(
+                $product,
+                $stockData['source_location_id'],
+                $stockData['destination_location_id'],
+                $stockData['batch_id'],
+                $quantity,
+                $unit
+            );
+
+            return $operation;
+        });
     }
 
 
@@ -313,6 +319,44 @@ class StockOperationService
         });
     }
 
+    private function transferStock(Product|int $product, int $sourceStockLocation, int $destinationStockLocation, int $batchId, float $quantity, ?string $unit)
+    {
+        DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+            $sourceStockData = Stock::where('product_id', $product->id)
+                ->where('location_id', $sourceStockLocation)
+                ->where('batch_id', $batchId)
+                ->firstOrFail();
+
+
+            $destinationStockData = Stock::where('product_id', $product->id)
+                ->where('location_id', $destinationStockLocation)
+                ->where('batch_id', $batchId)
+                ->first();
+
+            if (!$destinationStockData) {
+                // Create destination stock record if it doesn't exist
+                $destinationStockData = Stock::create([
+                    'product_id' => $product->id,
+                    'location_id' => $destinationStockLocation,
+                    'batch_id' => $batchId,
+                    'quantity' => 0,
+                    'minimum_quantity' => 0,
+                    'unit' => $sourceStockData->unit,
+                    'status' => 'out_of_stock',
+                    'remarks' => 'Created for transfer',
+                ]);
+            }
+
+            $newStockSource = $this->decrementStock($product, $sourceStockData, $quantity, $unit);
+            $newStockDestination = $this->incrementStock($product, $destinationStockData, $quantity, $unit);
+            // If everything was moved, delete the source stock row
+            if ($newStockSource && ($newStockSource->status === 'out_of_stock' || (float)$newStockSource->quantity <= 0.0)) {
+                $newStockSource->delete();
+            }
+        });
+    }
+
     private function getUnitRecord($unit)
     {
         return Unit::findOrFail($unit);
@@ -328,7 +372,7 @@ class StockOperationService
             ->firstOrFail();
     }
 
-    private function incrementStock(Product|int $product, array $stockData, float $quantity = 0, ?string $unit = null)
+    private function incrementStock(Product|int $product, Stock|array $stockData, float $quantity = 0, ?string $unit = null)
     {
 
         // Use unit conversion service to convert quantity to base unit
@@ -336,97 +380,90 @@ class StockOperationService
             throw new \InvalidArgumentException('Quantity must be a positive number.');
         }
 
-        DB::transaction(function () use ($product, $stockData, $quantity, $unit) {
-            $productId = $product instanceof Product ? $product->id : $product;
-            $productName = $product instanceof Product ? $product->name : (string) $product;
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit) {
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+            $unit = $unit ?? $product->unit;
 
-            $stock = Stock::firstOrCreate(
-                [
-                    'product_id' => $productId,
-                    'location_id' => $stockData['location_id'],
-                    'batch_id' => $stockData['batch_id']
-                ],
-                [
-                    'quantity' => $quantity,
-                    'unit' => $unit ?? $product->unit,
-                    'status' => $this->setStockStatus($quantity, $stockData['minimum_quantity'] ?? 0),
-                ]
-            );
-
-            if (!$stock) {
-                throw new \Exception("No stock for product {$productName} at the specified location/batch");
-            }
-
-            $stockUnit = $stock->unit;
-            $quantityUnit = $unit ?? ($product instanceof Product ? $product->unit : $stockUnit);
-
-            $stockUnitRecord = $this->getUnitRecord($stockUnit);
-            $quantityUnitRecord = $this->getUnitRecord($quantityUnit);
-
-            if ($stockUnitRecord->base_unit !== $quantityUnitRecord->base_unit) {
-                throw new \Exception("Base unit mismatch: stock unit '{$stockUnit}' vs quantity unit '{$quantityUnit}'.");
-            }
-
-            // Normalize stock quantity
-            $stockInBaseUnit = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
-            $quantityInBaseUnit = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
-
-            // Calculate and convert base unit
-            $totalQuantity = $stockInBaseUnit + $quantityInBaseUnit;
-            $newQuantity = $this->unitConverter->fromBaseUnit($totalQuantity, $stockUnit);
-            $stock->update([
-                'quantity' => $newQuantity,
-                'status' => $this->setStockStatus($newQuantity, $stock['minimum_quantity'] ?? 0),
-            ]);
-        });
-    }
-
-    private function decrementStock(Product|int $product, array $stockData, float $quantity, ?string $unit)
-    {
-        if ($quantity <= 0) {
-            throw new \InvalidArgumentException('Quantity must be a positive number.');
-        }
-        DB::transaction(function () use ($product, $stockData, $quantity, $unit) {
-            $productId = $product instanceof Product ? $product->id : $product;
-            $productName = $product instanceof Product ? $product->name : (string) $product;
-
-            // Lock the row to prevent concurrent decrements racing.
-            $stock = Stock::where('product_id', $productId)
+            $stock = Stock::where('product_id', $product->id)
                 ->where('location_id', $stockData['location_id'])
                 ->where('batch_id', $stockData['batch_id'] ?? null)
                 ->lockForUpdate()
                 ->first();
 
             if (!$stock) {
-                throw new \Exception("No stock for product {$productName} at the specified location/batch");
+                throw new \Exception("No stock for product {$product->name} at the specified location/batch");
             }
-            $stockUnit = $stock->unit;
-            $quantityUnit = $unit ?? ($product instanceof Product ? $product->unit : $stockUnit);
 
-            $stockUnitRecord = $this->getUnitRecord($stockUnit);
-            $quantityUnitRecord = $this->getUnitRecord($quantityUnit);
+            // $quantityUnit = $unit ?? ($product instanceof Product ? $product->unit : $stockUnit);
 
-            if ($stockUnitRecord->base_unit !== $quantityUnitRecord->base_unit) {
+            $stockUnit = $this->getUnitRecord($stock->unit);
+            $quantityUnit = $this->getUnitRecord($unit);
+
+            if ($stockUnit->base_unit !== $quantityUnit->base_unit) {
+                throw new \Exception("Base unit mismatch: stock unit '{$stockUnit}' vs quantity unit '{$quantityUnit}'.");
+            }
+
+            // Normalize stock quantity
+            $qtyInBase = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
+            $currentStockInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
+
+            // Calculate and convert base unit
+            $newInBase = $currentStockInBase + $qtyInBase;
+            $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
+            $stock->update([
+                'quantity' => $newQuantity,
+                'status' => $this->setStockStatus($newQuantity, $stock['minimum_quantity']),
+            ]);
+
+            return $stock->fresh();
+        });
+    }
+
+    private function decrementStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit)
+    {
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('Quantity must be a positive number.');
+        }
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit) {
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+            $unit = $unit ?? $product->unit; // Default to product unit if not provided
+
+            // Lock the row to prevent concurrent decrements racing.
+            $stock = Stock::where('product_id', $product->id)
+                ->where('location_id', $stockData['location_id'])
+                ->where('batch_id', $stockData['batch_id'] ?? null)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$stock) {
+                throw new \Exception("No stock for product {$product->name} at the specified location/batch");
+            }
+            $stockUnit = $this->getUnitRecord($stock->unit);
+            $quantityUnit = $this->getUnitRecord($unit);
+
+            if ($stockUnit->base_unit !== $quantityUnit->base_unit) {
                 throw new \Exception("Base unit mismatch: stock unit '{$stockUnit}' vs quantity unit '{$quantityUnit}'.");
             }
 
             // Normalize to base units to compare and compute
-            $stockInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
-            $quantityInBase = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
+            $qtyInBase = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
+            $currentStockInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
 
-            if ($stockInBase < $quantityInBase) {
-                throw new \Exception('Insufficient stock for product: ' . $product->name ?? $product);
+            if ($currentStockInBase < $qtyInBase) {
+                throw new \Exception('Insufficient stock for product: ' . $product->name);
             }
 
-            $remainingInBase = $stockInBase - $quantityInBase;
-            $newQuantity = $this->unitConverter->fromBaseUnit($remainingInBase, $stockUnit);
+            $newInBase = $currentStockInBase - $qtyInBase;
+            $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
 
             $stock->update([
                 'quantity' => $newQuantity,
-                'status' => $remainingInBase > 0
-                    ? $this->setStockStatus($newQuantity, $stock->minimum_quantity ?? 0)
+                'status' => $newInBase > 0
+                    ? $this->setStockStatus($newQuantity, $stock->minimum_quantity)
                     : 'out_of_stock'
             ]);
+
+            return $stock->fresh();
         });
     }
 }
