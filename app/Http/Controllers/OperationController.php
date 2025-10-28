@@ -66,7 +66,7 @@ class OperationController extends Controller
     public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
         $validatedData = $request->validate([
-            'operationType' => 'required|in:inbound,outbound,adjustment',
+            'operationType' => 'required|in:inbound,outbound,adjustment,transfer',
             'adjustmentType' => 'required|in:addition,subtraction',
             'product' => 'required|exists:products,id',
             'location' => 'required|exists:locations,id',
@@ -75,6 +75,8 @@ class OperationController extends Controller
             'unit' => 'required|exists:units,name',
             'date' => 'required|date',
             'remarks' => 'nullable|string|max:255',
+            'source_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
+            'destination_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
         ]);
 
         $validatedData['batch'] = $batchAssignmentService->determineBatch(
@@ -137,6 +139,17 @@ class OperationController extends Controller
                 $validatedData['unit'],
                 $validatedData['adjustmentType'],
                 $validatedData['remarks']
+            );
+        } elseif ($operationType === 'transfer') {
+            $stockData['source_location_id'] = $validatedData['source_location'];
+            $stockData['destination_location_id'] = $validatedData['destination_location'];
+            $operationService->createTransferOperation(
+                $stockData->product,
+                $stockData,
+                $operationQuantity,
+                $validatedData['unit'],
+                $validatedData['remarks'] ?? '',
+                $validatedData['date'],
             );
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
