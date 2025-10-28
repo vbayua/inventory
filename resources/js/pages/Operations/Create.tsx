@@ -35,6 +35,9 @@ type OperationForm = {
     operationType: string;
     adjustmentType: string;
     remarks: string;
+    // transfer operation might need more fields like destination location
+    source_location?: string;
+    destination_location?: string;
 }
 
 type Batch = {
@@ -63,6 +66,8 @@ export default function Create({ stocks, products, locations, batches, units, qu
         operationType: 'outbound',
         adjustmentType: 'addition',
         remarks: '',
+        source_location: '',
+        destination_location: '',
     });
 
     // Ensure products are unique by ID only
@@ -79,6 +84,8 @@ export default function Create({ stocks, products, locations, batches, units, qu
     // Product selection
     const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
     const selectedBatch = batches.find(batch => batch.id.toString() === data.batch);
+    const selectedLocation = locations.find(location => location.id.toString() === data.location);
+    const selectedLocationDestination = locations.find(location => location.id.toString() === data.destination_location);
 
     // Batch filtering based on selected product
     const filteredBatches = data.product
@@ -131,13 +138,20 @@ export default function Create({ stocks, products, locations, batches, units, qu
         });
     }
 
+    const operationTypes = [
+        { value: 'outbound', label: 'Usage Stock' },
+        { value: 'inbound', label: 'Receive Stock' },
+        { value: 'adjustment', label: 'Adjust Stock' },
+        { value: 'transfer', label: 'Transfer Stock' },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
 
             <div className="rounded-lg mt-12 shadow-md p-6 w-full max-w-4xl mx-auto">
                 <form onSubmit={createOperation} className="space-y-6">
-                    <h1 className="text-xl font-semibold mb-12">{data.operationType === 'outbound' ? 'Usage' : 'Receive'} Operation</h1>
+                    <h1 className="text-xl font-semibold mb-12">{data.operationType.toString().toUpperCase()} OPERATION</h1>
                     <div className="mb-6">
                         <Label className="block mb-4">
                             Operation Type
@@ -156,15 +170,11 @@ export default function Create({ stocks, products, locations, batches, units, qu
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
-                                    <SelectItem value="outbound">
-                                        Usage Stock
-                                    </SelectItem>
-                                    <SelectItem value="inbound" >
-                                        Receive Stock
-                                    </SelectItem>
-                                    <SelectItem value="adjustment" >
-                                        Adjust Stock
-                                    </SelectItem>
+                                    {operationTypes.map((type) => (
+                                        <SelectItem key={type.value} value={type.value}>
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
@@ -284,6 +294,150 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                 </PopoverContent>
                             </Popover>
                         </div>
+
+                        {data.operationType === 'transfer' && (
+                            <>
+                                <div>
+                                    <Label className="block mb-2">
+                                        From Location
+                                    </Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn("justify-between w-full", errors.location && "border-red-500 text-muted-foreground")}>
+                                                {selectedLocation?.name ?? "Select a location"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="p-0" align="start">
+                                            <Command>
+                                                <CommandInput placeholder="Search location..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No location found</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {filteredLocations.map((location: any) => (
+                                                            <CommandItem
+                                                                key={location.id}
+                                                                value={location.id.toString()}
+                                                                onSelect={(value) => {
+                                                                    setData('location', value);
+                                                                    setData('source_location', value);
+                                                                    setData('destination_location', '');
+                                                                }}
+                                                                className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                            >
+                                                                <Check className={cn("mr-2 h-4 w-4", data.location === location.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                                {location.name}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+
+                                <div>
+                                    <Label className="block mb-2">
+                                        To Location
+                                    </Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn("justify-between w-full", errors.location && "border-red-500 text-muted-foreground")}>
+                                                {selectedLocationDestination?.name ?? "Select a destination"}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="p-0" align="start">
+                                            <Command>
+                                                <CommandInput placeholder="Search location..." />
+                                                <CommandList>
+                                                    <CommandEmpty>No location found</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {locations.map((location: any) => location.id.toString() !== data.location && (
+                                                            <CommandItem
+                                                                key={location.id}
+                                                                value={location.id.toString()}
+                                                                onSelect={(value) => {
+                                                                    setData('destination_location', value);
+                                                                }}
+                                                                className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                            >
+                                                                <Check className={cn("mr-2 h-4 w-4", data.destination_location === location.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                                {location.name}
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+
+                                <div>
+                                    <Label className="block mb-2">
+                                        Source Quantity
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="text"
+                                            value={currentStock ? `${stockQuantity} ${stockUnit}` : 0}
+                                            onChange={(e) => setData('quantity', parseFloat(e.target.value))}
+                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            disabled={true}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <Label className="block mb-2">
+                                        Quantity
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            value={data.quantity}
+                                            onChange={(e) => setData('quantity', parseFloat(e.target.value))}
+                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            placeholder="Enter quantity"
+                                            max={productUnit?.base_unit === stockUnit ? stockQuantity : undefined}
+                                            min={1}
+                                            step={0.01}
+                                            disabled={!selectedBatch || stockQuantity <= 0}
+                                        />
+                                        <Select
+                                            onValueChange={(value) => setData('unit', value)}
+                                            value={data.unit}
+                                            disabled={!selectedBatch || stockQuantity <= 0}
+                                        >
+                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
+                                                <SelectValue placeholder="Select unit" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {filteredUnits.map((unit) => (
+                                                        <SelectItem key={unit.name} value={unit.name.toString()}>
+                                                            {unit.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    {selectedBatch && (
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
                         {data.operationType === 'outbound' && (
                             <>
                                 <div>
@@ -494,7 +648,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
 
                         <div>
                             <Label className="block mb-2">
-                                {data.operationType === 'outbound' ? 'Usage' : 'Receive'} Date
+                                Operation Date
                             </Label>
 
                             <div className="flex items-center gap-2">
@@ -577,6 +731,16 @@ export default function Create({ stocks, products, locations, batches, units, qu
                             disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
                         >
                             Create Adjust Operation
+                        </Button>
+                    )}
+                    {data.operationType === 'transfer' && (
+                        <Button
+                            variant="default"
+                            type="submit"
+                            className="w-full sm:w-auto"
+                            disabled={processing || !data.product || !data.batch || !data.location || !data.destination_location || !data.quantity || Number(data.quantity) <= 0}
+                        >
+                            Create Transfer Operation
                         </Button>
                     )}
                 </form>
