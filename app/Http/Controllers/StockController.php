@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Stock;
 use App\Http\Requests\StoreStockRequest;
 use App\Http\Requests\UpdateStockRequest;
+use App\Models\Operation;
 
 class StockController extends Controller
 {
@@ -53,7 +54,22 @@ class StockController extends Controller
      */
     public function show(Stock $stock)
     {
-        //
+        $operations = Operation::where('product_id', $stock->product_id)
+            ->where('location_id', $stock->location_id)
+            ->where('batch_id', $stock->batch_id)
+            ->orderBy('operation_date', 'desc')
+            ->get();
+        return Inertia('Stocks/Show', [
+            'stock' => $stock->load([
+                'product:id,name,sku,product_type_id',
+                'product.productType:id,name,type_code',
+                'location:id,name,warehouse_id',
+                'location.warehouse:id,name',
+                'batch:id,batch_number,supplier_id',
+                'batch.supplier:id,name',
+            ]),
+            'operations' => $operations,
+        ]);
     }
 
     /**
