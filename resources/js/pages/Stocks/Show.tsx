@@ -1,92 +1,76 @@
+import ContainerLayout from '@/components/container-layout';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { toast } from 'sonner';
+import { ArrowLeft } from 'lucide-react';
+import StockDetailCard from '@/components/stocks/StockDetailCard';
+import OperationHistoryTable from '@/components/stocks/OperationHistoryTable';
 
-type Operation = {
-    id: number;
-    product?: {
-        id: number;
-        name?: string;
-    };
-    batch?: {
-        id: number;
-        batch_number?: string;
-    };
-    location?: {
-        id: number;
-        name?: string;
-    };
-    quantity?: number;
-    unit?: string;
-    remarks?: string;
-    operation_type?: string;
-    operation_date?: Date | string;
-    created_at?: string;
-    updated_at?: string;
-}
+type StockStatus = "available" | "out_of_stock" | "reserved" | "low_stock";
 
-export default function Show({ operation }: { operation: Operation }) {
+export default function Show({ stock, operations }: { stock: any, operations: any[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Operation',
-            href: '/operations',
+            title: 'Stock Index',
+            href: '/stocks',
         },
         {
-            title: `${operation?.batch?.batch_number} - ${operation?.product?.name}`,
-            href: `/operations/${operation.id}`,
+            title: `${stock?.batch?.batch_number} - ${stock?.product?.name}`,
+            href: `/stocks/${stock?.id}`,
         }
     ];
+    const stockStatus = stock.status;
 
-    const deleteOperation = (id: number) => {
-        if (confirm('Are you sure you want to delete this operation?')) {
-            // Call the delete API endpoint
-            router.delete(`/operations/${id}`, {
-                onSuccess: () => {
-                    toast.success('Operation deleted successfully');
-                },
-                onError: () => {
-                    toast.error('Failed to delete operation');
-                },
-            });
-        }
-    };
-    console.log("Operation:", operation);
+
+    const getStockBadge = (status: StockStatus) => {
+        const colors: Record<StockStatus, string> = {
+            available: "bg-green-100 text-green-800",
+            out_of_stock: "bg-red-100 text-red-800",
+            reserved: "bg-yellow-100 text-yellow-800",
+            low_stock: "bg-orange-100 text-orange-800",
+        };
+        return colors[status] || "bg-gray-100 text-gray-800";
+    }
+
+    const stockData = {
+
+    }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${operation?.product?.name}`} />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <div className="p-4">
-                        <h2 className="text-2xl font-semibold mb-4">{operation?.batch?.batch_number} - {operation?.product?.name}</h2>
+            <Head title={`${stock?.batch?.batch_number} - ${stock?.product?.name}`} />
+            <ContainerLayout>
+                <div className="mb-6">
+                    <Button variant="ghost" className='text-muted-foreground hover:text-foreground' asChild>
+                        <Link href={route('stocks.index')}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to Stocks
+                        </Link>
+                    </Button>
 
-                        <p className="text-gray-600">Operation ID: {operation.id}</p>
-                        <p className="text-gray-600">
-                            {operation.operation_type?.toString().toUpperCase()} - {operation.operation_date ? new Date(operation.operation_date).toLocaleDateString() : 'N/A'}
-                        </p>
-                        {/* <div className='border border-gray-200 dark:border-gray-700 rounded-lg p-4 mt-8'>
-                            <h3 className='font-semibold font-lg'>Actions</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <h3 className='text-md'>Edit</h3>
-                                    <Link href={`/operations/${operation.id}/edit`}>
-                                        <Button variant="outline" className="cursor-pointer mt-4">
-                                            Edit Operation
-                                        </Button>
-                                    </Link>
-                                </div>
-                                <div>
-                                    <h3 className='text-md'>Danger Zone</h3>
-                                    <Button variant="destructive" className="cursor-pointer mt-4" size={"sm"} onClick={() => deleteOperation(operation.id)}>
-                                        Delete
-                                    </Button>
-                                </div>
-                            </div>
-                        </div> */}
-                    </div>
+                    <h1 className="text-3xl font-bold mt-4">
+                        {stock?.batch?.batch_number} - {stock?.product?.name}
+                    </h1>
+
+                    <p className="text-muted-foreground mt-2">
+                        View stock detail and operation history
+                    </p>
                 </div>
-            </div>
+
+                <div className="space-y-6">
+                    <StockDetailCard
+                        batch_number={stock?.batch?.batch_number}
+                        product_name={stock?.product?.name}
+                        warehouse_name={stock?.location?.warehouse?.name}
+                        location_name={stock?.location?.name}
+                        quantity={stock?.quantity}
+                        unit={stock?.unit}
+                        status={stockStatus}
+                    />
+                    <OperationHistoryTable operations={operations} />
+                </div>
+            </ContainerLayout>
         </AppLayout>
     );
 }
