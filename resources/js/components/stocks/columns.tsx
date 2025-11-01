@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { MoreHorizontal } from 'lucide-react'
-import { router } from '@inertiajs/react'
+import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 import { DataTableColumnHeader } from '../data-table-column-header'
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu'
@@ -69,7 +69,7 @@ const handleCopyBatchNumber = (batchNumber: string) => {
 
 const handleViewStock = (id: number, product_name: any) => {
     return function () {
-        router.get('/', { product_name }, {
+        router.get('stocks.show', { id }, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -270,9 +270,9 @@ export const columns: ColumnDef<Stock>[] = [
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                        onClick={handleViewStock(row.original.id, row.original.product?.name)}
+                        asChild
                     >
-                        View Details
+                        <Link href={route('stocks.show', { stock: row.original.id })}> View Details </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleCreateOperation(row.original.id, row.original.product?.name)}>
                         Create Operation
