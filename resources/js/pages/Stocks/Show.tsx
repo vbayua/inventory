@@ -7,6 +7,26 @@ import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 import StockDetailCard from '@/components/stocks/StockDetailCard';
 import OperationHistoryTable from '@/components/stocks/OperationHistoryTable';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useRef, useState } from 'react';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 
 type StockStatus = "available" | "out_of_stock" | "reserved" | "low_stock";
 
@@ -23,39 +43,95 @@ export default function Show({ stock, operations }: { stock: any, operations: an
     ];
     const stockStatus = stock.status;
 
+    const [showEditDialog, setShowEditDialog] = useState(false);
+    const [showAdjustDialog, setShowAdjustDialog] = useState(false);
+    const [minimumQuantity, setMinimumQuantity] = useState(stock?.minimum_quantity || 0);
 
-    const getStockBadge = (status: StockStatus) => {
-        const colors: Record<StockStatus, string> = {
-            available: "bg-green-100 text-green-800",
-            out_of_stock: "bg-red-100 text-red-800",
-            reserved: "bg-yellow-100 text-yellow-800",
-            low_stock: "bg-orange-100 text-orange-800",
-        };
-        return colors[status] || "bg-gray-100 text-gray-800";
+
+    const handleMinimumQuantityUpdate = () => {
+        router.put(route('stocks.update', stock.id), {
+            minimum_quantity: minimumQuantity,
+        }, {
+            onSuccess: () => {
+                setShowEditDialog(false);
+            },
+            onError: () => {
+                //
+            }
+        });
     }
 
-    const stockData = {
 
-    }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${stock?.batch?.batch_number} - ${stock?.product?.name}`} />
             <ContainerLayout>
-                <div className="mb-6">
-                    <Button variant="ghost" className='text-muted-foreground hover:text-foreground' asChild>
-                        <Link href={route('stocks.index')}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Stocks
-                        </Link>
-                    </Button>
+                <div className="mb-6 flex items-center justify-between">
+                    <div>
+                        <Button variant="ghost" className='text-muted-foreground hover:text-foreground' asChild>
+                            <Link href={route('stocks.index')}>
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Stocks
+                            </Link>
+                        </Button>
+                        <h1 className="text-3xl font-bold mt-4">
+                            {stock?.batch?.batch_number} - {stock?.product?.name}
+                        </h1>
+                        <p className="text-muted-foreground mt-2">
+                            View stock detail and operation history
+                        </p>
+                    </div>
 
-                    <h1 className="text-3xl font-bold mt-4">
-                        {stock?.batch?.batch_number} - {stock?.product?.name}
-                    </h1>
-
-                    <p className="text-muted-foreground mt-2">
-                        View stock detail and operation history
-                    </p>
+                    <div>
+                        <DropdownMenu modal={false}>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">Actions</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Stock Actions</DropdownMenuLabel>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>
+                                        Edit Stock
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        Adjust Stock
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Edit Stock</DialogTitle>
+                                <DialogDescription>
+                                    Edit stock details here.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <FieldGroup>
+                                <Field>
+                                    <FieldLabel>Minimum Quantity</FieldLabel>
+                                    <Input
+                                        name="minimum_quantity"
+                                        type="number"
+                                        className="w-full px-3 py-2 border rounded-md"
+                                        defaultValue={stock?.minimum_quantity}
+                                        onChange={(e) => setMinimumQuantity(e.target.valueAsNumber)}
+                                        min={0}
+                                        step={0.1}
+                                    />
+                                </Field>
+                            </FieldGroup>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="secondary">Cancel</Button>
+                                </DialogClose>
+                                <Button
+                                    onClick={handleMinimumQuantityUpdate}
+                                >Save Changes</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 <div className="space-y-6">

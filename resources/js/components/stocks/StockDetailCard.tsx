@@ -23,13 +23,13 @@ export default function StockDetailCard({
     const getStatusBadge = () => {
         switch (status) {
             case "out_of_stock":
-                return <Badge variant="destructive">Expired</Badge>;
+                return <Badge variant="destructive" className='bg-red-100 text-red-800'>Expired</Badge>;
             case "low_stock":
-                return <Badge className="bg-warning text-warning-foreground">Low Stock</Badge>;
+                return <Badge className="bg-orange-100 text-orange-800">Low Stock</Badge>;
             case "reserved":
                 return <Badge className="bg-yellow-100 text-yellow-800">Reserved</Badge>;
             default:
-                return <Badge className="bg-accent text-accent-foreground">Active</Badge>;
+                return <Badge className="bg-green-100 text-green-800">Available</Badge>;
         }
     };
     return (
