@@ -6,6 +6,7 @@ use App\Models\Stock;
 use App\Http\Requests\StoreStockRequest;
 use App\Http\Requests\UpdateStockRequest;
 use App\Models\Operation;
+use App\Service\StockOperationService;
 
 class StockController extends Controller
 {
@@ -83,9 +84,21 @@ class StockController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateStockRequest $request, Stock $stock)
+    public function update(UpdateStockRequest $request, Stock $stock, StockOperationService $stockService)
     {
-        //
+        $data = $request->validated();
+
+        // Use incoming values if present; otherwise fall back to current model values
+        $minQty = array_key_exists('minimum_quantity', $data) ? $data['minimum_quantity'] : $stock->minimum_quantity;
+        $qty    = array_key_exists('quantity', $data) ? $data['quantity'] : $stock->quantity;
+
+        // Compute status based on the effective quantities
+        $data['status'] = $stockService->setStockStatus($qty, $minQty);
+
+        // Persist all changes in a single update
+        $stock->update($data);
+
+        return redirect()->route('stocks.show', $stock)->with('success', 'Stock updated successfully.');
     }
 
     /**
