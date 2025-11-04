@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('stocks')->group(function () {
         Route::get('/', [\App\Http\Controllers\StockController::class, 'index'])->name('stocks.index');
         Route::get('/{stock}', [\App\Http\Controllers\StockController::class, 'show'])->name('stocks.show');
+        Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
     });
 });
 
