@@ -72,13 +72,11 @@ class StockOperationService
         });
     }
 
-    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks)
+    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks = 'Stock Adjustment', $operationDate = null)
     {
-        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks) {
-            if (is_int($stock)) {
-                $stock = Stock::where('id', $stock)->firstOrFail();
-            }
+        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks, $operationDate) {
 
+            $stock = $stock instanceof Stock ? $stock : Stock::findOrFail($stock);
             $productId = $stock->product_id;
             $locationId = $stock->location_id;
             $batchId = $stock->batch_id;
@@ -89,13 +87,14 @@ class StockOperationService
                 $stock,
                 $quantity,
                 $unit,
-                'adjust stock',
+                $remarks,
+                $operationDate
             );
 
-            $stockAdjustment =  StockAdjustment::create([
+            StockAdjustment::create([
                 'product_id' => $productId,
-                'location_id' => $stock->location_id,
-                'batch_id' => $stock->batch_id,
+                'location_id' => $locationId,
+                'batch_id' => $batchId,
                 'quantity' => $quantity,
                 'unit' => $unit,
                 'adjustment_type' => $type,
@@ -122,7 +121,7 @@ class StockOperationService
                 throw new \InvalidArgumentException("Stock Adjustment of type {$type} is unknown");
             }
 
-            return $stockAdjustment;
+            return $operation;
         });
     }
 
@@ -242,7 +241,7 @@ class StockOperationService
         });
     }
 
-    private function setStockStatus(float $quantity, float $minimum_quantity)
+    public function setStockStatus(float $quantity, float $minimum_quantity)
     {
         if ($quantity <= 0) {
             return 'out_of_stock';

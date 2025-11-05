@@ -11,7 +11,7 @@ class StoreStockAdjustmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class StoreStockAdjustmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'stock_id' => ['required', 'exists:stocks,id'],
+            'quantity' => ['required', 'numeric'],
+            'unit' => ['required', 'string', 'max:10'],
+            'adjustment_type' => ['required', 'in:addition,subtraction'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }
