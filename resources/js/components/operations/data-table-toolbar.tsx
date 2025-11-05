@@ -30,6 +30,13 @@ export function DataTableToolbar<TData>({
             }))
             : [];
 
+    const batchColumn = table.getColumn("batch_number")
+        ? Array.from(table.getColumn("batch_number")!.getFacetedUniqueValues().keys()).map((value: string) => ({
+            label: value,
+            value: value,
+        }))
+        : [];
+
     const operationType = [
         { label: "Initial", value: "initial" },
         { label: "Inbound", value: "inbound" },
@@ -42,6 +49,11 @@ export function DataTableToolbar<TData>({
         ...productColumn,
     ];
 
+    const batchFacetedFilter: Options[] = [
+        { label: "All", value: "" },
+        ...batchColumn,
+    ];
+
     const operationTypeFacetedFilter: Options[] = [
         { label: "All", value: "" },
         ...operationType,
@@ -51,18 +63,18 @@ export function DataTableToolbar<TData>({
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
                 <Input
-                    placeholder="Filter Batch Number..."
-                    value={(table.getColumn("batch_number")?.getFilterValue() as string) ?? ""}
+                    placeholder="Search batch or product"
+                    value={(table.getState().globalFilter as string) ?? ""}
                     onChange={(event) =>
-                        table.getColumn("batch_number")?.setFilterValue(event.target.value)
+                        table.setGlobalFilter(event.target.value)
                     }
                     className="h-8 w-[150px] lg:w-[250px]"
                 />
-                {table.getColumn("product_name") && (
+                {table.getColumn("batch_number") && (
                     <DataTableFacetedFilter
-                        column={table.getColumn("product_name")}
-                        title="Product Name"
-                        options={productFacetedFilter}
+                        column={table.getColumn("batch_number")}
+                        title="Batch"
+                        options={batchFacetedFilter}
                     />
                 )}
                 {table.getColumn("operation_type") && (
