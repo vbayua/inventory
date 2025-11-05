@@ -58,7 +58,14 @@ const operationConfig = {
         color: 'bg-yellow-100 text-yellow-800',
         variant: 'outline' as const,
         icon: Edit2,
-    }
+    },
+    transfer: {
+        id: 'transfer',
+        label: 'Transfer',
+        color: 'bg-indigo-100 text-indigo-800',
+        variant: 'default' as const,
+        icon: LogIn,
+    },
 }
 
 export const columns: ColumnDef<OperationIndex>[] = [
@@ -127,16 +134,19 @@ export const columns: ColumnDef<OperationIndex>[] = [
             return (
                 <DataTableColumnHeader
                     column={column}
-                    title="Created At"
+                    title="Operation Date"
                 />
             )
         },
         cell: ({ row }) => {
             const date = new Date(row.original.operation_date)
-            const localeDateString = date.toLocaleDateString('en-US', {
+            const localeDateString = date.toLocaleDateString('id-ID', {
                 year: 'numeric',
-                month: 'long',
+                month: 'short',
                 day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
             })
             return (
                 <span className="text-sm text-muted-foreground" >
