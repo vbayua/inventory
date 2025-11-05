@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Illuminate\Support\Carbon;
 
 class StockOperationService
 {
@@ -226,6 +227,16 @@ class StockOperationService
         return DB::transaction(function () use ($type, $product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $productId = $product instanceof Product ? $product->id : $product;
             $unitName = $unit instanceof Unit ? $unit->name : $unit;
+
+            // Keep the provided date, but set the time to "now"
+            $operationDateWithAddedTime = $operationDate
+                ? ($operationDate instanceof \DateTimeInterface
+                    ? Carbon::instance($operationDate)
+                    : Carbon::parse($operationDate))
+                : now();
+            $now = now();
+            $operationDateWithAddedTime = $operationDateWithAddedTime->setTime($now->hour, $now->minute, $now->second);
+
             $operation = Operation::create([
                 'operation_type' => $type,
                 'product_id' => $productId,
@@ -233,7 +244,7 @@ class StockOperationService
                 'batch_id' => $stockData['batch_id'] ?? null,
                 'unit' => $unitName,
                 'quantity' => $usageQuantity,
-                'operation_date' => $operationDate ?? now(),
+                'operation_date' => $operationDateWithAddedTime,
                 'remarks' => $remarks ?? ''
             ]);
 
