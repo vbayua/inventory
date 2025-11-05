@@ -27,6 +27,7 @@ import {
 import { useRef, useState } from 'react';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import AdjustOperation from '@/components/operations/adjust-operation';
 
 type StockStatus = "available" | "out_of_stock" | "reserved" | "low_stock";
 
@@ -47,7 +48,6 @@ export default function Show({ stock, operations }: { stock: any, operations: an
     const [showAdjustDialog, setShowAdjustDialog] = useState(false);
     const [minimumQuantity, setMinimumQuantity] = useState(stock?.minimum_quantity || 0);
 
-
     const handleMinimumQuantityUpdate = () => {
         router.put(route('stocks.update', stock.id), {
             minimum_quantity: minimumQuantity,
@@ -55,12 +55,11 @@ export default function Show({ stock, operations }: { stock: any, operations: an
             onSuccess: () => {
                 setShowEditDialog(false);
             },
-            onError: () => {
-                //
+            onError: (errors) => {
+                console.log(errors)
             }
         });
     }
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -93,7 +92,7 @@ export default function Show({ stock, operations }: { stock: any, operations: an
                                     <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>
                                         Edit Stock
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setShowAdjustDialog(true)}>
                                         Adjust Stock
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
@@ -132,6 +131,17 @@ export default function Show({ stock, operations }: { stock: any, operations: an
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                    <Dialog open={showAdjustDialog} onOpenChange={setShowAdjustDialog}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Adjust Stock</DialogTitle>
+                                <DialogDescription>
+                                    Adjust stock quantity here.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <AdjustOperation stock={stock} isDialogOpen={showAdjustDialog} setDialogOpen={setShowAdjustDialog} />
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 <div className="space-y-6">
@@ -144,7 +154,7 @@ export default function Show({ stock, operations }: { stock: any, operations: an
                         unit={stock?.unit}
                         status={stockStatus}
                     />
-                    <OperationHistoryTable operations={operations} />
+                    {/* <OperationHistoryTable operations={operations} /> */}
                 </div>
             </ContainerLayout>
         </AppLayout>
