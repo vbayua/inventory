@@ -280,7 +280,6 @@ export default function Create({ categories, suppliers, units, product_types, wa
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
                                     {categories.map((category) => (
                                         <SelectItem key={category.id} value={String(category.id)}>
                                             {category.name}
