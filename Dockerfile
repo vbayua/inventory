@@ -4,6 +4,12 @@ FROM composer:2 AS vendor
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
+COPY artisan ./
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY routes ./routes
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 
 FROM node:20 AS frontend
@@ -27,6 +33,7 @@ RUN apt-get update \
         libzip-dev \
         sqlite3 \
         libsqlite3-dev \
+        gosu \
     && docker-php-ext-configure zip \
     && docker-php-ext-install pdo pdo_sqlite zip \
     && rm -rf /var/lib/apt/lists/*
@@ -42,8 +49,6 @@ RUN mkdir -p storage/database \
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
-
-USER www-data
 
 EXPOSE 8000
 
