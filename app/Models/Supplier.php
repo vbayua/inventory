@@ -19,15 +19,12 @@ class Supplier extends Model
             $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
     }
+    /**
+     * The products that belong to the supplier.
+     */
     public function products()
     {
         return $this->belongsToMany(Product::class, 'products_suppliers', 'supplier_id', 'product_id')
-            ->withPivot('price')
-            ->withTimestamps();
-    }
-
-    public function batches()
-    {
-        return $this->hasMany(Batch::class);
+            ->withPivot('price', 'created_at', 'updated_at');
     }
 }
