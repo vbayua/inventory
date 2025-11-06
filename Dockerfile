@@ -44,13 +44,18 @@ COPY . ./
 COPY --from=vendor /var/www/html/vendor ./vendor
 COPY --from=frontend /var/www/html/public/build ./public/build
 
-RUN mkdir -p storage/database \
+RUN mkdir -p \
+      storage/framework/cache/data \
+      storage/framework/sessions \
+      storage/framework/views \
+      storage/logs \
+      storage/database \
     && chown -R www-data:www-data storage bootstrap/cache database
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
 
-EXPOSE 8000
+EXPOSE 8080
 
 ENTRYPOINT ["entrypoint"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
