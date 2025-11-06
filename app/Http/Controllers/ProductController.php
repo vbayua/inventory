@@ -6,7 +6,10 @@ use App\Models\Product;
 use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -40,9 +43,7 @@ class ProductController extends Controller
         $warehouses = Cache::remember('warehouses_list', 3600, function () {
             return \App\Models\Warehouse::select('id', 'name')->get();
         });
-        $locations = Cache::remember('locations_list', 3600, function () {
-            return \App\Models\Location::select('id', 'name')->get();
-        });
+        $locations = \App\Models\Location::select('id', 'name', 'warehouse_id')->get();
         $suppliers = Cache::remember('suppliers_list', 3600, function () {
             return \App\Models\Supplier::select('id', 'name')->get();
         });
@@ -62,10 +63,8 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreProductRequest $request, StockOperationService $stockOperationService)
+
+    public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
 
 
@@ -75,36 +74,43 @@ class ProductController extends Controller
         ]);
 
 
-        $product = Product::create($request->validate([
-            'name' => ['required'],
-            'sku' => ['nullable', 'string'],
-            'unit' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'is_active' => ['required', 'boolean'],
-            'product_type_id' => ['required', 'exists:product_types,id'],
-            'brand_name' => ['nullable', 'string'],
-            'scientific_name' => ['nullable', 'string'],
-        ]));
-
-        $product->suppliers()->attach($request->supplier_id, [
-            'price' => $request->price,
-            'created_at' => now(),
-            'updated_at' => now(),
+        $product = $request->safe()->except([
+            'supplier_id',
+            'location_id',
+            'quantity',
+            'minimum_quantity'
         ]);
+
+        DB::beginTransaction();
         //  Create a default batch for the product
+        $newProduct = new Product($product);
+        $newProduct->save();
         if ($request->with_begin_stock) {
-            $stockData = $request->validate(
+            $stockData = $request->safe()->only(
                 [
-                    'location_id' => ['required', 'exists:locations,id'],
-                    'quantity' => ['required', 'numeric', 'min:0'],
-                    'minimum_quantity' => ['required', 'numeric', 'min:0'],
+                    'supplier_id',
+                    'location_id',
+                    'quantity',
+                    'minimum_quantity'
                 ]
             );
-            $stockOperationService = app(StockOperationService::class);
-            $stockOperationService->createInitialStock($product, $stockData);
+
+            // If with_begin_stock is true and stock is created then attach the product to the supplier.
+            $newProduct->suppliers()->attach($request->supplier_id, [
+                'price' => $request->price,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
+            if (!$stock) {
+                DB::rollback();
+                throw ValidationException::withMessages([
+                    'stock' => 'Failed to create stock'
+                ]);
+            }
         }
+        DB::commit();
         Cache::forget('products_index');
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
@@ -115,7 +121,17 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        return Inertia::render('Products/Show', ['product' => $product]);
+        $product->load('suppliers');
+        $product->load('stocks');
+
+        $totalStock = $product->getAllStockQty();
+        $suppliers = $product->suppliers;
+        // Product
+        return Inertia::render('Products/Show', [
+            'product' => $product,
+            'suppliers' => $suppliers,
+            'total_stock_qty' => $totalStock
+        ]);
     }
 
     /**

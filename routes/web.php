@@ -31,7 +31,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{batch}', [\App\Http\Controllers\BatchController::class, 'update'])->name('batch.update');
     });
 
-    Route::resource('stocks', \App\Http\Controllers\StockController::class);
+    Route::prefix('stocks')->group(function () {
+        Route::get('/', [\App\Http\Controllers\StockController::class, 'index'])->name('stocks.index');
+        Route::get('/{stock}', [\App\Http\Controllers\StockController::class, 'show'])->name('stocks.show');
+        Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
+    });
+
+    Route::prefix('stock-adjustments')->group(function () {
+        Route::get('/', [\App\Http\Controllers\StockAdjustmentController::class, 'index'])->name('stock-adjustments.index');
+        Route::get('/create', [\App\Http\Controllers\StockAdjustmentController::class, 'create'])->name('stock-adjustments.create');
+        Route::post('/', [\App\Http\Controllers\StockAdjustmentController::class, 'store'])->name('stock-adjustments.store');
+        Route::get('/{stockAdjustment}', [\App\Http\Controllers\StockAdjustmentController::class, 'show'])->name('stock-adjustments.show');
+    });
 });
 
 require __DIR__ . '/settings.php';

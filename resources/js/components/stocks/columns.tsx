@@ -2,36 +2,55 @@ import { ColumnDef } from '@tanstack/react-table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Button } from '../ui/button'
 import { MoreHorizontal } from 'lucide-react'
-import { router } from '@inertiajs/react'
+import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 import { DataTableColumnHeader } from '../data-table-column-header'
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu'
 
-interface StockIndex {
+type ProductType = {
     id: number;
-    product?: {
-        id: number;
-        name?: string;
-        [key: string]: any;
-    };
-    location?: {
-        id: number;
-        name?: string;
-        warehouse?: {
-            id: number;
-            name?: string;
-            [key: string]: any;
-        };
-        [key: string]: any;
-    };
-    batch?: {
-        id: number;
-        batch_number?: string;
-        [key: string]: any;
-    };
+    name?: string;
+    type_code?: string;
+}
+
+type Supplier = {
+    id: number;
+    name?: string;
+}
+
+type Product = {
+    id: number;
+    name?: string;
+    sku?: string;
+    product_type?: ProductType;
+}
+
+type Batch = {
+    id: number;
+    batch_number?: string;
+    supplier?: Supplier;
+}
+
+type Warehouse = {
+    id: number;
+    name?: string;
+}
+
+type Location = {
+    id: number;
+    name?: string;
+    warehouse?: Warehouse;
+}
+
+type Stock = {
+    id: number;
+    product?: Product;
+    location?: Location;
+    batch?: Batch;
     status?: string;
-    unit?: string;
     quantity?: number;
+    unit?: string;
+    minimum_quantity?: number;
     created_at?: string;
     updated_at?: string;
 }
@@ -48,7 +67,16 @@ const handleCopyBatchNumber = (batchNumber: string) => {
     }
 }
 
-const handleViewStock = (id: number) => {
+const handleViewStock = (id: number, product_name: any) => {
+    return function () {
+        router.get('stocks.show', { id }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+}
+
+const handleCreateOperation = (id: number, product_name: any) => {
     return function () {
         router.get(`/stocks/${id}`, {}, {
             preserveState: true,
@@ -58,31 +86,32 @@ const handleViewStock = (id: number) => {
 }
 
 const statusConfig = {
-    available: {
+    "available": {
         label: 'Available',
         color: 'bg-green-100 text-green-800',
         variant: 'default' as const,
     },
-    low_stock: {
+    "low_stock": {
         label: 'Low Stock',
         color: 'bg-yellow-100 text-yellow-800',
         variant: 'secondary' as const,
     },
-    out_of_stock: {
+    "out_of_stock": {
         label: 'Out of Stock',
         color: 'bg-red-100 text-red-800',
         variant: 'destructive' as const,
     },
-    reserved: {
+    "reserved": {
         label: 'Reserved',
         color: 'bg-blue-100 text-blue-800',
         variant: 'outline' as const,
     }
 }
 
-export const columns: ColumnDef<StockIndex>[] = [
+export const columns: ColumnDef<Stock>[] = [
     {
         id: "batch_number",
+        accessorKey: "Batch Number",
         accessorFn: row => row.batch?.batch_number ?? '-',
         header: "Batch Number",
         meta: {
@@ -90,8 +119,11 @@ export const columns: ColumnDef<StockIndex>[] = [
         },
         cell: ({ row }) => row.original.batch?.batch_number ?? '-',
     },
+
     {
-        accessorKey: "product.name",
+        id: "product_name",
+        accessorKey: "Product Name",
+        accessorFn: row => row.product?.name,
         header: "Product Name",
         meta: {
             filterVariant: 'select',
@@ -99,7 +131,33 @@ export const columns: ColumnDef<StockIndex>[] = [
         cell: ({ row }) => row.original.product?.name ?? '-',
     },
     {
+        id: "product_type",
+        accessorKey: "Product Type",
+        accessorFn: row => row.product?.product_type?.type_code,
+        header: "Product Type",
+        meta: {
+            filterVariant: 'select',
+        },
+        cell: ({ row }) => row.original.product?.product_type?.type_code ?? '-',
+    },
+    {
+        id: 'supplier_name',
+        accessorKey: 'Supplier',
+        accessorFn: row => row.batch?.supplier?.name ?? '-',
+        header: "Supplier",
+        meta: { filterVariant: 'select' },
+        cell: ({ row }) => row.original.batch?.supplier?.name ?? '-',
+    },
+    {
+        id: "product_sku",
+        accessorKey: "SKU",
+        accessorFn: row => row.product?.sku,
+        header: "SKU",
+        cell: ({ row }) => row.original.product?.sku ?? '-',
+    },
+    {
         id: "location_name",
+        accessorKey: "Location",
         accessorFn: row => row.location?.name,
         header: "Location",
         meta: {
@@ -108,6 +166,7 @@ export const columns: ColumnDef<StockIndex>[] = [
     },
     {
         id: "warehouse_name",
+        accessorKey: "Warehouse",
         accessorFn: row => row.location?.warehouse?.name, // for filtering and sorting
         header: "Warehouse",
         meta: {
@@ -115,7 +174,7 @@ export const columns: ColumnDef<StockIndex>[] = [
         },
     },
     {
-        accessorKey: "quantity",
+        accessorKey: "Quantity",
         header: "Quantity",
         cell: ({ row }) => {
             const quantity = row.original.quantity;
@@ -124,7 +183,17 @@ export const columns: ColumnDef<StockIndex>[] = [
         }
     },
     {
+        accessorKey: "minimum_qty",
+        header: "Min. Qty",
+        cell: ({ row }) => {
+            return row.original.minimum_quantity
+        },
+        enableHiding: true,
+    },
+    {
+        id: "status",
         accessorKey: "status",
+        accessorFn: row => row.status,
         header: "Status",
         cell: ({ row }) => {
             const status = row.original.status;
@@ -141,7 +210,8 @@ export const columns: ColumnDef<StockIndex>[] = [
         }
     },
     {
-        accessorKey: "updated_at",
+        id: "updated_at",
+        accessorKey: "Last Updated",
         header: ({ column }) => (
             <DataTableColumnHeader column={column} title="Last Updated" />
         ),
@@ -154,7 +224,28 @@ export const columns: ColumnDef<StockIndex>[] = [
                 hour: '2-digit',
                 minute: '2-digit',
             });
-        }
+        },
+        // Enable filtering by a date range passed in the column filter value
+        filterFn: (row, id, value) => {
+            const date = new Date(row.getValue<string>(id));
+            const from = value?.from ? new Date(value.from) : undefined;
+            const to = value?.to ? new Date(value.to) : undefined;
+
+            if (from && to) {
+                const toDate = new Date(to);
+                toDate.setHours(23, 59, 59, 999);
+                return date >= from && date <= toDate;
+            }
+            if (from) {
+                return date >= from;
+            }
+            if (to) {
+                const toDate = new Date(to);
+                toDate.setHours(23, 59, 59, 999);
+                return date <= toDate;
+            }
+            return true;
+        },
     },
     {
         id: 'actions',
@@ -179,11 +270,11 @@ export const columns: ColumnDef<StockIndex>[] = [
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                        onClick={handleViewStock(row.original.id)}
+                        asChild
                     >
-                        View Details
+                        <Link href={route('stocks.show', { stock: row.original.id })}> View Details </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className='text-emerald-800'>
+                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, row.original.product?.name)}>
                         Create Operation
                     </DropdownMenuItem>
                 </DropdownMenuContent>

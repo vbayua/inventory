@@ -11,7 +11,7 @@ class UpdateBatchRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,9 @@ class UpdateBatchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'batch_number' => ['required', 'string', 'max:255'],
+            'manufacture_date' => ['nullable', 'date'],
+            'expiry_date' => ['nullable', 'date', 'after_or_equal:manufacture_date'],
         ];
     }
 }

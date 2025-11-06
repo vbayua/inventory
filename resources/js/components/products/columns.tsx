@@ -4,6 +4,7 @@ import { Button, buttonVariants } from '../ui/button'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
+import { DataTableColumnHeader } from '../data-table-column-header'
 
 type ProductIndex = {
     id: number;
@@ -39,21 +40,52 @@ const productTypeConfig = {
 }
 export const columns: ColumnDef<ProductIndex>[] = [
     {
-        accessorKey: "name",
-        header: ({ column }) => {
+        accessorKey: "sku",
+        header: "SKU",
+        cell: ({ cell }) => {
             return (
-                <Button
-                    variant={'ghost'}
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+                <Link
+                    href={route('products.show', { id: cell.row.original.id })}
+                >
+                    {cell.getValue() as string}
+                </Link >
             )
         },
     },
     {
-        accessorKey: "sku",
-        header: "SKU"
+        accessorKey: "name",
+        header: ({ column }) => {
+            return (
+                <DataTableColumnHeader
+                    column={column}
+                    title='Product Name'
+                />
+            )
+        },
+    },
+    {
+        accessorKey: "brand_name",
+        header: "Brand",
+        cell: ({ cell }) => {
+            return (
+                <span className="text-gray-700">
+                    {cell.getValue() as string}
+                </span>
+            )
+        },
+        enableHiding: true
+    },
+    {
+        accessorKey: "scientific_name",
+        header: "Inci Name",
+        cell: ({ cell }) => {
+            return (
+                <span className="text-gray-700">
+                    {cell.getValue() as string}
+                </span>
+            )
+        },
+        enableHiding: true
     },
     {
         accessorKey: "unit",
@@ -62,7 +94,14 @@ export const columns: ColumnDef<ProductIndex>[] = [
     {
         id: "product_type",
         accessorFn: row => row.product_type?.type_code,
-        header: "Product Type",
+        header: ({ column }) => {
+            return (
+                <DataTableColumnHeader
+                    column={column}
+                    title='Product Type'
+                />
+            )
+        },
         meta: {
             filterVariant: 'select',
         },
@@ -83,6 +122,7 @@ export const columns: ColumnDef<ProductIndex>[] = [
         meta: {
             filterVariant: 'select',
         },
+        enableHiding: true,
     },
     {
         accessorKey: "created_at",
@@ -100,7 +140,7 @@ export const columns: ColumnDef<ProductIndex>[] = [
     },
     {
         accessorKey: "updated_at",
-        header: "updated_at",
+        header: "Last Updated",
         cell: ({ cell }) => {
             const date = new Date(cell.getValue() as string)
             return date.toLocaleDateString('en-US', {
@@ -144,12 +184,12 @@ export const columns: ColumnDef<ProductIndex>[] = [
                     <DropdownMenuContent align='end'>
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
-                            <Link href={viewProduct} className={'w-full'}>
+                            <Link href={viewProduct} className={buttonVariants({ variant: 'ghost' })}>
                                 View Product
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                            <Link href={editProduct} className={'w-full'}>
+                            <Link href={editProduct} className={buttonVariants({ variant: 'ghost' })}>
                                 Edit Product
                             </Link>
                         </DropdownMenuItem>

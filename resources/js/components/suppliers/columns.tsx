@@ -24,6 +24,15 @@ export const columns: ColumnDef<SupplierIndex>[] = [
                 />
             )
         },
+        cell: ({ row }) => {
+            const id = row.original.id;
+            const name = row.original.name;
+            return (
+                <Link href={route('supplier.show', id)}>
+                    {name}
+                </Link>
+            )
+        }
     },
     {
         id: "actions",

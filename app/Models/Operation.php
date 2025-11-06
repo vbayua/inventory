@@ -15,8 +15,9 @@ class Operation extends Model
 
     protected $casts = [
         'operation_type' => 'string',
-        'operation_date' => 'date',
+        'operation_date' => 'datetime',
     ];
+
 
     public function product(): BelongsTo
     {

@@ -5,7 +5,7 @@ import { Link, usePage } from '@inertiajs/react';
 export function NavMainSingle({ items = [], group = 'Group' }: { items: NavItem[], group?: string }) {
     const page = usePage();
     return (
-        <SidebarGroup className="px-2 py-0">
+        <SidebarGroup className="px-2 py-2">
             <SidebarGroupLabel>{group}</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (

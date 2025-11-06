@@ -54,9 +54,9 @@ class Product extends Model
 
     public function suppliers()
     {
-        // return $this->belongsToMany(Supplier::class, '');
         return $this->belongsToMany(Supplier::class, 'products_suppliers', 'product_id', 'supplier_id')
-            ->withPivot('price', 'created_at', 'updated_at');
+            ->withPivot('price')
+            ->withTimestamps();
     }
 
     public function unit()
@@ -77,5 +77,12 @@ class Product extends Model
     public function getBaseUnitAttribute()
     {
         return $this->unit ? $this->unit->base_unit : null;
+    }
+
+    public function getAllStockQty()
+    {
+        return $this->relationLoaded('stocks')
+            ? (int) $this->stocks->sum('quantity')
+            : (int) $this->stocks()->sum('quantity');
     }
 }

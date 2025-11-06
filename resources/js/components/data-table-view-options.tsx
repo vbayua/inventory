@@ -24,13 +24,13 @@ export function DataTableViewOptions<TData>({
                 <Button
                     variant="outline"
                     size="sm"
-                    className="ml-auto hidden h-8 lg:flex"
+                    className="ml-auto hidden h-8 lg:flex hover:cursor-pointer"
                 >
                     <Settings2 />
                     Columns
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[150px]">
+            <DropdownMenuContent align="end" className="w-[180px]">
                 <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {table
@@ -43,7 +43,7 @@ export function DataTableViewOptions<TData>({
                         return (
                             <DropdownMenuCheckboxItem
                                 key={column.id}
-                                className="capitalize"
+                                className="capitalize hover:cursor-pointer"
                                 checked={column.getIsVisible()}
                                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
                             >

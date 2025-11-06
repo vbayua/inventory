@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StockAdjustment;
 use App\Http\Requests\StoreStockAdjustmentRequest;
 use App\Http\Requests\UpdateStockAdjustmentRequest;
+use App\Service\StockOperationService;
 
 class StockAdjustmentController extends Controller
 {
@@ -27,9 +28,19 @@ class StockAdjustmentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreStockAdjustmentRequest $request)
+    public function store(StoreStockAdjustmentRequest $request, StockOperationService $stockOperationService)
     {
-        //
+        $validated = $request->validated();
+        $stockOperationService->adjustStockOperation(
+            stock: $validated['stock_id'],
+            quantity: $validated['quantity'],
+            unit: $validated['unit'],
+            type: $validated['adjustment_type'],
+            remarks: $validated['remarks'],
+            operationDate: now(),
+        );
+
+        return redirect()->route('stocks.index')->with('success', 'Stock adjustment recorded successfully.');
     }
 
     /**
