@@ -79,8 +79,6 @@ class StockOperationService
 
             $stock = $stock instanceof Stock ? $stock : Stock::findOrFail($stock);
             $productId = $stock->product_id;
-            $locationId = $stock->location_id;
-            $batchId = $stock->batch_id;
 
             $operation = $this->createOperation(
                 'adjustment',
@@ -93,9 +91,7 @@ class StockOperationService
             );
 
             StockAdjustment::create([
-                'product_id' => $productId,
-                'location_id' => $locationId,
-                'batch_id' => $batchId,
+                'stock_id' => $stock->id,
                 'quantity' => $quantity,
                 'unit' => $unit,
                 'adjustment_type' => $type,

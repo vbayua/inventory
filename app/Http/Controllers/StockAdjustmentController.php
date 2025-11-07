@@ -6,6 +6,7 @@ use App\Models\StockAdjustment;
 use App\Http\Requests\StoreStockAdjustmentRequest;
 use App\Http\Requests\UpdateStockAdjustmentRequest;
 use App\Service\StockOperationService;
+use Inertia\Inertia;
 
 class StockAdjustmentController extends Controller
 {
@@ -14,7 +15,13 @@ class StockAdjustmentController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('StockAdjustments/Index', [
+            'stockAdjustments' => StockAdjustment::with([
+                'stock.product:only:id,name',
+                'stock.location:only:id,name',
+                'stock.batch:only:id,batch_number',
+            ])->latest()->get(),
+        ]);
     }
 
     /**
