@@ -38,4 +38,9 @@ class Stock extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
 }
