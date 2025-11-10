@@ -14,7 +14,7 @@ class StockAdjustment extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        // 'quantity' => 'decimal:2',
         'unit' => 'string',
         'adjustment_type' => 'string',
     ];
