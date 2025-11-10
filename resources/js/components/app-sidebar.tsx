@@ -70,6 +70,11 @@ const stockNavItems: NavItem[] = [
         href: '/operations',
         icon: Cog,
     },
+    {
+        title: 'Stock Adjustments',
+        href: '/stock-adjustments',
+        icon: CheckCheck,
+    }
 ]
 
 const supplierNavItem: NavItem[] = [

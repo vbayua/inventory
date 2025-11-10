@@ -15,12 +15,15 @@ class StockAdjustmentController extends Controller
      */
     public function index()
     {
+        $stockAdjustmentData = StockAdjustment::with([
+            'stock:id,location_id,product_id,batch_id',
+            'stock.product:id,name',
+            'stock.location:id,name',
+            'stock.batch:id,batch_number',
+        ])->latest()->get();
+        // dd($stockAdjustmentData);
         return Inertia::render('StockAdjustments/Index', [
-            'stockAdjustments' => StockAdjustment::with([
-                'stock.product:only:id,name',
-                'stock.location:only:id,name',
-                'stock.batch:only:id,batch_number',
-            ])->latest()->get(),
+            'stock_adjustments' => $stockAdjustmentData
         ]);
     }
 
