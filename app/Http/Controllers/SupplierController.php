@@ -17,7 +17,7 @@ class SupplierController extends Controller
     public function index()
     {
         return Inertia::render('Suppliers/Index', [
-            'suppliers' => Supplier::all(),
+            'suppliers' => Supplier::with('partner')->get(),
         ]);
     }
 
@@ -45,7 +45,7 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        $supplier->load(['products.categories']);
+        $supplier->load(['products.categories', 'partner']);
         $productsFromSupplier = $supplier->products;
         $totalProducts = $productsFromSupplier->count();
         $relatedProductIds = $productsFromSupplier->pluck('id')->all();
