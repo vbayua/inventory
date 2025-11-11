@@ -62,9 +62,14 @@ type ProductMin = {
     name?: string;
     sku?: string;
 }
-type Supplier = {
+
+type Partner = {
     id: number;
     name?: string;
+}
+type Supplier = {
+    id: number;
+    partner?: Partner;
     phone_number?: string;
     email?: string;
     contact_person?: string;
@@ -103,7 +108,7 @@ export default function Show({ supplier, products, totalProducts }: {
             href: '/suppliers',
         },
         {
-            title: `${supplier.name}`,
+            title: `${supplier.partner?.name}`,
             href: `/supplier/${supplier.id}`,
         }
     ];
@@ -169,7 +174,7 @@ export default function Show({ supplier, products, totalProducts }: {
     const stockStatus = total_stock_qty > 0 ? "available" : "out_of_stock";
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${supplier?.name}`} />
+            <Head title={`${supplier?.partner?.name}`} />
             <ContainerLayout>
                 <div>
                     {/* <h2 className="text-3xl font-semibold mb-2.5">{supplier.name}</h2>
@@ -179,7 +184,7 @@ export default function Show({ supplier, products, totalProducts }: {
                         <CardHeader>
                             <div className="flex items-start justify-between">
                                 <CardTitle>
-                                    <h2 className="text-3xl font-semibold mb-2.5">{supplier.name}</h2>
+                                    <h2 className="text-3xl font-semibold mb-2.5">{supplier.partner?.name}</h2>
                                 </CardTitle>
                                 <Badge variant={"secondary"} className='text-base px-4 py-2'>
                                     <Package className="mr-2 h-4 w-4" />
@@ -225,7 +230,7 @@ export default function Show({ supplier, products, totalProducts }: {
                     <Card>
                         <CardHeader className='grid grid-cols-2 gap-4 mt-4'>
                             <div className="">
-                                <CardTitle>Products from {supplier.name}</CardTitle>
+                                <CardTitle>Products from {supplier.partner?.name}</CardTitle>
                                 <CardDescription>View and manage all products supplied by this vendor</CardDescription>
                             </div>
                             <div
@@ -244,7 +249,7 @@ export default function Show({ supplier, products, totalProducts }: {
                                         <DialogHeader>
                                             <DialogTitle>Add Products</DialogTitle>
                                             <DialogDescription>
-                                                {supplier.name}.
+                                                {supplier.partner?.name}.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4">
