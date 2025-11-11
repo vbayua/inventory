@@ -13,12 +13,18 @@ class Supplier extends Model
 
     public $guarded = ['id'];
 
-    public function scopeFilter($query, $filters)
+    // public function scopeFilter($query, $filters)
+    // {
+    //     if (!empty($filters['name'])) {
+    //         $query->where('name', 'like', '%' . $filters['name'] . '%');
+    //     }
+    // }
+
+    public function partner()
     {
-        if (!empty($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
-        }
+        return $this->belongsTo(Partner::class);
     }
+
     public function products()
     {
         return $this->belongsToMany(Product::class, 'products_suppliers', 'supplier_id', 'product_id')

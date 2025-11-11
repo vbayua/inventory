@@ -17,8 +17,7 @@ class SupplierFactory extends Factory
     public function definition(): array
     {
         return [
-            //
-            'name' => $this->faker->company,
+            'partner_id' => \App\Models\Partner::factory(),
         ];
     }
 }
