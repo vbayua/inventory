@@ -33,10 +33,12 @@ class PartnerController extends Controller
      */
     public function store(StorePartnerRequest $request)
     {
-        DB::functiion(function () use ($request) {
+        DB::transaction(function () use ($request) {
             $validatedData = $request->validated();
             Partner::create($validatedData);
         });
+
+        return redirect()->route('partners.index')->with('success', 'Partner created successfully.');
     }
 
     /**
@@ -44,7 +46,9 @@ class PartnerController extends Controller
      */
     public function show(Partner $partner)
     {
-        //
+        return Inertia::render('Partners/Show', [
+            'partner' => $partner,
+        ]);
     }
 
     /**
@@ -52,7 +56,9 @@ class PartnerController extends Controller
      */
     public function edit(Partner $partner)
     {
-        //
+        return Inertia::render('Partners/Edit', [
+            'partner' => $partner,
+        ]);
     }
 
     /**
@@ -60,7 +66,12 @@ class PartnerController extends Controller
      */
     public function update(UpdatePartnerRequest $request, Partner $partner)
     {
-        //
+        DB::transaction(function () use ($request, $partner) {
+            $validatedData = $request->validated();
+            $partner->update($validatedData);
+        });
+
+        return redirect()->route('partners.index')->with('success', 'Partner updated successfully.');
     }
 
     /**

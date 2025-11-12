@@ -66,14 +66,14 @@ type ProductMin = {
 type Partner = {
     id: number;
     name?: string;
-}
-type Supplier = {
-    id: number;
-    partner?: Partner;
     phone_number?: string;
     email?: string;
     contact_person?: string;
     address?: string;
+}
+type Supplier = {
+    id: number;
+    partner?: Partner;
     notes?: string;
 }
 
@@ -198,8 +198,8 @@ export default function Show({ supplier, products, totalProducts }: {
                                     <Mail className='h-5 w-5 text-primary mt-0.5' />
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">Email</p>
-                                        <a href={supplier.email ? `mailto:${supplier.email}` : "#"} className="text-foreground hover:text-primary transition-colors">
-                                            {supplier.email ?? "-"}
+                                        <a href={supplier.partner?.email ? `mailto:${supplier.partner?.email}` : "#"} className="text-foreground hover:text-primary transition-colors">
+                                            {supplier.partner?.email ?? "-"}
                                         </a>
                                     </div>
                                 </div>
@@ -207,8 +207,8 @@ export default function Show({ supplier, products, totalProducts }: {
                                     <Phone className='h-5 w-5 text-primary mt-0.5' />
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">Phone</p>
-                                        <a href={supplier.phone_number ? `tel:${supplier.phone_number}` : "#"} className="text-foreground hover:text-primary transition-colors">
-                                            {supplier.phone_number ?? "-"}
+                                        <a href={supplier.partner?.phone_number ? `tel:${supplier.partner?.phone_number}` : "#"} className="text-foreground hover:text-primary transition-colors">
+                                            {supplier.partner?.phone_number ?? "-"}
                                         </a>
                                     </div>
                                 </div>
@@ -217,7 +217,7 @@ export default function Show({ supplier, products, totalProducts }: {
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">Address</p>
                                         <p className="text-foreground">
-                                            {supplier.address ?? "-"}
+                                            {supplier.partner?.address ?? "-"}
                                         </p>
                                     </div>
                                 </div>
@@ -229,8 +229,8 @@ export default function Show({ supplier, products, totalProducts }: {
                     {/* Products Table */}
                     <Card>
                         <CardHeader className='grid grid-cols-2 gap-4 mt-4'>
-                            <div className="">
-                                <CardTitle>Products from {supplier.partner?.name}</CardTitle>
+                            <div className="space-y-6">
+                                <CardTitle>Products Assigned</CardTitle>
                                 <CardDescription>View and manage all products supplied by this vendor</CardDescription>
                             </div>
                             <div
