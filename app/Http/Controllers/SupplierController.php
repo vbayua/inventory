@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
+use App\Models\Partner;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -26,7 +27,13 @@ class SupplierController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Suppliers/Create');
+        $relatedPartnerIds = Supplier::pluck('partner_id')->all();
+        return Inertia::render('Suppliers/Create', [
+            'partners' => Inertia::lazy(fn() => Partner::select('id', 'name')
+                ->whereNotIn('id', $relatedPartnerIds)
+                ->orderBy('name')
+                ->get()),
+        ]);
     }
 
     /**

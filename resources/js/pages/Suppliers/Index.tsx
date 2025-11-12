@@ -24,7 +24,6 @@ type SearchSupplierForm = {
 }
 
 export default function Index({ suppliers }: { suppliers: any }) {
-    console.log('Suppliers:', suppliers);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Supplier Lists" />
@@ -36,7 +35,7 @@ export default function Index({ suppliers }: { suppliers: any }) {
                     </div>
                     <Link className={buttonVariants({ variant: 'default' })} href={route('supplier.create')}>
                         <PlusIcon className='w-4 h-4 mr-2' />
-                        Create Supplier
+                        Add Supplier
                     </Link>
                 </div>
                 <DataTable data={suppliers} columns={columns} clientSide={true} />
