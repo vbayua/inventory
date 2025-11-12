@@ -79,10 +79,20 @@ const stockNavItems: NavItem[] = [
 
 const supplierNavItem: NavItem[] = [
     {
+        title: 'Partners / Companies',
+        href: '/partners',
+        icon: Building
+    },
+    {
         title: 'Suppliers',
         href: '/suppliers',
-        icon: BuildingIcon
+        icon: Building
     },
+    {
+        title: 'Manufacturers',
+        href: '/manufacturers',
+        icon: Building
+    }
 ]
 const footerNavItems: NavItem[] = [
     {
