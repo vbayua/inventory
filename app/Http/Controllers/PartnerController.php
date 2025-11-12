@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Partner;
 use App\Http\Requests\StorePartnerRequest;
 use App\Http\Requests\UpdatePartnerRequest;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PartnerController extends Controller
 {
@@ -13,7 +15,9 @@ class PartnerController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Partners/Index', [
+            'partners' => Partner::all(),
+        ]);
     }
 
     /**
@@ -21,7 +25,7 @@ class PartnerController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Partners/Create');
     }
 
     /**
@@ -29,7 +33,10 @@ class PartnerController extends Controller
      */
     public function store(StorePartnerRequest $request)
     {
-        //
+        DB::functiion(function () use ($request) {
+            $validatedData = $request->validated();
+            Partner::create($validatedData);
+        });
     }
 
     /**
