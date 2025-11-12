@@ -45,7 +45,7 @@ export const columns: ColumnDef<PartnerIndex>[] = [
                     router.delete(route('partners.destroy', { id: partner.id }), {
                         preserveScroll: true,
                         onSuccess: () => {
-                            toast.success('Pertner deleted successfully')
+                            toast.success('Partner deleted successfully')
                         },
                         onError: (errors) => {
                             if (errors.name) {
@@ -67,12 +67,12 @@ export const columns: ColumnDef<PartnerIndex>[] = [
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewPartner} className={'w-full'}>
-                                View Pertner
+                                View Partner
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                             <Link href={editPartner} className={'w-full'}>
-                                Edit Pertner
+                                Edit Partner
                             </Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
