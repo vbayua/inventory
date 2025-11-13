@@ -16,9 +16,4 @@ class Partner extends Model
     {
         return $this->hasMany(Supplier::class);
     }
-
-    public function manufacturers()
-    {
-        return $this->hasMany(Manufacturer::class);
-    }
 }
