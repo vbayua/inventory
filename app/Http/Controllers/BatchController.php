@@ -28,8 +28,11 @@ class BatchController extends Controller
     public function create()
     {
         return Inertia::render('Batches/Create', [
-            'products' => \App\Models\Product::select('id', 'name', 'sku')->with('suppliers')->get(),
-            'suppliers' => \App\Models\Supplier::select('id', 'name')->get(),
+            'products' => \App\Models\Product::select('id', 'name', 'sku')->with(
+                'suppliers:id,partner_id',
+                'suppliers.partner:id,name'
+            )->get(),
+            'suppliers' => \App\Models\Supplier::with('partner:id,name')->select('id', 'partner_id')->get(),
         ]);
     }
 

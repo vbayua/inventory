@@ -20,7 +20,7 @@ class ProductController extends Controller
     public function index()
     {
         $products =  Cache::remember('products_index', 3600, function () {
-            return Product::with(['categories:id,name', 'suppliers:id,name', 'productType:id,type_code'])
+            return Product::with(['categories:id,name', 'productType:id,type_code'])
                 ->orderBy('created_at', 'desc')
                 ->get();
         });
@@ -37,29 +37,25 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $categories = Cache::remember('categories_list', 3600, function () {
-            return \App\Models\Category::select('id', 'name')->get();
+        $suppliers = Inertia::lazy(function () {
+            return Cache::remember('suppliers_list', 3600, function () {
+                return \App\Models\Supplier::with('partner:id,name')->select('id', 'partner_id')->get();
+            });
         });
-        $warehouses = Cache::remember('warehouses_list', 3600, function () {
-            return \App\Models\Warehouse::select('id', 'name')->get();
+        $partners = Inertia::lazy(function () {
+            return Cache::remember('partners_list', 3600, function () {
+                return \App\Models\Partner::select('id', 'name')->get();
+            });
         });
-        $locations = \App\Models\Location::select('id', 'name', 'warehouse_id')->get();
-        $suppliers = Cache::remember('suppliers_list', 3600, function () {
-            return \App\Models\Supplier::select('id', 'name')->get();
-        });
-        $units = Cache::remember('units_list', 3600, function () {
-            return \App\Models\Unit::select('name')->get();
-        });
-        $product_types = Cache::remember('product_type_list', 3600, function () {
-            return \App\Models\ProductType::select('id', 'name', 'type_code')->get();
-        });
+
         return Inertia::render('Products/Create', [
-            'categories' => $categories,
+            'categories' => \App\Models\Category::select('id', 'name')->get(),
             'suppliers' => $suppliers,
-            'units' => $units,
-            'product_types' => $product_types,
-            'warehouses' => $warehouses,
-            'locations' => $locations,
+            'units' => \App\Models\Unit::select('name')->get(),
+            'product_types' => \App\Models\ProductType::select('id', 'name', 'type_code')->get(),
+            'warehouses' => \App\Models\Warehouse::select('id', 'name')->get(),
+            'locations' => \App\Models\Location::select('id', 'name', 'warehouse_id')->get(),
+            'partners' => $partners,
         ]);
     }
 
@@ -121,7 +117,10 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load('suppliers');
+        $product->load([
+            'suppliers:id,partner_id',
+            'suppliers.partner:id,name',
+        ]);
         $product->load('stocks');
 
         $totalStock = $product->getAllStockQty();

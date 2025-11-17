@@ -30,6 +30,7 @@ class StoreProductRequest extends FormRequest
             'with_begin_stock' => ['required', 'boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_name' => ['nullable', 'string'],
+            'manufacturer' => ['nullable', 'string'],
             'scientific_name' => ['nullable', 'string'],
             'price' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
             'supplier_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:suppliers,id'],
