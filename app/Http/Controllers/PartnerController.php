@@ -10,6 +10,11 @@ use Inertia\Inertia;
 
 class PartnerController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Partner::class, 'partner');
+    }
+
     /**
      * Display a listing of the resource.
      */

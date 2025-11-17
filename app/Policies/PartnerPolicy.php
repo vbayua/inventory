@@ -4,16 +4,23 @@ namespace App\Policies;
 
 use App\Models\Partner;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PartnerPolicy
 {
+    use HandlesAuthorization;
+
+    private function hasPermission(User $user, string $ability): bool
+    {
+        return $user->hasPermission("partner.{$ability}");
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $this->hasPermission($user, 'viewAny');
     }
 
     /**
@@ -21,7 +28,7 @@ class PartnerPolicy
      */
     public function view(User $user, Partner $partner): bool
     {
-        return false;
+        return $this->hasPermission($user, 'view');
     }
 
     /**
@@ -29,7 +36,7 @@ class PartnerPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $this->hasPermission($user, 'create');
     }
 
     /**
@@ -37,7 +44,7 @@ class PartnerPolicy
      */
     public function update(User $user, Partner $partner): bool
     {
-        return false;
+        return $this->hasPermission($user, 'update');
     }
 
     /**
@@ -45,7 +52,7 @@ class PartnerPolicy
      */
     public function delete(User $user, Partner $partner): bool
     {
-        return false;
+        return $this->hasPermission($user, 'delete');
     }
 
     /**
@@ -53,7 +60,7 @@ class PartnerPolicy
      */
     public function restore(User $user, Partner $partner): bool
     {
-        return false;
+        return $this->hasPermission($user, 'restore');
     }
 
     /**
@@ -61,6 +68,6 @@ class PartnerPolicy
      */
     public function forceDelete(User $user, Partner $partner): bool
     {
-        return false;
+        return $this->hasPermission($user, 'forceDelete');
     }
 }
