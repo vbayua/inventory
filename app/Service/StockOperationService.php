@@ -12,6 +12,7 @@ use App\Service\BatchAssignmentService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 use Illuminate\Support\Carbon;
 
@@ -241,7 +242,8 @@ class StockOperationService
                 'unit' => $unitName,
                 'quantity' => $usageQuantity,
                 'operation_date' => $operationDateWithAddedTime,
-                'remarks' => $remarks ?? ''
+                'remarks' => $remarks ?? '',
+                'user_id' => Auth::id(),
             ]);
 
             return $operation;
@@ -280,6 +282,7 @@ class StockOperationService
                 $stock->quantity = 0;
                 $stock->minimum_quantity = $stockData['minimum_quantity'];
                 $stock->status = 'out_of_stock';
+                $stock->user_id = Auth::id();
                 $stock->save();
                 // Relock newly reted row to be safe in high contention
                 $stock = Stock::where('id', $stock->id)->lockForUpdate()->firstOrFail();

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Service\BatchPolicies\BatchPolicyInterface;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -104,7 +105,8 @@ class BatchAssignmentService
             'product_id' => $product->id,
             'batch_number' => $batchNumber,
             'expiry_date' => $expiryDate ?? null,
-            'supplier_id' => $supplierId
+            'supplier_id' => $supplierId,
+            'user_id' => Auth::id(),
         ]);
 
         return $policy->determineBatch($product, $newBatch->id);

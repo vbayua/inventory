@@ -15,7 +15,7 @@ class Batch extends Model
     /** @use HasFactory<\Database\Factories\BatchFactory> */
     use HasFactory;
 
-    protected $fillable = ['product_id', 'batch_number', 'supplier_id', 'manufacture_date', 'expiry_date'];
+    protected $fillable = ['product_id', 'batch_number', 'supplier_id', 'manufacture_date', 'expiry_date', 'user_id'];
 
     protected $casts = [
         'manufacture_date' => 'date',
@@ -45,6 +45,11 @@ class Batch extends Model
     public function stockAdjustments(): HasMany
     {
         return $this->hasMany(StockAdjustment::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function isExpired(): bool

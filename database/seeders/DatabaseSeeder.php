@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             // \Database\Seeders\PermissionSeeder::class,
             // \Database\Seeders\RolePermissionSeeder::class,
             // \Database\Seeders\UserSeeder::class,
+            \Database\Seeders\AuthorizationSeeder::class,
             \Database\Seeders\UnitSeeder::class,
         ]);
         $warehouse = \App\Models\Warehouse::factory()->create([
