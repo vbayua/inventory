@@ -52,15 +52,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{partner}/edit', [\App\Http\Controllers\PartnerController::class, 'edit'])->name('partners.edit');
         Route::put('/{partner}', [\App\Http\Controllers\PartnerController::class, 'update'])->name('partners.update');
     });
-
-    Route::prefix('manufacturers')->group(function () {
-        Route::get('/', [\App\Http\Controllers\ManufacturerController::class, 'index'])->name('manufacturers.index');
-        Route::get('/create', [\App\Http\Controllers\ManufacturerController::class, 'create'])->name('manufacturers.create');
-        Route::post('/', [\App\Http\Controllers\ManufacturerController::class, 'store'])->name('manufacturers.store');
-        Route::get('/{manufacturer}', [\App\Http\Controllers\ManufacturerController::class, 'show'])->name('manufacturers.show');
-        Route::get('/{manufacturer}/edit', [\App\Http\Controllers\ManufacturerController::class, 'edit'])->name('manufacturers.edit');
-        Route::put('/{manufacturer}', [\App\Http\Controllers\ManufacturerController::class, 'update'])->name('manufacturers.update');
-    });
 });
 
 require __DIR__ . '/settings.php';
