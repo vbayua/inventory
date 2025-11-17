@@ -16,7 +16,7 @@ class BlankStateSeeder extends Seeder
             \Database\Seeders\UnitSeeder::class,
             \Database\Seeders\ProductTypeSeeder::class,
             \Database\Seeders\CategorySeeder::class,
-            \Database\Seeders\SupplierSeeder::class,
+            \Database\Seeders\PartnerSeeder::class,
             \Database\Seeders\WarehouseSeeder::class,
             \Database\Seeders\LocationSeeder::class,
             \Database\Seeders\UserSeeder::class,
