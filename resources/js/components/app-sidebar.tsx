@@ -88,11 +88,6 @@ const supplierNavItem: NavItem[] = [
         href: '/suppliers',
         icon: Building
     },
-    {
-        title: 'Manufacturers',
-        href: '/manufacturers',
-        icon: Building
-    }
 ]
 const footerNavItems: NavItem[] = [
     {
