@@ -14,16 +14,12 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Product::class, 'product');
-    }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $this->authorize('viewAny', Product::class);
         $products =  Cache::remember('products_index', 3600, function () {
             return Product::with(['categories:id,name', 'productType:id,type_code'])
                 ->orderBy('created_at', 'desc')
@@ -42,6 +38,7 @@ class ProductController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Product::class);
         $suppliers = Inertia::lazy(function () {
             return Cache::remember('suppliers_list', 3600, function () {
                 return \App\Models\Supplier::with('partner:id,name')->select('id', 'partner_id')->get();
@@ -67,7 +64,7 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
-
+        $this->authorize('create', Product::class);
 
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
@@ -122,6 +119,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        $this->authorize('view', $product);
         $product->load([
             'suppliers:id,partner_id',
             'suppliers.partner:id,name',
@@ -143,6 +141,7 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        $this->authorize('update', $product);
         $categories = Cache::remember('categories_list', 3600, function () {
             return \App\Models\Category::select('id', 'name')->get();
         });
@@ -170,6 +169,7 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
+        $this->authorize('update', $product);
         $product->update($request->validate([
             'name' => ['required'],
             'sku' => ['nullable', 'string'],
@@ -197,6 +197,7 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        $this->authorize('delete', $product);
         $product->delete();
         return redirect()->route('products.index');
     }

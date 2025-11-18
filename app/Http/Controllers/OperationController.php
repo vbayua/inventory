@@ -19,7 +19,7 @@ class OperationController extends Controller
     public function index()
     {
         return Inertia('Operations/Index', [
-            'operations' => Operation::with(['product', 'batch', 'location'])->latest()->get(),
+            'operations' => Operation::with(['product', 'batch', 'location', 'user:id,name'])->latest()->get(),
         ]);
     }
 
