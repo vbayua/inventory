@@ -1,11 +1,9 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button, buttonVariants } from '../ui/button'
-import { MoreHorizontal, ArrowUpDown, LogIn } from 'lucide-react'
-import { Link, router } from '@inertiajs/react'
-import { toast } from 'sonner'
-import { DataTableColumnHeader } from '../data-table-column-header'
-import { ArrowDown, ArrowUp, PlusCircle, Edit2 } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, Edit2, LogIn, MoreHorizontal, PlusCircle } from 'lucide-react';
+import { DataTableColumnHeader } from '../data-table-column-header';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 type OperationIndex = {
     id: number;
@@ -23,12 +21,17 @@ type OperationIndex = {
         batch_number: string;
         [key: string]: any; // Adjust this type based on your warehouse structure
     };
+    user?: {
+        id: number;
+        name: string;
+        [key: string]: any; // Adjust this type based on your user structure
+    };
     unit: string;
     quantity: number;
     remarks: string;
     created_at: string;
     operation_date: string;
-}
+};
 
 const operationConfig = {
     inbound: {
@@ -66,28 +69,28 @@ const operationConfig = {
         variant: 'default' as const,
         icon: LogIn,
     },
-}
+};
 
 export const columns: ColumnDef<OperationIndex>[] = [
     {
-        id: "batch_number",
-        accessorFn: row => row.batch?.batch_number,
-        header: "Batch Number",
+        id: 'batch_number',
+        accessorFn: (row) => row.batch?.batch_number,
+        header: 'Batch Number',
         meta: {
             filterVariant: 'select',
         },
     },
     {
-        id: "product_name",
-        accessorFn: row => row.product?.name,
-        header: "Product Name",
+        id: 'product_name',
+        accessorFn: (row) => row.product?.name,
+        header: 'Product Name',
         meta: {
             filterVariant: 'select',
         },
     },
     {
-        accessorKey: "operation_type",
-        header: "Operation Type",
+        accessorKey: 'operation_type',
+        header: 'Operation Type',
         cell: ({ row }) => {
             const operationType = row.original.operation_type;
             const config = operationConfig[operationType as keyof typeof operationConfig] || {
@@ -101,45 +104,40 @@ export const columns: ColumnDef<OperationIndex>[] = [
                     {config.label}
                 </span>
             );
-        }
+        },
     },
     {
-        id: "quantity",
-        accessorFn: row => row.quantity,
-        header: "Quantity",
+        id: 'quantity',
+        accessorFn: (row) => row.quantity,
+        header: 'Quantity',
     },
     {
-        id: "unit",
-        accessorFn: row => row.unit,
-        header: "Unit",
+        id: 'unit',
+        accessorFn: (row) => row.unit,
+        header: 'Unit',
     },
     {
-        id: "location_name",
-        accessorFn: row => row.location?.name,
-        header: "Location",
+        id: 'location_name',
+        accessorFn: (row) => row.location?.name,
+        header: 'Location',
         meta: {
             filterVariant: 'select',
         },
         enableHiding: true,
     },
     {
-        id: "remarks",
-        accessorFn: row => row.remarks,
-        header: "Remarks",
+        id: 'remarks',
+        accessorFn: (row) => row.remarks,
+        header: 'Remarks',
         enableHiding: true,
     },
     {
-        accessorKey: "operation_date",
+        accessorKey: 'operation_date',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Operation Date"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Operation Date" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.operation_date)
+            const date = new Date(row.original.operation_date);
             const localeDateString = date.toLocaleDateString('id-ID', {
                 year: 'numeric',
                 month: 'short',
@@ -147,20 +145,22 @@ export const columns: ColumnDef<OperationIndex>[] = [
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
-            })
-            return (
-                <span className="text-sm text-muted-foreground" >
-                    {localeDateString}
-                </span >
-            )
-        }
+            });
+            return <span className="text-muted-foreground text-sm">{localeDateString}</span>;
+        },
     },
     {
-        id: "actions",
+        id: 'User',
+        accessorFn: (row) => row.user?.name || 'System',
+        header: 'Performed By',
+        enableHiding: true,
+    },
+    {
+        id: 'actions',
         cell: ({ row }) => {
-            const operation = row.original
-            const viewOperation = route('operations.show', { id: operation.id })
-            const editOperation = route('operations.edit', { id: operation.id })
+            const operation = row.original;
+            const viewOperation = route('operations.show', { id: operation.id });
+            const editOperation = route('operations.edit', { id: operation.id });
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -169,7 +169,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
+                    <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewOperation} className={'w-full'}>
@@ -183,7 +183,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
-        }
-    }
-]
+            );
+        },
+    },
+];
