@@ -86,6 +86,7 @@ class StockController extends Controller
      */
     public function update(UpdateStockRequest $request, Stock $stock, StockOperationService $stockService)
     {
+        $this->authorize('update', Operation::class);
         $data = $request->validated();
 
         // Use incoming values if present; otherwise fall back to current model values
