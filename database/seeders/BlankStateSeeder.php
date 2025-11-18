@@ -20,6 +20,7 @@ class BlankStateSeeder extends Seeder
             \Database\Seeders\WarehouseSeeder::class,
             \Database\Seeders\LocationSeeder::class,
             \Database\Seeders\UserSeeder::class,
+            \Database\Seeders\AuthorizationSeeder::class,
         ]);
     }
 }

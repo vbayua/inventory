@@ -11,7 +11,7 @@ class AuthorizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $resources = ['product', 'partner', 'supplier'];
+        $resources = ['product', 'partner', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit'];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
         $permissions = collect($resources)->flatMap(function (string $resource) use ($actions) {
@@ -28,11 +28,33 @@ class AuthorizationSeeder extends Seeder
             ['description' => 'System administrator with full permissions']
         );
 
+        $operatorRole = Role::firstOrCreate(
+            ['name' => 'operator'],
+            ['description' => 'Operator with limited permissions']
+        );
+
         $adminRole->permissions()->sync($permissions->pluck('id')->all());
+        $operatorRole->permissions()->sync(
+            $permissions->whereIn('name', [
+                'product.viewAny',
+                'product.view',
+                'partner.viewAny',
+                'partner.view',
+                'supplier.viewAny',
+                'supplier.view',
+                'operation.viewAny',
+                'operation.view',
+            ])->pluck('id')->all()
+        );
 
         $adminUser = User::where('email', 'admin@example.com')->first();
         if ($adminUser) {
             $adminUser->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
+
+        $operatorUser = User::where('email', 'operator@example.com')->first();
+        if ($operatorUser) {
+            $operatorUser->roles()->syncWithoutDetaching([$operatorRole->id]);
         }
     }
 }
