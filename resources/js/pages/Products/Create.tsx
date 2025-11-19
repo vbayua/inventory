@@ -37,6 +37,8 @@ type CreateProductForm = {
     with_begin_stock?: boolean;
     quantity?: number;
     minimum_quantity?: number;
+    container_quantity?: number;
+    container_unit?: string;
     warehouse_id?: string | null;
     location_id?: string | null;
     status?: string;
@@ -108,6 +110,8 @@ export default function Create({
         with_begin_stock: false,
         quantity: 0,
         minimum_quantity: 0,
+        container_quantity: 0,
+        container_unit: '',
         warehouse_id: '',
         location_id: '',
         status: 'available',
@@ -477,6 +481,43 @@ export default function Create({
                                     />
 
                                     <InputError message={errors.minimum_quantity} />
+                                </div>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2 md:gap-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="container_quantity">Container Quantity</Label>
+                                    <Input
+                                        id="container_quantity"
+                                        type="number"
+                                        min={0}
+                                        value={data.container_quantity}
+                                        onChange={(e) => {
+                                            setData('container_quantity', Number(e.target.value));
+                                        }}
+                                        className="mt-1 block w-full"
+                                    />
+
+                                    <InputError message={errors.container_quantity} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="container_unit">Container Unit</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-between">
+                                                {data.container_unit ? data.container_unit : 'Select Unit'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-full p-0" align="start">
+                                            <SelectCommand
+                                                lists={units}
+                                                getId={(item) => String(item.name)}
+                                                getLabel={(item) => String(item.name)}
+                                                onSelect={(item) => {
+                                                    setData('container_unit', item.name ?? '');
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
                         </>
