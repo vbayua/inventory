@@ -89,7 +89,9 @@ class ProductController extends Controller
                     'supplier_id',
                     'location_id',
                     'quantity',
-                    'minimum_quantity'
+                    'minimum_quantity',
+                    'container_quantity',
+                    'container_unit',
                 ]
             );
 
