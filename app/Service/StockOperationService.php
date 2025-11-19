@@ -75,9 +75,9 @@ class StockOperationService
         });
     }
 
-    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks = 'Stock Adjustment', $operationDate = null)
+    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks = 'Stock Adjustment', $operationDate = null, ?bool $withContainer = false)
     {
-        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks, $operationDate) {
+        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks, $operationDate, $withContainer) {
 
             $stock = $stock instanceof Stock ? $stock : Stock::findOrFail($stock);
             $productId = $stock->product_id;
@@ -106,7 +106,8 @@ class StockOperationService
                     $stock,
                     $quantity,
                     $unit,
-                    'increment'
+                    'increment',
+                    $withContainer
                 );
             } elseif ($type === 'subtraction') {
                 $this->setStock(
@@ -114,7 +115,8 @@ class StockOperationService
                     $stock,
                     $quantity,
                     $unit,
-                    'decrement'
+                    'decrement',
+                    $withContainer
                 );
             } else {
                 throw new \InvalidArgumentException("Stock Adjustment of type {$type} is unknown");
@@ -172,9 +174,9 @@ class StockOperationService
     }
 
 
-    public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null)
+    public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
     {
-        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate, $withContainer) {
             $operation = $this->createOperation(
                 'transfer',
                 $product,
@@ -337,7 +339,7 @@ class StockOperationService
 
     private function transferStock(Product|int $product, int $sourceStockLocation, int $destinationStockLocation, int $batchId, float $quantity, ?string $unit)
     {
-        DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
+        return DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
             $sourceStockData = Stock::where('product_id', $product->id)
                 ->where('location_id', $sourceStockLocation)
