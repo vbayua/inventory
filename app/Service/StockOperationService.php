@@ -140,7 +140,8 @@ class StockOperationService
                 $stockData,
                 $receiveQuantity,
                 $unit,
-                'increment'
+                'increment',
+                $stockData['with_container'] ?? false
             );
             return $operation;
         });
@@ -162,7 +163,8 @@ class StockOperationService
                 $stockData,
                 $usageQuantity,
                 $unit,
-                'decrement'
+                'decrement',
+                $stockData['with_container'] ?? false
             );
             return $operation;
         });
@@ -261,9 +263,9 @@ class StockOperationService
         }
     }
 
-    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode): Stock
+    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
     {
-        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode) {
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode, $withContainer) {
             $productId = $product instanceof Product ? $product->id : $product;
 
             $quantityUnit = $this->getUnitRecord($unit);
@@ -281,6 +283,8 @@ class StockOperationService
                 $stock->unit = $quantityUnit->name;
                 $stock->quantity = 0;
                 $stock->minimum_quantity = $stockData['minimum_quantity'];
+                $stock->container_capacity = $stockData['container_capacity'] ?? null;
+                $stock->container_unit = $stockData['container_unit'] ?? null;
                 $stock->status = 'out_of_stock';
                 $stock->user_id = Auth::id();
                 $stock->save();
@@ -295,7 +299,9 @@ class StockOperationService
                 throw new \Exception("Base unit mismatch: stock unit '{$stockUnit}' vs quantity unit '{$quantityUnit}'.");
             }
 
-            $qtyInBase = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
+            $qtyInBase = $withContainer
+                ? $this->unitConverter->containerToBaseUnit($quantity, $stock)
+                : $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
             $currentStockQtyInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
 
             $newInBase = (float) 0;
