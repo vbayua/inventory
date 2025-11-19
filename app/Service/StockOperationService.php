@@ -68,7 +68,8 @@ class StockOperationService
                 $stockData,
                 $stockData['quantity'],
                 $product->unit ?? $stockData['unit'],
-                'set'
+                'set',
+                $stockData['with_container'] ?? false
             );
             return $operation;
         });
