@@ -370,8 +370,10 @@ export default function Show({ supplier, products, totalProducts }: { supplier: 
                                                                 <DropdownMenuItem asChild>
                                                                     <Link href={route('products.show', product.id)}>View Product</Link>
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem>
-                                                                    <Link href={route('stocks.index', { sku: product.sku })}>View Stocks</Link>
+                                                                <DropdownMenuItem asChild>
+                                                                    <Link href={route('stocks.index', { product_sku: product.sku })}>
+                                                                        View Stocks
+                                                                    </Link>
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
