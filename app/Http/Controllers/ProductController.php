@@ -6,6 +6,11 @@ use App\Models\Product;
 use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Models\Category;
+use App\Models\Location;
+use App\Models\Partner;
+use App\Models\Supplier;
+use App\Models\Unit;
 use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +25,11 @@ class ProductController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Product::class);
-        $products =  Cache::remember('products_index', 3600, function () {
-            return Product::with(['categories:id,name', 'productType:id,type_code'])
+        $products =  Cache::remember('products_index', 3600, fn() =>
+            Product::with(['categories:id,name', 'productType:id,type_code'])
                 ->orderBy('created_at', 'desc')
-                ->get();
-        });
+                ->get()
+        );
 
         return Inertia::render('Products/Index', [
             'products' => $products,
@@ -39,15 +44,11 @@ class ProductController extends Controller
     public function create()
     {
         $this->authorize('create', Product::class);
-        $suppliers = Inertia::lazy(function () {
-            return Cache::remember('suppliers_list', 3600, function () {
-                return \App\Models\Supplier::with('partner:id,name')->select('id', 'partner_id')->get();
-            });
-        });
+        $suppliers = Inertia::lazy(fn () =>
+            Cache::remember('suppliers_list', 3600, fn() => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
+        );
         $partners = Inertia::lazy(function () {
-            return Cache::remember('partners_list', 3600, function () {
-                return \App\Models\Partner::select('id', 'name')->get();
-            });
+            return Cache::remember('partners_list', 3600, fn() => Partner::select('id', 'name')->get());
         });
 
         return Inertia::render('Products/Create', [
@@ -90,7 +91,7 @@ class ProductController extends Controller
                     'location_id',
                     'quantity',
                     'minimum_quantity',
-                    'container_quantity',
+                    'container_capacity',
                     'container_unit',
                 ]
             );
@@ -111,7 +112,6 @@ class ProductController extends Controller
             }
         }
         DB::commit();
-        Cache::forget('products_index');
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
     }
@@ -144,18 +144,18 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $this->authorize('update', $product);
-        $categories = Cache::remember('categories_list', 3600, function () {
-            return \App\Models\Category::select('id', 'name')->get();
-        });
-        $locations = Cache::remember('locations_list', 3600, function () {
-            return \App\Models\Location::select('id', 'name')->get();
-        });
-        $suppliers = Cache::remember('suppliers_list', 3600, function () {
-            return \App\Models\Supplier::select('id', 'name')->get();
-        });
-        $units = Cache::remember('units_list', 3600, function () {
-            return \App\Models\Unit::select('name')->get();
-        });
+        $categories = Cache::remember('categories_list', 3600, fn () =>
+            Category::select('id', 'name')->get()
+        );
+        $locations = Cache::remember('locations_list', 3600, fn () =>
+            Location::select('id', 'name', 'warehouse_id')->get()
+        );
+        $suppliers = Cache::remember('suppliers_list', 3600, fn() =>
+            Supplier::select('id', 'name')->get()
+        );
+        $units = Cache::remember('units_list', 3600, fn() =>
+            Unit::select('name')->get()
+        );
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,

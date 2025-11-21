@@ -17,17 +17,13 @@ class StockCalculatorService
     private function getUnitByNameCached(string $unitName): Unit
     {
         $normalized = strtolower($unitName);
-        $unit = Cache::remember("unit:name:{$normalized}", 3600, function () use ($normalized) {
-            return Unit::where('name', $normalized)->firstOrFail();
-        });
+        $unit = Cache::remember("unit:name:{$normalized}", 3600, fn() => Unit::where('name', $normalized)->firstOrFail());
         return $unit;
     }
 
     public function getStockRecordByIdCached(int $stockId): Stock
     {
-        return Cache::remember("stock:id:{$stockId}", 3600, function () use ($stockId) {
-            return Stock::findOrFail($stockId);
-        });
+        return Cache::remember("stock:id:{$stockId}", 3600, fn() => Stock::findOrFail($stockId));
     }
 
     /**

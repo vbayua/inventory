@@ -37,7 +37,7 @@ class StoreProductRequest extends FormRequest
             'location_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:locations,id'],
             'quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
             'minimum_quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
-            'container_quantity' => ['nullable', 'numeric', 'min:0'],
+            'container_capacity' => ['nullable', 'numeric', 'min:0'],
             'container_unit' => ['nullable', 'string'],
         ];
     }
