@@ -85,4 +85,15 @@ class Product extends Model
             ? (int) $this->stocks->sum('quantity')
             : (int) $this->stocks()->sum('quantity');
     }
+
+    public static function booted():void
+    {
+        static::saved(function (Product $product) {
+            \Illuminate\Support\Facades\Cache::forget('products_index');
+        });
+
+        static::deleted(function (Product $product) {
+            \Illuminate\Support\Facades\Cache::forget('products_index');
+        });
+    }
 }

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Supplier extends Model
 {
@@ -32,8 +34,19 @@ class Supplier extends Model
             ->withTimestamps();
     }
 
-    public function batches()
+    public function batches(): HasMany
     {
         return $this->hasMany(Batch::class);
+    }
+
+    public static function booted():void
+    {
+        static::saved(function (Supplier $supplier) {
+            Cache::forget('suppliers_list');
+        });
+
+        static::deleted(function (Supplier $supplier) {
+            Cache::forget('suppliers_list');
+        });
     }
 }
