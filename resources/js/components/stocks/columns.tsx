@@ -1,46 +1,46 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button } from '../ui/button'
-import { MoreHorizontal } from 'lucide-react'
-import { Link, router } from '@inertiajs/react'
-import { toast } from 'sonner'
-import { DataTableColumnHeader } from '../data-table-column-header'
-import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu'
+import { Link, router } from '@inertiajs/react';
+import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
+import { DataTableColumnHeader } from '../data-table-column-header';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 type ProductType = {
     id: number;
     name?: string;
     type_code?: string;
-}
+};
 
 type Supplier = {
     id: number;
     name?: string;
-}
+};
 
 type Product = {
     id: number;
     name?: string;
     sku?: string;
     product_type?: ProductType;
-}
+};
 
 type Batch = {
     id: number;
     batch_number?: string;
     supplier?: Supplier;
-}
+};
 
 type Warehouse = {
     id: number;
     name?: string;
-}
+};
 
 type Location = {
     id: number;
     name?: string;
     warehouse?: Warehouse;
-}
+};
 
 type Stock = {
     id: number;
@@ -53,88 +53,103 @@ type Stock = {
     minimum_quantity?: number;
     created_at?: string;
     updated_at?: string;
-}
+};
 
 const handleCopyBatchNumber = (batchNumber: string) => {
     return function () {
-        navigator.clipboard.writeText(batchNumber)
+        navigator.clipboard
+            .writeText(batchNumber)
             .then(() => {
                 toast.success('Batch number copied to clipboard');
             })
             .catch(() => {
                 toast.error('Failed to copy batch number');
             });
-    }
-}
+    };
+};
 
 const handleViewStock = (id: number, product_name: any) => {
     return function () {
-        router.get('stocks.show', { id }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }
-}
+        router.get(
+            'stocks.show',
+            { id },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+};
 
 const handleCreateOperation = (id: number, product_name: any) => {
     return function () {
-        router.get(`/stocks/${id}`, {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }
-}
+        router.get(
+            `/stocks/${id}`,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+};
 
 const statusConfig = {
-    "available": {
+    available: {
         label: 'Available',
         color: 'bg-green-100 text-green-800',
         variant: 'default' as const,
     },
-    "low_stock": {
+    low_stock: {
         label: 'Low Stock',
         color: 'bg-yellow-100 text-yellow-800',
         variant: 'secondary' as const,
     },
-    "out_of_stock": {
+    out_of_stock: {
         label: 'Out of Stock',
         color: 'bg-red-100 text-red-800',
         variant: 'destructive' as const,
     },
-    "reserved": {
+    reserved: {
         label: 'Reserved',
         color: 'bg-blue-100 text-blue-800',
         variant: 'outline' as const,
-    }
-}
+    },
+};
 
 export const columns: ColumnDef<Stock>[] = [
     {
-        id: "batch_number",
-        accessorKey: "Batch Number",
-        accessorFn: row => row.batch?.batch_number ?? '-',
-        header: "Batch Number",
+        id: 'batch_number',
+        accessorKey: 'Batch Number',
+        accessorFn: (row) => row.batch?.batch_number ?? '-',
+        header: 'Batch Number',
         meta: {
             filterVariant: 'select',
+        },
+        // Explicit exact match filter
+        filterFn: (row, id, value) => {
+            if (!value) return true;
+            const cell = row.getValue<string | undefined>(id);
+            return (cell ?? '').toLowerCase() === String(value).toLowerCase();
         },
         cell: ({ row }) => row.original.batch?.batch_number ?? '-',
     },
 
     {
-        id: "product_name",
-        accessorKey: "Product Name",
-        accessorFn: row => row.product?.name,
-        header: "Product Name",
+        id: 'product_name',
+        accessorKey: 'Product Name',
+        accessorFn: (row) => row.product?.name,
+        header: 'Product Name',
         meta: {
             filterVariant: 'select',
         },
         cell: ({ row }) => row.original.product?.name ?? '-',
     },
     {
-        id: "product_type",
-        accessorKey: "Product Type",
-        accessorFn: row => row.product?.product_type?.type_code,
-        header: "Product Type",
+        id: 'product_type',
+        accessorKey: 'Product Type',
+        accessorFn: (row) => row.product?.product_type?.type_code,
+        header: 'Product Type',
         meta: {
             filterVariant: 'select',
         },
@@ -143,58 +158,63 @@ export const columns: ColumnDef<Stock>[] = [
     {
         id: 'supplier_name',
         accessorKey: 'Supplier',
-        accessorFn: row => row.batch?.supplier?.name ?? '-',
-        header: "Supplier",
+        accessorFn: (row) => row.batch?.supplier?.name ?? '-',
+        header: 'Supplier',
         meta: { filterVariant: 'select' },
         cell: ({ row }) => row.original.batch?.supplier?.name ?? '-',
     },
     {
-        id: "product_sku",
-        accessorKey: "SKU",
-        accessorFn: row => row.product?.sku,
-        header: "SKU",
+        id: 'product_sku',
+        accessorKey: 'SKU',
+        accessorFn: (row) => row.product?.sku,
+        header: 'SKU',
+        filterFn: (row, id, value) => {
+            if (!value) return true;
+            const cell = row.getValue<string | undefined>(id);
+            return (cell ?? '').toLowerCase() === String(value).toLowerCase();
+        },
         cell: ({ row }) => row.original.product?.sku ?? '-',
     },
     {
-        id: "location_name",
-        accessorKey: "Location",
-        accessorFn: row => row.location?.name,
-        header: "Location",
+        id: 'location_name',
+        accessorKey: 'Location',
+        accessorFn: (row) => row.location?.name,
+        header: 'Location',
         meta: {
             filterVariant: 'select',
         },
     },
     {
-        id: "warehouse_name",
-        accessorKey: "Warehouse",
-        accessorFn: row => row.location?.warehouse?.name, // for filtering and sorting
-        header: "Warehouse",
+        id: 'warehouse_name',
+        accessorKey: 'Warehouse',
+        accessorFn: (row) => row.location?.warehouse?.name, // for filtering and sorting
+        header: 'Warehouse',
         meta: {
             filterVariant: 'select',
         },
     },
     {
-        accessorKey: "Quantity",
-        header: "Quantity",
+        accessorKey: 'Quantity',
+        header: 'Quantity',
         cell: ({ row }) => {
             const quantity = row.original.quantity;
             const unit = row.original.unit ?? '';
             return quantity !== undefined ? `${quantity} ${unit}` : '-';
-        }
+        },
     },
     {
-        accessorKey: "minimum_qty",
-        header: "Min. Qty",
+        accessorKey: 'minimum_qty',
+        header: 'Min. Qty',
         cell: ({ row }) => {
-            return row.original.minimum_quantity
+            return row.original.minimum_quantity;
         },
         enableHiding: true,
     },
     {
-        id: "status",
-        accessorKey: "status",
-        accessorFn: row => row.status,
-        header: "Status",
+        id: 'status',
+        accessorKey: 'status',
+        accessorFn: (row) => row.status,
+        header: 'Status',
         cell: ({ row }) => {
             const status = row.original.status;
             const config = statusConfig[status as keyof typeof statusConfig] || {
@@ -202,19 +222,13 @@ export const columns: ColumnDef<Stock>[] = [
                 color: 'bg-gray-100 text-gray-800',
                 variant: 'default' as const,
             };
-            return (
-                <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${config.color} rounded`}>
-                    {config.label}
-                </span>
-            );
-        }
+            return <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${config.color} rounded`}>{config.label}</span>;
+        },
     },
     {
-        id: "updated_at",
-        accessorKey: "Last Updated",
-        header: ({ column }) => (
-            <DataTableColumnHeader column={column} title="Last Updated" />
-        ),
+        id: 'updated_at',
+        accessorKey: 'Last Updated',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Last Updated" />,
         cell: ({ row }) => {
             const date = new Date(row.original.updated_at ?? '');
             return date.toLocaleDateString('en-US', {
@@ -250,9 +264,7 @@ export const columns: ColumnDef<Stock>[] = [
     {
         id: 'actions',
         enableHiding: false,
-        header: ({ column }) => (
-            <DataTableColumnHeader column={column} title="Actions" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
         cell: ({ row }) => (
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -263,22 +275,14 @@ export const columns: ColumnDef<Stock>[] = [
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
-                        onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}
-                    >
-                        Copy Batch Number
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}>Copy Batch Number</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        asChild
-                    >
+                    <DropdownMenuItem asChild>
                         <Link href={route('stocks.show', { stock: row.original.id })}> View Details </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, row.original.product?.name)}>
-                        Create Operation
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, row.original.product?.name)}>Create Operation</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         ),
-    }
-]
+    },
+];
