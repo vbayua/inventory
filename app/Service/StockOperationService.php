@@ -68,15 +68,16 @@ class StockOperationService
                 $stockData,
                 $stockData['quantity'],
                 $product->unit ?? $stockData['unit'],
-                'set'
+                'set',
+                $stockData['with_container'] ?? false
             );
             return $operation;
         });
     }
 
-    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks = 'Stock Adjustment', $operationDate = null)
+    public function adjustStockOperation(Stock|int $stock, float $quantity, Unit|string $unit, string $type, string $remarks = 'Stock Adjustment', $operationDate = null, ?bool $withContainer = false)
     {
-        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks, $operationDate) {
+        return DB::transaction(function () use ($stock, $quantity, $unit, $type, $remarks, $operationDate, $withContainer) {
 
             $stock = $stock instanceof Stock ? $stock : Stock::findOrFail($stock);
             $productId = $stock->product_id;
@@ -105,7 +106,8 @@ class StockOperationService
                     $stock,
                     $quantity,
                     $unit,
-                    'increment'
+                    'increment',
+                    $withContainer
                 );
             } elseif ($type === 'subtraction') {
                 $this->setStock(
@@ -113,7 +115,8 @@ class StockOperationService
                     $stock,
                     $quantity,
                     $unit,
-                    'decrement'
+                    'decrement',
+                    $withContainer
                 );
             } else {
                 throw new \InvalidArgumentException("Stock Adjustment of type {$type} is unknown");
@@ -140,7 +143,8 @@ class StockOperationService
                 $stockData,
                 $receiveQuantity,
                 $unit,
-                'increment'
+                'increment',
+                $stockData['with_container'] ?? false
             );
             return $operation;
         });
@@ -162,16 +166,17 @@ class StockOperationService
                 $stockData,
                 $usageQuantity,
                 $unit,
-                'decrement'
+                'decrement',
+                $stockData['with_container'] ?? false
             );
             return $operation;
         });
     }
 
 
-    public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null)
+    public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
     {
-        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate, $withContainer) {
             $operation = $this->createOperation(
                 'transfer',
                 $product,
@@ -261,9 +266,9 @@ class StockOperationService
         }
     }
 
-    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode): Stock
+    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
     {
-        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode) {
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode, $withContainer) {
             $productId = $product instanceof Product ? $product->id : $product;
 
             $quantityUnit = $this->getUnitRecord($unit);
@@ -281,6 +286,8 @@ class StockOperationService
                 $stock->unit = $quantityUnit->name;
                 $stock->quantity = 0;
                 $stock->minimum_quantity = $stockData['minimum_quantity'];
+                $stock->container_capacity = $stockData['container_capacity'] ?? null;
+                $stock->container_unit = $stockData['container_unit'] ?? null;
                 $stock->status = 'out_of_stock';
                 $stock->user_id = Auth::id();
                 $stock->save();
@@ -295,7 +302,9 @@ class StockOperationService
                 throw new \Exception("Base unit mismatch: stock unit '{$stockUnit}' vs quantity unit '{$quantityUnit}'.");
             }
 
-            $qtyInBase = $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
+            $qtyInBase = $withContainer
+                ? $this->unitConverter->containerToBaseUnit($quantity, $stock)
+                : $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
             $currentStockQtyInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
 
             $newInBase = (float) 0;
@@ -330,7 +339,7 @@ class StockOperationService
 
     private function transferStock(Product|int $product, int $sourceStockLocation, int $destinationStockLocation, int $batchId, float $quantity, ?string $unit)
     {
-        DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
+        return DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
             $sourceStockData = Stock::where('product_id', $product->id)
                 ->where('location_id', $sourceStockLocation)

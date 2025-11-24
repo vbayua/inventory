@@ -80,6 +80,9 @@ class OperationController extends Controller
             'remarks' => 'nullable|string|max:255',
             'source_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
             'destination_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
+            'with_container' => 'nullable|boolean',
+            'container_quantity' => 'nullable|numeric|min:0',
+            'container_unit' => 'nullable|exists:units,name',
         ]);
 
         $validatedData['batch'] = $batchAssignmentService->determineBatch(
@@ -95,6 +98,11 @@ class OperationController extends Controller
             })
             ->first();
 
+        // Append with_container to stockData if provided
+        if (isset($validatedData['with_container']) && $stockData) {
+            $stockData->with_container = $validatedData['with_container'];
+        }
+
         $operationQuantity = $validatedData['quantity'];
         $operationType = $validatedData['operationType'];
 
@@ -109,6 +117,9 @@ class OperationController extends Controller
                     'status' => 'available',
                     'remarks' => 'Initial stock created',
                     'date' => $validatedData['date'],
+                    'with_container' => $validatedData['with_container'] ?? false,
+                    'container_quantity' => $validatedData['container_quantity'] ?? null,
+                    'container_unit' => $validatedData['container_unit'] ?? null,
                 ];
                 $operationService->createInitialStock(
                     $validatedData['product'],

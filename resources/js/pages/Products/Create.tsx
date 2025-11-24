@@ -37,6 +37,8 @@ type CreateProductForm = {
     with_begin_stock?: boolean;
     quantity?: number;
     minimum_quantity?: number;
+    container_capacity?: number;
+    container_unit?: string;
     warehouse_id?: string | null;
     location_id?: string | null;
     status?: string;
@@ -108,6 +110,8 @@ export default function Create({
         with_begin_stock: false,
         quantity: 0,
         minimum_quantity: 0,
+        container_capacity: 0,
+        container_unit: '',
         warehouse_id: '',
         location_id: '',
         status: 'available',
@@ -121,6 +125,7 @@ export default function Create({
     const isBeginStockChecked = data.with_begin_stock;
     const selectedSupplier = suppliers?.find((supplier) => supplier.id?.toString() === data.supplier_id);
     console.log(selectedSupplier);
+
     useEffect(() => {
         if (isBeginStockChecked && !suppliers && !partners) {
             router.reload({ only: ['suppliers', 'partners'] });
@@ -138,10 +143,11 @@ export default function Create({
                 reset();
             },
             onError: (errors) => {
-                console.log(errors);
                 // reset()
                 setData('with_begin_stock', false);
-                toast.error(String(errors));
+                Object.entries(errors).forEach(([field, message]) => {
+                    toast.error(`${field}: ${message}`, { id: `error-${field}` });
+                });
             },
         });
     };
@@ -263,7 +269,7 @@ export default function Create({
                             </Label>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-between">
+                                    <Button variant="outline" className="text-muted-foreground w-full justify-between">
                                         {data.unit ? data.unit : 'Select a unit'}
                                     </Button>
                                 </PopoverTrigger>
@@ -285,7 +291,7 @@ export default function Create({
                             <Label htmlFor="category">Category</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-between">
+                                    <Button variant="outline" className="text-muted-foreground w-full justify-between">
                                         {data.category_id
                                             ? categories.find((category) => category.id?.toString() === data.category_id)?.name
                                             : 'Select a category'}
@@ -355,19 +361,21 @@ export default function Create({
                     {/* WITH BEGIN STOCK */}
                     {data.with_begin_stock && (
                         <>
-                            <div className={`grid gap-2 md:grid-cols-2`}>
+                            <div className={`grid gap-2 space-y-4`}>
                                 <div className="grid gap-2">
                                     <Label htmlFor="supplier">Supplier</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between">
+                                            <Button variant="outline" className="text-muted-foreground w-full justify-between">
                                                 {data.supplier_id ? selectedSupplier?.partner?.name : 'Select a supplier'}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-full p-0" align="start">
                                             <SelectCommand
                                                 lists={suppliers}
+                                                getId={(item) => String(item.id)}
                                                 renderItem={(item) => item.partner?.name}
+                                                getLabel={(item) => String(item.partner?.name)}
                                                 onSelect={(item) => {
                                                     setData('supplier_id', String(item.id));
                                                 }}
@@ -380,7 +388,7 @@ export default function Create({
                                     <Label htmlFor="manufacturer_name">Manufacturer Name</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between">
+                                            <Button variant="outline" className="text-muted-foreground w-full justify-between">
                                                 {data.manufacturer_name ? data.manufacturer_name : 'Select a manufacturer'}
                                             </Button>
                                         </PopoverTrigger>
@@ -396,45 +404,50 @@ export default function Create({
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="warehouse_id">Warehouse</Label>
-                                    <Select
-                                        onValueChange={(value) => {
-                                            setData('warehouse_id', String(value));
-                                        }}
-                                        value={String(data.warehouse_id)}
-                                        defaultValue={String(data.warehouse_id)}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select a warehouse" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {warehouses.map((warehouse) => (
-                                                <SelectItem key={warehouse.id} value={String(warehouse.id)}>
-                                                    {warehouse.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" className="text-muted-foreground w-full justify-between">
+                                                {data.warehouse_id
+                                                    ? warehouses.find((warehouse) => warehouse.id?.toString() === data.warehouse_id)?.name
+                                                    : 'Select a warehouse'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-full p-0" align="start">
+                                            <SelectCommand
+                                                lists={warehouses}
+                                                getId={(item) => String(item.id)}
+                                                getLabel={(item) => String(item.name)}
+                                                onSelect={(item) => {
+                                                    setData('warehouse_id', item.id ? String(item.id) : '');
+                                                    setData('location_id', '');
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                     <InputError message={errors.warehouse_id} />
                                 </div>
                                 {filteredLocations.length > 0 && (
                                     <div className="grid gap-2">
                                         <Label htmlFor="location_id">Location</Label>
-                                        <Select
-                                            onValueChange={(value) => setData('location_id', String(value))}
-                                            value={String(data.location_id)}
-                                            defaultValue={String(data.location_id)}
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select a location" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {filteredLocations.map((location) => (
-                                                    <SelectItem key={location.id} value={String(location.id)}>
-                                                        {location.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="text-muted-foreground w-full justify-between">
+                                                    {data.location_id
+                                                        ? filteredLocations.find((location) => location.id?.toString() === data.location_id)?.name
+                                                        : 'Select a location'}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0" align="start">
+                                                <SelectCommand
+                                                    lists={filteredLocations}
+                                                    getId={(item) => String(item.id)}
+                                                    getLabel={(item) => String(item.name)}
+                                                    onSelect={(item) => {
+                                                        setData('location_id', item.id ? String(item.id) : '');
+                                                    }}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                         <InputError message={errors.location_id} />
                                     </div>
                                 )}
@@ -477,6 +490,43 @@ export default function Create({
                                     />
 
                                     <InputError message={errors.minimum_quantity} />
+                                </div>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2 md:gap-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="container_capacity">Container Capacity</Label>
+                                    <Input
+                                        id="container_capacity"
+                                        type="number"
+                                        min={0}
+                                        value={data.container_capacity}
+                                        onChange={(e) => {
+                                            setData('container_capacity', Number(e.target.value));
+                                        }}
+                                        className="mt-1 block w-full"
+                                    />
+
+                                    <InputError message={errors.container_capacity} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="container_unit">Container Unit</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-between">
+                                                {data.container_unit ? data.container_unit : 'Select Unit'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-full p-0" align="start">
+                                            <SelectCommand
+                                                lists={units}
+                                                getId={(item) => String(item.name)}
+                                                getLabel={(item) => String(item.name)}
+                                                onSelect={(item) => {
+                                                    setData('container_unit', item.name ?? '');
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
                         </>
