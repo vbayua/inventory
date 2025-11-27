@@ -135,8 +135,6 @@ export default function Create({
               )
             : [];
 
-    // console.log(filteredLocations)
-    console.log(data.unit);
     const createOperation: FormEventHandler = (e) => {
         e.preventDefault();
         console.log('Creating operation with data:', data);
