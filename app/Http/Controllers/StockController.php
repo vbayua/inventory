@@ -23,7 +23,8 @@ class StockController extends Controller
             'location:id,name,warehouse_id',
             'location.warehouse:id,name',
             'batch:id,batch_number,supplier_id',
-            'batch.supplier:id,name',
+            'batch.supplier:id,partner_id',
+            'batch.supplier.partner:id,name',
         ])->get();
         return Inertia('Stocks/Index', [
             'stocks' => $stocks,
