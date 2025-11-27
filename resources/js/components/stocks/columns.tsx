@@ -13,9 +13,13 @@ type ProductType = {
     type_code?: string;
 };
 
-type Supplier = {
+type Partner = {
     id: number;
     name?: string;
+};
+type Supplier = {
+    id: number;
+    partner?: Partner;
 };
 
 type Product = {
@@ -81,11 +85,11 @@ const handleViewStock = (id: number, product_name: any) => {
     };
 };
 
-const handleCreateOperation = (id: number, product_name: any) => {
+const handleCreateOperation = (id: number) => {
     return function () {
         router.get(
-            `/stocks/${id}`,
-            {},
+            route('operations.create'),
+            { stock_id: id },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -158,10 +162,10 @@ export const columns: ColumnDef<Stock>[] = [
     {
         id: 'supplier_name',
         accessorKey: 'Supplier',
-        accessorFn: (row) => row.batch?.supplier?.name ?? '-',
+        accessorFn: (row) => row.batch?.supplier?.partner?.name ?? '-',
         header: 'Supplier',
         meta: { filterVariant: 'select' },
-        cell: ({ row }) => row.original.batch?.supplier?.name ?? '-',
+        cell: ({ row }) => row.original.batch?.supplier?.partner?.name ?? '-',
     },
     {
         id: 'product_sku',
@@ -227,7 +231,7 @@ export const columns: ColumnDef<Stock>[] = [
     },
     {
         id: 'updated_at',
-        accessorKey: 'Last Updated',
+        accessorKey: 'updated_at',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Last Updated" />,
         cell: ({ row }) => {
             const date = new Date(row.original.updated_at ?? '');

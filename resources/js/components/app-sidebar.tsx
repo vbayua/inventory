@@ -1,21 +1,23 @@
 import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { NavItem, type MainNavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Boxes, Building2, Folder, LayoutGrid, Box, Building, TruckIcon, Cog, ChartBar, MapPin, BuildingIcon, CheckCheck, FileCheck } from 'lucide-react';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import { NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, Box, Boxes, Building, Building2, ChartBar, CheckCheck, ChevronRight, Cog, Folder, MapPin } from 'lucide-react';
 import AppLogo from './app-logo';
-import { NavMainSingle } from './nav-main-single';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-
-];
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Icon } from './ui/icon';
 
 const productNavItems: NavItem[] = [
     {
@@ -37,8 +39,8 @@ const productNavItems: NavItem[] = [
     {
         title: 'Product Types',
         href: '/product-types',
-        icon: Box
-    }
+        icon: Box,
+    },
 ];
 
 const warehouseNavItems: NavItem[] = [
@@ -52,7 +54,7 @@ const warehouseNavItems: NavItem[] = [
         href: '/location',
         icon: MapPin,
     },
-]
+];
 
 const stockNavItems: NavItem[] = [
     {
@@ -74,21 +76,49 @@ const stockNavItems: NavItem[] = [
         title: 'Stock Adjustments',
         href: '/stock-adjustments',
         icon: CheckCheck,
-    }
-]
+    },
+];
 
 const supplierNavItem: NavItem[] = [
     {
         title: 'Partners / Companies',
         href: '/partners',
-        icon: Building
+        icon: Building,
     },
     {
         title: 'Suppliers',
         href: '/suppliers',
-        icon: Building
+        icon: Building,
     },
-]
+];
+
+const mainNavItems: NavItem[] = [
+    {
+        title: 'Products',
+        href: '/products',
+        icon: Box,
+        items: productNavItems,
+    },
+    {
+        title: 'Warehouse',
+        href: '/warehouse',
+        icon: Building2,
+        items: warehouseNavItems,
+    },
+    {
+        title: 'Stock',
+        href: '/stocks',
+        icon: ChartBar,
+        items: stockNavItems,
+    },
+    {
+        title: 'Suppliers',
+        href: '/suppliers',
+        icon: Building,
+        items: supplierNavItem,
+    },
+];
+
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
@@ -103,8 +133,10 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const page = usePage();
+    const url = page.url.search(/\?.*$/) ? page.url.replace(/\?.*$/, '') : page.url;
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="offcanvas" variant="sidebar">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -117,12 +149,61 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
-                <NavMainSingle items={mainNavItems} group='Menu' />
-                <NavMainSingle items={warehouseNavItems} group="Warehouse" />
-                <NavMainSingle items={supplierNavItem} group='Supplier & Vendor' />
-                <NavMainSingle items={productNavItems} group="Product" />
-                <NavMainSingle items={stockNavItems} group='Stock' />
+            <SidebarContent className="gap-0">
+                {mainNavItems
+                    .filter((item) => !item.items || item.items.length === 0)
+                    .map((item) => (
+                        <SidebarMenu key={item.title}>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={item.isActive}>
+                                    <Link href={item.href}>
+                                        {item.icon && <Icon iconNode={item.icon} className="mr-3 h-4 w-4" />}
+                                        {item.title}
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    ))}
+                {/*Collapsible SidebarGroup for each parent*/}
+                {mainNavItems.map(
+                    (item) =>
+                        item.items !== undefined && (
+                            <Collapsible
+                                key={item.title}
+                                title={item.title}
+                                className="group/collapsible"
+                                defaultOpen={item.items.some((subItem) => subItem.href === url)}
+                            >
+                                <SidebarGroup>
+                                    <SidebarGroupLabel
+                                        asChild
+                                        className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
+                                    >
+                                        <CollapsibleTrigger>
+                                            <span className="flex items-center">
+                                                {item.icon && <Icon iconNode={item.icon} className="mr-3 h-4 w-4" />}
+                                                {item.title}
+                                            </span>
+                                            <ChevronRight className="ml-auto transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-90" />
+                                        </CollapsibleTrigger>
+                                    </SidebarGroupLabel>
+                                    <CollapsibleContent className="mt-1">
+                                        <SidebarGroupContent className="px-2 py-2">
+                                            <SidebarMenu>
+                                                {item.items?.map((item) => (
+                                                    <SidebarMenuItem key={item.title}>
+                                                        <SidebarMenuButton asChild isActive={item.href === page.url}>
+                                                            <Link href={item.href}>{item.title}</Link>
+                                                        </SidebarMenuButton>
+                                                    </SidebarMenuItem>
+                                                ))}
+                                            </SidebarMenu>
+                                        </SidebarGroupContent>
+                                    </CollapsibleContent>
+                                </SidebarGroup>
+                            </Collapsible>
+                        ),
+                )}
             </SidebarContent>
 
             <SidebarFooter>
@@ -132,4 +213,3 @@ export function AppSidebar() {
         </Sidebar>
     );
 }
-

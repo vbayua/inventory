@@ -1,18 +1,20 @@
-import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList, CommandItem } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import AppLayout from "@/layouts/app-layout";
-import { cn } from "@/lib/utils";
-import { BreadcrumbItem } from "@/types";
-import { Head, useForm } from "@inertiajs/react";
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
-import { FormEventHandler } from "react";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import ContainerFormLayout from '@/components/container-form-layout';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SelectCommand from '@/components/ui/select-command';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import { BreadcrumbItem } from '@/types';
+import { Head, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { FormEventHandler, useEffect, useRef } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -38,38 +40,36 @@ type OperationForm = {
     // transfer operation might need more fields like destination location
     source_location?: string;
     destination_location?: string;
-}
+};
 
 type Batch = {
     id: number;
     batch_number: string;
-}
+};
 
 type Location = {
     id: number;
     name: string;
-}
+};
 
-interface OperationFormQuery {
-    [key: string]: any
-}
-
-export default function Create({ stocks, products, locations, batches, units, query }: { stocks: any[], products: any[], locations: any[], batches: any[], units: any[], query: OperationFormQuery }) {
-    const checkQuery = query.product_id ? String(query.product_id) : '';
-    const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
-        product: checkQuery,
-        batch: '',
-        quantity: 0,
-        location: '',
-        date: '',
-        unit: '',
-        operationType: 'outbound',
-        adjustmentType: 'addition',
-        remarks: '',
-        source_location: '',
-        destination_location: '',
-    });
-
+type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
+export default function Create({
+    stocks,
+    products,
+    locations,
+    batches,
+    units,
+    stockQuery,
+    operationType,
+}: {
+    stocks: any[];
+    products: any[];
+    locations: Location[];
+    batches: any[];
+    units: any[];
+    stockQuery?: any;
+    operationType?: OperationType;
+}) {
     // Ensure products are unique by ID only
     const uniqueProductIds = new Set();
     const productList = products.reduce((acc, item) => {
@@ -79,26 +79,34 @@ export default function Create({ stocks, products, locations, batches, units, qu
         }
         return acc;
     }, []);
-
+    const quantityRef = useRef<HTMLInputElement>(null);
+    const stockData = stockQuery;
+    const locationId = operationType === 'inbound' ? '' : stockData?.location_id ? String(stockData.location_id) : '';
+    const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
+        product: stockData?.product_id ? String(stockData.product_id) : '',
+        batch: stockData?.batch_id ? String(stockData.batch_id) : '',
+        quantity: 0,
+        location: locationId,
+        date: '',
+        unit: '',
+        operationType: operationType || 'outbound',
+        adjustmentType: 'addition',
+        remarks: '',
+        source_location: '',
+        destination_location: '',
+    });
 
     // Product selection
     const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
-    const selectedBatch = batches.find(batch => batch.id.toString() === data.batch);
-    const selectedLocation = locations.find(location => location.id.toString() === data.location);
-    const selectedLocationDestination = locations.find(location => location.id.toString() === data.destination_location);
+    const selectedBatch = batches.find((batch) => batch.id.toString() === data.batch);
+    const selectedLocation = locations.find((location) => location.id.toString() === data.location);
+    const selectedLocationDestination = locations.find((location) => location.id.toString() === data.destination_location);
 
     // Batch filtering based on selected product
-    const filteredBatches = data.product
-        ? batches.filter(
-            (batch) =>
-                batch.product_id === selectedProduct.id
-        )
-        : [];
+    const filteredBatches = data.product ? batches.filter((batch) => batch.product_id === selectedProduct.id) : [];
 
-    const currentStock = stocks.find(stock =>
-        stock.product_id && selectedProduct?.id &&
-        stock.batch_id === selectedBatch?.id &&
-        stock.location_id === parseInt(data.location)
+    const currentStock = stocks.find(
+        (stock) => stock.product_id && selectedProduct?.id && stock.batch_id === selectedBatch?.id && stock.location_id === parseInt(data.location),
     );
 
     const stockQuantity = currentStock?.quantity ?? 0;
@@ -106,37 +114,40 @@ export default function Create({ stocks, products, locations, batches, units, qu
 
     // Filter unit have the same base_unit as the selected product
     const productUnit = selectedProduct?.unit;
-    const filteredUnits = productUnit ?
-        units.filter((unit) => unit.base_unit === productUnit?.base_unit) :
-        units;
+    const filteredUnits = productUnit ? units.filter((unit) => unit.base_unit === productUnit?.base_unit) : units;
 
-    const filteredLocations = selectedProduct && selectedBatch
-        ? locations.filter((location: Location) =>
-            stocks.some( // for some stocks that are...
-                (stock: any) =>
-                    stock.batch_id === selectedBatch.id &&
-                    stock.product_id === selectedProduct.id &&
-                    stock.location_id === location.id &&
-                    stock.quantity > 0
-            )
-        )
-        : [];
-
-    // console.log(filteredLocations)
+    useEffect(() => {
+        if (stockData?.unit) {
+            setData('unit', stockData?.unit);
+        }
+    }, [stockData]);
+    const filteredLocations: Location[] =
+        selectedProduct && selectedBatch
+            ? locations.filter((location: Location) =>
+                  stocks.some(
+                      // for some stocks that are...
+                      (stock: any) =>
+                          stock.batch_id === selectedBatch.id &&
+                          stock.product_id === selectedProduct.id &&
+                          stock.location_id === location.id &&
+                          stock.quantity > 0,
+                  ),
+              )
+            : [];
 
     const createOperation: FormEventHandler = (e) => {
         e.preventDefault();
-        console.log("Creating operation with data:", data);
+        console.log('Creating operation with data:', data);
         post('/operations', {
             onSuccess: () => {
-                reset()
+                reset();
             },
             onError: (errors) => {
                 console.error(errors);
             },
             preserveScroll: true,
         });
-    }
+    };
 
     const operationTypes = [
         { value: 'outbound', label: 'Usage Stock' },
@@ -148,23 +159,23 @@ export default function Create({ stocks, products, locations, batches, units, qu
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
-
-            <div className="rounded-lg mt-12 shadow-md p-6 w-full max-w-4xl mx-auto">
+            <ContainerFormLayout>
                 <form onSubmit={createOperation} className="space-y-6">
-                    <h1 className="text-xl font-semibold mb-12">{data.operationType.toString().toUpperCase()} OPERATION</h1>
+                    <h1 className="mb-12 text-xl font-semibold">{data.operationType.toString().toUpperCase()} OPERATION</h1>
                     <div className="mb-6">
-                        <Label className="block mb-4">
-                            Operation Type
-                        </Label>
-                        <Select onValueChange={(value) => {
-                            setData('operationType', value);
-                            // setData('product', '');
-                            setData('batch', '');
-                            setData('location', '');
-                            setData('quantity', 0);
-                            setData('date', '');
-                            setData('remarks', '');
-                        }} value={data.operationType}>
+                        <Label className="mb-4 block">Operation Type</Label>
+                        <Select
+                            onValueChange={(value) => {
+                                setData('operationType', value);
+                                // setData('product', '');
+                                setData('batch', '');
+                                setData('location', '');
+                                setData('quantity', 0);
+                                setData('date', '');
+                                setData('remarks', '');
+                            }}
+                            value={data.operationType}
+                        >
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select operation type" />
                             </SelectTrigger>
@@ -179,20 +190,23 @@ export default function Create({ stocks, products, locations, batches, units, qu
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {/*ADJUSTMENT SECTION*/}
                     {data.operationType === 'adjustment' && (
                         <div className="mb-6">
-                            <Label className="block mb-4">
-                                Adjustment Type
-                            </Label>
-                            <Select onValueChange={(value) => {
-                                setData('adjustmentType', value);
-                                setData('product', '');
-                                setData('batch', '');
-                                setData('location', '');
-                                setData('quantity', 0);
-                                setData('date', '');
-                                setData('remarks', '');
-                            }} value={data.adjustmentType}>
+                            <Label className="mb-4 block">Adjustment Type</Label>
+                            <Select
+                                onValueChange={(value) => {
+                                    setData('adjustmentType', value);
+                                    setData('product', '');
+                                    setData('batch', '');
+                                    setData('location', '');
+                                    setData('quantity', 0);
+                                    setData('date', '');
+                                    setData('remarks', '');
+                                }}
+                                value={data.adjustmentType}
+                            >
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select Adjustment Type" />
                                 </SelectTrigger>
@@ -205,19 +219,19 @@ export default function Create({ stocks, products, locations, batches, units, qu
                             </Select>
                         </div>
                     )}
+                    {/*END OF ADJUSTMENT SECTION*/}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className={"col-span-1"}>
-                            <Label className="block mb-2">
-                                Product Name
-                            </Label>
+                    <div className="space-y-6">
+                        <div>
+                            <Label className="mb-2 block">Product Name</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
                                         role="combobox"
-                                        className={cn("justify-between w-full", errors.product && "border-red-500 text-muted-foreground")}>
-                                        {selectedProduct?.name ?? "Select a product"}
+                                        className={cn('w-full justify-between', errors.product && 'text-muted-foreground border-red-500')}
+                                    >
+                                        {selectedProduct?.name ?? 'Select a product'}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -234,16 +248,20 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                                         onSelect={(value) => {
                                                             setData('product', value);
                                                             setData('batch', ''); // Reset batch when product changes
-                                                            setData('unit', product.unit.toString()); // Set default unit from product
+                                                            setData('unit', product.unit.name.toString()); // Set default unit from product
                                                             setData('location', ''); // Reset location when product changes
                                                             setData('quantity', 0); // Reset quantity when product changes
                                                             setData('date', ''); // Reset date when product changes
                                                             setData('remarks', ''); // Reset remarks when product changes
-
                                                         }}
-                                                        className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                        className="relative flex cursor-pointer items-center px-2 py-1.5 select-none hover:bg-gray-100"
                                                     >
-                                                        <Check className={cn("mr-2 h-4 w-4", data.product === product.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                        <Check
+                                                            className={cn(
+                                                                'mr-2 h-4 w-4',
+                                                                data.product === product.id.toString() ? 'opacity-100' : 'opacity-0',
+                                                            )}
+                                                        />
                                                         {product.name}
                                                     </CommandItem>
                                                 ))}
@@ -255,16 +273,15 @@ export default function Create({ stocks, products, locations, batches, units, qu
                         </div>
 
                         <div>
-                            <Label className="block mb-2">
-                                Batch
-                            </Label>
+                            <Label className="mb-2 block">Batch</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
                                         role="combobox"
-                                        className={cn("justify-between w-full", errors.batch && "border-red-500 text-muted-foreground")}>
-                                        {selectedBatch?.batch_number ?? "Select a batch"}
+                                        className={cn('w-full justify-between', errors.batch && 'text-muted-foreground border-red-500')}
+                                    >
+                                        {selectedBatch?.batch_number ?? 'Select a batch'}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -282,9 +299,14 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                                             setData('batch', value);
                                                             setData('location', '');
                                                         }}
-                                                        className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                        className="relative flex cursor-pointer items-center px-2 py-1.5 select-none hover:bg-gray-100"
                                                     >
-                                                        <Check className={cn("mr-2 h-4 w-4", data.batch === batch.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                        <Check
+                                                            className={cn(
+                                                                'mr-2 h-4 w-4',
+                                                                data.batch === batch.id.toString() ? 'opacity-100' : 'opacity-0',
+                                                            )}
+                                                        />
                                                         {batch.batch_number}
                                                     </CommandItem>
                                                 ))}
@@ -295,19 +317,19 @@ export default function Create({ stocks, products, locations, batches, units, qu
                             </Popover>
                         </div>
 
+                        {/*TRANSFER SECTION*/}
                         {data.operationType === 'transfer' && (
                             <>
                                 <div>
-                                    <Label className="block mb-2">
-                                        From Location
-                                    </Label>
+                                    <Label className="mb-2 block">From Location</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 role="combobox"
-                                                className={cn("justify-between w-full", errors.location && "border-red-500 text-muted-foreground")}>
-                                                {selectedLocation?.name ?? "Select a location"}
+                                                className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
+                                            >
+                                                {selectedLocation?.name ?? 'Select a location'}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
@@ -326,9 +348,14 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                                                     setData('source_location', value);
                                                                     setData('destination_location', '');
                                                                 }}
-                                                                className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
+                                                                className="relative flex cursor-pointer items-center px-2 py-1.5 select-none hover:bg-gray-100"
                                                             >
-                                                                <Check className={cn("mr-2 h-4 w-4", data.location === location.id.toString() ? "opacity-100" : "opacity-0")} />
+                                                                <Check
+                                                                    className={cn(
+                                                                        'mr-2 h-4 w-4',
+                                                                        data.location === location.id.toString() ? 'opacity-100' : 'opacity-0',
+                                                                    )}
+                                                                />
                                                                 {location.name}
                                                             </CommandItem>
                                                         ))}
@@ -340,16 +367,15 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                 </div>
 
                                 <div>
-                                    <Label className="block mb-2">
-                                        To Location
-                                    </Label>
+                                    <Label className="mb-2 block">To Location</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 role="combobox"
-                                                className={cn("justify-between w-full", errors.location && "border-red-500 text-muted-foreground")}>
-                                                {selectedLocationDestination?.name ?? "Select a destination"}
+                                                className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
+                                            >
+                                                {selectedLocationDestination?.name ?? 'Select a destination'}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
@@ -359,19 +385,29 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                                 <CommandList>
                                                     <CommandEmpty>No location found</CommandEmpty>
                                                     <CommandGroup>
-                                                        {locations.map((location: any) => location.id.toString() !== data.location && (
-                                                            <CommandItem
-                                                                key={location.id}
-                                                                value={location.id.toString()}
-                                                                onSelect={(value) => {
-                                                                    setData('destination_location', value);
-                                                                }}
-                                                                className="cursor-pointer select-none relative flex items-center px-2 py-1.5 hover:bg-gray-100"
-                                                            >
-                                                                <Check className={cn("mr-2 h-4 w-4", data.destination_location === location.id.toString() ? "opacity-100" : "opacity-0")} />
-                                                                {location.name}
-                                                            </CommandItem>
-                                                        ))}
+                                                        {locations.map(
+                                                            (location: any) =>
+                                                                location.id.toString() !== data.location && (
+                                                                    <CommandItem
+                                                                        key={location.id}
+                                                                        value={location.id.toString()}
+                                                                        onSelect={(value) => {
+                                                                            setData('destination_location', value);
+                                                                        }}
+                                                                        className="relative flex cursor-pointer items-center px-2 py-1.5 select-none hover:bg-gray-100"
+                                                                    >
+                                                                        <Check
+                                                                            className={cn(
+                                                                                'mr-2 h-4 w-4',
+                                                                                data.destination_location === location.id.toString()
+                                                                                    ? 'opacity-100'
+                                                                                    : 'opacity-0',
+                                                                            )}
+                                                                        />
+                                                                        {location.name}
+                                                                    </CommandItem>
+                                                                ),
+                                                        )}
                                                     </CommandGroup>
                                                 </CommandList>
                                             </Command>
@@ -380,142 +416,158 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                 </div>
 
                                 <div>
-                                    <Label className="block mb-2">
-                                        Source Quantity
-                                    </Label>
+                                    <Label className="mb-2 block">Source Quantity</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="text"
                                             value={currentStock ? `${stockQuantity} ${stockUnit}` : 0}
                                             onChange={(e) => setData('quantity', parseFloat(e.target.value))}
-                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            className={cn('w-full', errors.quantity && 'text-muted-foreground border-red-500')}
                                             disabled={true}
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <Label className="block mb-2">
-                                        Quantity
-                                    </Label>
+                                    <Label className="mb-2 block">Quantity</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
                                             value={data.quantity}
                                             onChange={(e) => setData('quantity', parseFloat(e.target.value))}
-                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            className={cn('w-full', errors.quantity && 'text-muted-foreground border-red-500')}
                                             placeholder="Enter quantity"
                                             max={productUnit?.base_unit === stockUnit ? stockQuantity : undefined}
                                             min={1}
                                             step={0.01}
                                             disabled={!selectedBatch || stockQuantity <= 0}
                                         />
-                                        <Select
-                                            onValueChange={(value) => setData('unit', value)}
-                                            value={data.unit}
-                                            disabled={!selectedBatch || stockQuantity <= 0}
-                                        >
-                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
-                                                <SelectValue placeholder="Select unit" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {filteredUnits.map((unit) => (
-                                                        <SelectItem key={unit.name} value={unit.name.toString()}>
-                                                            {unit.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn('w-full justify-between', errors.unit && 'text-muted-foreground border-red-500')}
+                                                    disabled={!selectedBatch || stockQuantity <= 0}
+                                                >
+                                                    {data.unit ? data.unit : 'Select unit'}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="p-0" align="start">
+                                                <SelectCommand
+                                                    lists={filteredUnits}
+                                                    getKey={(item) => item.name}
+                                                    getId={(item) => item.name}
+                                                    getLabel={(item) => item.name}
+                                                    onSelect={(item) => {
+                                                        setData('unit', item.name);
+                                                    }}
+                                                    placeholder="Select unit"
+                                                    renderItem={(item) => <span>{item.name}</span>}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                     {selectedBatch && (
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-muted-foreground mt-1 text-sm">
                                             {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
                             </>
                         )}
+                        {/*END OF TRANSFER SECTION*/}
 
+                        {/*OUTBOUND SECTION*/}
                         {data.operationType === 'outbound' && (
                             <>
                                 <div>
-                                    <Label className="block mb-2">
-                                        Location
-                                    </Label>
-                                    <Select onValueChange={(value) => setData('location', value)} value={data.location}
-                                        disabled={filteredLocations.length === 0}>
-                                        <SelectTrigger className={cn("w-full", errors.location && "border-red-500 text-muted-foreground")}>
-                                            <SelectValue placeholder="Select a location" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                {filteredLocations.length > 0 ? (
-                                                    filteredLocations.map((location: Location) => (
-                                                        <SelectItem key={location.id} value={location.id.toString()}>
-                                                            {location.name}
-                                                        </SelectItem>
-                                                    ))
-                                                ) : (
-                                                    <div className="px-2 py-2 text-muted-foreground">No locations available</div>
-                                                )}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
+                                    <Label className="mb-2 block">Location</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
+                                            >
+                                                {selectedLocation?.name ?? 'Select a location'}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="p-0" align="start">
+                                            <SelectCommand
+                                                lists={filteredLocations}
+                                                getKey={(item) => item.id}
+                                                getId={(item) => item.id}
+                                                getLabel={(item) => item.name}
+                                                onSelect={(item) => {
+                                                    setData('location', String(item.id));
+                                                }}
+                                                placeholder="Search location..."
+                                                emptyText="No location found"
+                                                renderItem={(item) => <span>{item.name}</span>}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                                 <div>
-                                    <Label className="block mb-2">
-                                        Quantity
-                                    </Label>
+                                    <Label className="mb-2 block">Quantity</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
+                                            ref={quantityRef}
                                             value={data.quantity}
                                             onChange={(e) => setData('quantity', parseFloat(e.target.value))}
-                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            className={cn('w-full', errors.quantity && 'text-muted-foreground border-red-500')}
                                             placeholder="Enter quantity"
                                             max={productUnit?.base_unit === stockUnit ? stockQuantity : undefined}
                                             min={1}
                                             step={0.01}
                                             disabled={!selectedBatch || stockQuantity <= 0}
                                         />
-                                        <Select
-                                            onValueChange={(value) => setData('unit', value)}
-                                            value={data.unit}
-                                            disabled={!selectedBatch || stockQuantity <= 0}
-                                        >
-                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
-                                                <SelectValue placeholder="Select unit" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {filteredUnits.map((unit) => (
-                                                        <SelectItem key={unit.name} value={unit.name.toString()}>
-                                                            {unit.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn('w-full justify-between', errors.unit && 'text-muted-foreground border-red-500')}
+                                                    disabled={!selectedBatch || stockQuantity <= 0}
+                                                >
+                                                    {data.unit ? data.unit : 'Select unit'}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="p-0" align="start">
+                                                <SelectCommand
+                                                    lists={filteredUnits}
+                                                    getKey={(item) => item.name}
+                                                    getId={(item) => item.name}
+                                                    getLabel={(item) => item.name}
+                                                    onSelect={(item) => {
+                                                        setData('unit', item.name);
+                                                    }}
+                                                    placeholder="Select unit"
+                                                    renderItem={(item) => <span>{item.name}</span>}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                     {selectedBatch && (
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-muted-foreground mt-1 text-sm">
                                             {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
                             </>
                         )}
+                        {/*END OF OUTBOUND SECTION*/}
 
+                        {/*INBOUND SECTION*/}
                         {data.operationType === 'inbound' && (
                             <>
                                 <div>
-                                    <Label className="block mb-2">
-                                        Location
-                                    </Label>
+                                    <Label className="mb-2 block">Location</Label>
                                     <Select onValueChange={(value) => setData('location', value)} value={data.location}>
-                                        <SelectTrigger className={cn("w-full", errors.location && "border-red-500 text-muted-foreground")}>
+                                        <SelectTrigger className={cn('w-full', errors.location && 'text-muted-foreground border-red-500')}>
                                             <SelectValue placeholder="Select a location" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -527,50 +579,52 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                                         </SelectItem>
                                                     ))
                                                 ) : (
-                                                    <div className="px-2 py-2 text-muted-foreground">No locations available</div>
+                                                    <div className="text-muted-foreground px-2 py-2">No locations available</div>
                                                 )}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div>
-                                    <Label className="block mb-2">
-                                        Quantity
-                                    </Label>
+                                    <Label className="mb-2 block">Quantity</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
                                             value={data.quantity}
                                             onChange={(e) => setData('quantity', parseFloat(e.target.value))}
-                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            className={cn('w-full', errors.quantity && 'text-muted-foreground border-red-500')}
                                             placeholder="Enter quantity"
-
                                             min={1}
                                             step={0.01}
-
                                         />
-                                        <Select
-                                            onValueChange={(value) => setData('unit', value)}
-                                            value={data.unit}
-
-                                        >
-                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
-                                                <SelectValue placeholder="Select unit" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {filteredUnits.map((unit) => (
-                                                        <SelectItem key={unit.name} value={unit.name.toString()}>
-                                                            {unit.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn('w-full justify-between', errors.unit && 'text-muted-foreground border-red-500')}
+                                                >
+                                                    {data.unit ? data.unit : 'Select unit'}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="p-0" align="start">
+                                                <SelectCommand
+                                                    lists={filteredUnits}
+                                                    getKey={(item) => item.name}
+                                                    getId={(item) => item.name}
+                                                    getLabel={(item) => item.name}
+                                                    onSelect={(item) => {
+                                                        setData('unit', item.name);
+                                                    }}
+                                                    placeholder="Select unit"
+                                                    renderItem={(item) => <span>{item.name}</span>}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
                                     {selectedBatch && (
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            {currentStock && (`In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`)}
+                                        <p className="text-muted-foreground mt-1 text-sm">
+                                            {currentStock && `In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`}
                                         </p>
                                     )}
                                 </div>
@@ -580,11 +634,9 @@ export default function Create({ stocks, products, locations, batches, units, qu
                         {data.operationType === 'adjustment' && (
                             <>
                                 <div>
-                                    <Label className="block mb-2">
-                                        Location
-                                    </Label>
+                                    <Label className="mb-2 block">Location</Label>
                                     <Select onValueChange={(value) => setData('location', value)} value={data.location}>
-                                        <SelectTrigger className={cn("w-full", errors.location && "border-red-500 text-muted-foreground")}>
+                                        <SelectTrigger className={cn('w-full', errors.location && 'text-muted-foreground border-red-500')}>
                                             <SelectValue placeholder="Select a location" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -596,34 +648,26 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                                         </SelectItem>
                                                     ))
                                                 ) : (
-                                                    <div className="px-2 py-2 text-muted-foreground">No locations available</div>
+                                                    <div className="text-muted-foreground px-2 py-2">No locations available</div>
                                                 )}
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div>
-                                    <Label className="block mb-2">
-                                        Quantity
-                                    </Label>
+                                    <Label className="mb-2 block">Quantity</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
                                             value={data.quantity}
                                             onChange={(e) => setData('quantity', parseFloat(e.target.value))}
-                                            className={cn("w-full", errors.quantity && "border-red-500 text-muted-foreground")}
+                                            className={cn('w-full', errors.quantity && 'text-muted-foreground border-red-500')}
                                             placeholder="Enter quantity"
-
                                             min={1}
                                             step={0.01}
-
                                         />
-                                        <Select
-                                            onValueChange={(value) => setData('unit', value)}
-                                            value={data.unit}
-
-                                        >
-                                            <SelectTrigger className={cn("w-full", errors.unit && "border-red-500 text-muted-foreground")}>
+                                        <Select onValueChange={(value) => setData('unit', value)} value={data.unit}>
+                                            <SelectTrigger className={cn('w-full', errors.unit && 'text-muted-foreground border-red-500')}>
                                                 <SelectValue placeholder="Select unit" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -638,7 +682,7 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                         </Select>
                                     </div>
                                     {selectedBatch && (
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-muted-foreground mt-1 text-sm">
                                             Stock: {stockQuantity} {productUnit?.name || 'units'}
                                         </p>
                                     )}
@@ -647,30 +691,38 @@ export default function Create({ stocks, products, locations, batches, units, qu
                         )}
 
                         <div>
-                            <Label className="block mb-2">
-                                Operation Date
-                            </Label>
+                            <Label className="mb-2 block">Operation Date</Label>
 
                             <div className="flex items-center gap-2">
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
-                                            variant={"outline"}
-                                            className={cn("pl-3 text-left font-normal w-full", errors.date && "border-red-500 text-muted-foreground")}
+                                            variant={'outline'}
+                                            className={cn('w-full pl-3 text-left font-normal', errors.date && 'text-muted-foreground border-red-500')}
                                         >
-                                            {data.date ? format(new Date(data.date), 'yyyy-MM-dd') : <span className="text-muted-foreground">Select date</span>}
+                                            {data.date ? (
+                                                format(new Date(data.date), 'yyyy-MM-dd')
+                                            ) : (
+                                                <span className="text-muted-foreground">Select date</span>
+                                            )}
                                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" captionLayout="dropdown" endMonth={new Date()} selected={data.date ? new Date(data.date) : undefined} onSelect={(date) => {
-                                            if (date) {
-                                                setData('date', format(date, 'yyyy-MM-dd'));
-                                            } else {
-                                                setData('date', '');
-                                            }
-                                        }}
-                                            autoFocus />
+                                        <Calendar
+                                            mode="single"
+                                            captionLayout="dropdown"
+                                            endMonth={new Date()}
+                                            selected={data.date ? new Date(data.date) : undefined}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    setData('date', format(date, 'yyyy-MM-dd'));
+                                                } else {
+                                                    setData('date', '');
+                                                }
+                                            }}
+                                            autoFocus
+                                        />
                                     </PopoverContent>
                                 </Popover>
                                 <Button
@@ -683,25 +735,18 @@ export default function Create({ stocks, products, locations, batches, units, qu
                                     Set Today
                                 </Button>
                             </div>
-                            {errors.date && (
-                                <p className="text-red-500 text-sm mt-1">
-                                    {errors.date}
-                                </p>
-                            )}
+                            {errors.date && <p className="mt-1 text-sm text-red-500">{errors.date}</p>}
                         </div>
 
                         <div className="col-span-1 md:col-span-2">
-                            <Label className="block mb-2">
-                                Remarks
-                            </Label>
+                            <Label className="mb-2 block">Remarks</Label>
                             <Textarea
                                 value={data.remarks}
                                 onChange={(e) => setData('remarks', e.target.value)}
-                                className={cn("w-full", errors.remarks && "border-red-500 text-muted-foreground")}
+                                className={cn('w-full', errors.remarks && 'text-muted-foreground border-red-500')}
                                 placeholder="Enter any remarks"
                             />
                         </div>
-
                     </div>
                     {data.operationType === 'outbound' && (
                         <Button
@@ -738,15 +783,21 @@ export default function Create({ stocks, products, locations, batches, units, qu
                             variant="default"
                             type="submit"
                             className="w-full sm:w-auto"
-                            disabled={processing || !data.product || !data.batch || !data.location || !data.destination_location || !data.quantity || Number(data.quantity) <= 0}
+                            disabled={
+                                processing ||
+                                !data.product ||
+                                !data.batch ||
+                                !data.location ||
+                                !data.destination_location ||
+                                !data.quantity ||
+                                Number(data.quantity) <= 0
+                            }
                         >
                             Create Transfer Operation
                         </Button>
                     )}
                 </form>
-
-            </div>
+            </ContainerFormLayout>
         </AppLayout>
-    )
+    );
 }
-
