@@ -31,6 +31,7 @@ class OperationController extends Controller
     {
         // Caches
         $this->authorize('create', Operation::class);
+
         $stock = \App\Models\Stock::with(['product.unit'])
             ->select([
                 "id",
@@ -50,14 +51,17 @@ class OperationController extends Controller
 
         $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
         $locations = \App\Models\Location::all(['id', 'name']);
-        $query = $request->all();
+        $stockId = $request->get('stock_id');
+        $operationType = $request->get('operation_type');
+        $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => $products,
             'batches' => $batches,
             'units' => $units,
             'locations' => $locations,
-            'query' => $query,
+            'stockQuery' => $stockQuery,
+            'operationType' => $operationType
         ]);
     }
 
