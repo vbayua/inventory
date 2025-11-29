@@ -11,6 +11,7 @@ use App\Models\Location;
 use App\Models\Partner;
 use App\Models\Supplier;
 use App\Models\Unit;
+use App\Rules\Permissions\Product\ProductPermissions;
 use App\Service\BatchAssignmentService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -19,23 +20,27 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->authorizeResource(Product::class, 'product');
+    }
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(ProductPermissions $permissions)
     {
-        $this->authorize('viewAny', Product::class);
-        $products =  Cache::remember('products_index', 3600, fn() =>
-            Product::with(['categories:id,name', 'productType:id,type_code'])
+        // $this->authorize('viewAny', Product::class);
+        $data = Product::with(['categories:id,name', 'productType:id,type_code'])
                 ->orderBy('created_at', 'desc')
-                ->get()
-        );
+                ->get();
+        $products =  Cache::remember('products_index', 3600, fn() => $data );
 
         return Inertia::render('Products/Index', [
             'products' => $products,
             'name' => request()->name,
-            'count' => Product::count()
-        ]);
+            'count' => Product::count(),
+        ])->with($permissions);
     }
 
     /**
@@ -43,7 +48,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Product::class);
+        // $this->authorize('create', Product::class);
         $suppliers = Inertia::lazy(fn () =>
             Cache::remember('suppliers_list', 3600, fn() => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
         );
@@ -65,7 +70,7 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
-        $this->authorize('create', Product::class);
+        // $this->authorize('create', Product::class);
 
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
@@ -121,7 +126,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $this->authorize('view', $product);
+        // $this->authorize('view', $product);
         $product->load([
             'suppliers:id,partner_id',
             'suppliers.partner:id,name',
@@ -143,7 +148,7 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $this->authorize('update', $product);
+        // $this->authorize('update', $product);
         $categories = Cache::remember('categories_list', 3600, fn () =>
             Category::select('id', 'name')->get()
         );
@@ -171,7 +176,7 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $this->authorize('update', $product);
+        // $this->authorize('update', $product);
         $product->update($request->validate([
             'name' => ['required'],
             'sku' => ['nullable', 'string'],
@@ -199,7 +204,7 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        $this->authorize('delete', $product);
+        // $this->authorize('delete', $product);
         $product->delete();
         return redirect()->route('products.index');
     }
