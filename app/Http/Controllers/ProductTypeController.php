@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductTypeRequest;
 use App\Http\Requests\UpdateProductTypeRequest;
 use App\Models\ProductType;
+use App\Rules\Permissions\Product\ProductPermissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
@@ -13,10 +14,11 @@ use Illuminate\Http\Request;
 
 class ProductTypeController extends Controller
 {
-    public function index()
+    public function index(ProductPermissions $permissions)
     {
         return Inertia::render('ProductTypes/Index', [
-            'productTypes' => ProductType::all()
+            'productTypes' => ProductType::all(),
+            $permissions
         ]);
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use App\Rules\Permissions\Product\ProductPermissions;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
@@ -12,12 +13,13 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(ProductPermissions $permissions)
     {
         $categories = Category::all();
         // dd($categories);
         return Inertia::render('Categories/Index', [
             'categories' => $categories,
+            $permissions
         ]);
     }
 
