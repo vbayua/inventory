@@ -10,13 +10,16 @@ use Inertia\Inertia;
 
 class PartnerController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Partner::class, 'partner');
+    }
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $this->authorize('viewAny', Partner::class);
         return Inertia::render('Partners/Index', [
             'partners' => Partner::all(),
         ]);
@@ -27,7 +30,6 @@ class PartnerController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Partner::class);
         return Inertia::render('Partners/Create');
     }
 
@@ -36,7 +38,6 @@ class PartnerController extends Controller
      */
     public function store(StorePartnerRequest $request)
     {
-        $this->authorize('create', Partner::class);
         DB::transaction(function () use ($request) {
             $validatedData = $request->validated();
             Partner::create($validatedData);
@@ -50,7 +51,6 @@ class PartnerController extends Controller
      */
     public function show(Partner $partner)
     {
-        $this->authorize('view', $partner);
         return Inertia::render('Partners/Show', [
             'partner' => $partner,
         ]);
@@ -61,7 +61,6 @@ class PartnerController extends Controller
      */
     public function edit(Partner $partner)
     {
-        $this->authorize('update', $partner);
         return Inertia::render('Partners/Edit', [
             'partner' => $partner,
         ]);
@@ -72,7 +71,6 @@ class PartnerController extends Controller
      */
     public function update(UpdatePartnerRequest $request, Partner $partner)
     {
-        $this->authorize('update', $partner);
         DB::transaction(function () use ($request, $partner) {
             $validatedData = $request->validated();
             $partner->update($validatedData);
@@ -86,7 +84,6 @@ class PartnerController extends Controller
      */
     public function destroy(Partner $partner)
     {
-        $this->authorize('delete', $partner);
 
         DB::transaction(function () use ($partner) {
             $partner->delete();

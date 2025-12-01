@@ -12,12 +12,15 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Supplier::class, 'supplier');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $this->authorize('viewAny', Supplier::class);
         return Inertia::render('Suppliers/Index', [
             'suppliers' => Supplier::with('partner')->get(),
         ]);
@@ -43,7 +46,6 @@ class SupplierController extends Controller
      */
     public function store(StoreSupplierRequest $request)
     {
-        $this->authorize('create', Supplier::class);
         $validated = $request->validated();
         Supplier::create($validated);
 
@@ -55,7 +57,6 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        $this->authorize('view', $supplier);
         $supplier->load(['products.categories', 'partner']);
         $productsFromSupplier = $supplier->products;
         $totalProducts = $productsFromSupplier->count();
@@ -79,7 +80,6 @@ class SupplierController extends Controller
      */
     public function edit(Supplier $supplier)
     {
-        $this->authorize('update', $supplier);
         return Inertia::render('Suppliers/Edit', [
             'supplier' => [
                 'id' => $supplier->id,
@@ -90,7 +90,6 @@ class SupplierController extends Controller
 
     public function assignProduct(Request $request, Supplier $supplier)
     {
-        $this->authorize('update', $supplier);
         $request->validate([
             'product_ids' => 'required|array',
             'product_ids.*' => 'exists:products,id', // Make sure every product ID is valid
@@ -108,7 +107,6 @@ class SupplierController extends Controller
      */
     public function update(UpdateSupplierRequest $request, Supplier $supplier)
     {
-        $this->authorize('update', $supplier);
         $validated = $request->validated();
         $supplier->update($validated);
 
@@ -121,7 +119,6 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier)
     {
-        $this->authorize('delete', $supplier);
         $supplier->delete();
 
         return redirect()->route('supplier.index')->with('success', 'Supplier deleted successfully.');
