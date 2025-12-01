@@ -5,21 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Warehouse;
 use App\Http\Requests\StoreWarehouseRequest;
 use App\Http\Requests\UpdateWarehouseRequest;
+use App\Rules\Permissions\WarehousePermissions;
 use Illuminate\Support\Facades\Cache;
 
 class WarehouseController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Warehouse::class, 'warehouse');
+    }
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(WarehousePermissions $permissions)
     {
-        $warehouses = Cache::remember('warehouses_index', 3600, function () {
-            return Warehouse::with('locations')->orderBy('created_at', 'desc')->get();
-        });
+        $warehouseData = Warehouse::with('locations')->orderBy('created_at', 'desc')->get();
+        $warehouses = Cache::remember('warehouses_index', 3600, fn() => $warehouseData);
 
         return Inertia('Warehouses/Index', [
             'warehouses' => $warehouses,
+            $permissions
         ]);
     }
 

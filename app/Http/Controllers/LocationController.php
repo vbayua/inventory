@@ -8,29 +8,16 @@ use App\Http\Requests\UpdateLocationRequest;
 
 class LocationController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Location::class, 'location');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // $filters = request()->only(['name', 'warehouse_id']);
-        // $query = Location::with(['warehouse'])->orderBy('created_at', 'desc');
         $locations = Location::with(['warehouse'])->orderBy('created_at', 'desc');
-        // $locations = $query->filter($filters)
-        //     ->paginate(10)
-        //     ->appends($filters)
-        //     ->withQueryString()
-        //     ->through(fn($location) => [
-        //         'id' => $location->id,
-        //         'name' => $location->name,
-        //         'warehouse' => [
-        //             'id' => $location->warehouse->id,
-        //             'name' => $location->warehouse->name,
-        //         ],
-        //         'created_at' => $location->created_at,
-        //         'updated_at' => $location->updated_at,
-        //     ]);
-
         return Inertia('Locations/Index', [
             'locations' => $locations->get(),
             'name' => request()->name,
