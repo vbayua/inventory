@@ -15,7 +15,8 @@ class DefaultBatchPolicy implements BatchPolicyInterface
 
     public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null): string
     {
-        $basePrefix = $product->sku;
+        $year = date('y');
+        $basePrefix = $year . '' . $product->sku;
 
         $currentDefaultCount = null;
         $baseSupplierId = null;
