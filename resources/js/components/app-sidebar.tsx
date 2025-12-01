@@ -1,4 +1,3 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -11,6 +10,8 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarTrigger,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -18,6 +19,7 @@ import { BookOpen, Box, Boxes, Building, Building2, ChartBar, CheckCheck, Chevro
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Icon } from './ui/icon';
+import { Separator } from './ui/separator';
 
 const productNavItems: NavItem[] = [
     {
@@ -94,6 +96,11 @@ const supplierNavItem: NavItem[] = [
 
 const mainNavItems: NavItem[] = [
     {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: ChartBar,
+    },
+    {
         title: 'Products',
         href: '/products',
         icon: Box,
@@ -134,17 +141,19 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     const page = usePage();
-    const url = page.url.search(/\?.*$/) ? page.url.replace(/\?.*$/, '') : page.url;
+    const { state } = useSidebar();
+    const cleanUrl = page.url.search(/\?.*$/) ? page.url.replace(/\?.*$/, '') : page.url;
     return (
-        <Sidebar collapsible="offcanvas" variant="sidebar">
+        <Sidebar collapsible="offcanvas" variant="inset" className="w-64 flex-shrink-0">
             <SidebarHeader>
                 <SidebarMenu>
-                    <SidebarMenuItem>
+                    <SidebarMenuItem className="flex w-full items-center align-middle">
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
+                        {state === 'expanded' && <SidebarTrigger className="ml-auto" />}
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
@@ -153,7 +162,7 @@ export function AppSidebar() {
                 {mainNavItems
                     .filter((item) => !item.items || item.items.length === 0)
                     .map((item) => (
-                        <SidebarMenu key={item.title}>
+                        <SidebarMenu key={item.title} className="p-2.5">
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild isActive={item.isActive}>
                                     <Link href={item.href}>
@@ -164,6 +173,7 @@ export function AppSidebar() {
                             </SidebarMenuItem>
                         </SidebarMenu>
                     ))}
+                <Separator className="border-sidebar-border/50 my-2" />
                 {/*Collapsible SidebarGroup for each parent*/}
                 {mainNavItems.map(
                     (item) =>
@@ -172,7 +182,7 @@ export function AppSidebar() {
                                 key={item.title}
                                 title={item.title}
                                 className="group/collapsible"
-                                defaultOpen={item.items.some((subItem) => subItem.href === url)}
+                                defaultOpen={item.items.some((subItem) => subItem.href === cleanUrl)}
                             >
                                 <SidebarGroup>
                                     <SidebarGroupLabel
@@ -207,7 +217,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {/*<NavFooter items={footerNavItems} className="mt-auto" />*/}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
