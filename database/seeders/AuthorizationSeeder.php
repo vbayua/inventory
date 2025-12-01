@@ -11,7 +11,7 @@ class AuthorizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $resources = ['product', 'partner', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit'];
+        $resources = ['product', 'partner', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment'];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
         $permissions = collect($resources)->flatMap(function (string $resource) use ($actions) {
@@ -38,12 +38,9 @@ class AuthorizationSeeder extends Seeder
             $permissions->whereIn('name', [
                 'product.viewAny',
                 'product.view',
-                'partner.viewAny',
-                'partner.view',
-                'supplier.viewAny',
-                'supplier.view',
                 'operation.viewAny',
                 'operation.view',
+                'operation.create',
             ])->pluck('id')->all()
         );
 
