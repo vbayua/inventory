@@ -26,22 +26,26 @@ const productNavItems: NavItem[] = [
         title: 'Product Master',
         href: '/products',
         icon: Box,
+        uri: 'product',
     },
 
     {
         title: 'Categories',
         href: '/categories',
         icon: Boxes,
+        uri: 'category',
     },
     {
         title: 'Unit',
         href: '/units',
         icon: Cog,
+        uri: 'unit',
     },
     {
         title: 'Product Types',
         href: '/product-types',
         icon: Box,
+        uri: 'productType',
     },
 ];
 
@@ -50,11 +54,13 @@ const warehouseNavItems: NavItem[] = [
         title: 'Warehouse',
         href: '/warehouse',
         icon: Building2,
+        uri: 'warehouse',
     },
     {
         title: 'Location',
         href: '/location',
         icon: MapPin,
+        uri: 'location',
     },
 ];
 
@@ -63,6 +69,7 @@ const stockNavItems: NavItem[] = [
         title: 'Stock',
         href: '/stocks',
         icon: ChartBar,
+        uri: 'stock',
     },
     {
         title: 'Batches',
@@ -73,11 +80,13 @@ const stockNavItems: NavItem[] = [
         title: 'Operations',
         href: '/operations',
         icon: Cog,
+        uri: 'operation',
     },
     {
         title: 'Stock Adjustments',
         href: '/stock-adjustments',
         icon: CheckCheck,
+        uri: 'adjustment',
     },
 ];
 
@@ -86,11 +95,13 @@ const supplierNavItem: NavItem[] = [
         title: 'Partners / Companies',
         href: '/partners',
         icon: Building,
+        uri: 'partner',
     },
     {
         title: 'Suppliers',
         href: '/suppliers',
         icon: Building,
+        uri: 'supplier',
     },
 ];
 
@@ -99,30 +110,35 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: ChartBar,
+        uri: 'dashboard',
     },
     {
         title: 'Products',
         href: '/products',
         icon: Box,
         items: productNavItems,
+        uri: 'product',
     },
     {
         title: 'Warehouse',
         href: '/warehouse',
         icon: Building2,
         items: warehouseNavItems,
+        uri: 'warehouse',
     },
     {
         title: 'Stock',
         href: '/stocks',
         icon: ChartBar,
         items: stockNavItems,
+        uri: 'stock',
     },
     {
         title: 'Suppliers',
         href: '/suppliers',
         icon: Building,
         items: supplierNavItem,
+        uri: 'supplier',
     },
 ];
 
@@ -142,7 +158,11 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     const page = usePage();
     const { state } = useSidebar();
+    const { viewPermissions } = page.props.auth;
+    const permissions = Object.keys(viewPermissions).filter((key) => viewPermissions[key] === true);
+
     const cleanUrl = page.url.search(/\?.*$/) ? page.url.replace(/\?.*$/, '') : page.url;
+    const filteredNavItems = mainNavItems.filter((item) => item.items?.some((subItem) => permissions.includes(subItem.uri)));
     return (
         <Sidebar collapsible="offcanvas" variant="inset" className="w-64 flex-shrink-0">
             <SidebarHeader>
@@ -160,7 +180,7 @@ export function AppSidebar() {
 
             <SidebarContent className="gap-0">
                 {mainNavItems
-                    .filter((item) => !item.items || item.items.length === 0)
+                    .filter((item) => !item.items || item.items?.length === 0)
                     .map((item) => (
                         <SidebarMenu key={item.title} className="p-2.5">
                             <SidebarMenuItem>
@@ -175,7 +195,7 @@ export function AppSidebar() {
                     ))}
                 <Separator className="border-sidebar-border/50 my-2" />
                 {/*Collapsible SidebarGroup for each parent*/}
-                {mainNavItems.map(
+                {filteredNavItems.map(
                     (item) =>
                         item.items !== undefined && (
                             <Collapsible
