@@ -10,7 +10,7 @@ COPY bootstrap ./bootstrap
 COPY config ./config
 COPY database ./database
 COPY routes ./routes
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+RUN composer config platform.php 8.3 && composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 
 FROM node:20 AS frontend
 WORKDIR /var/www/html
