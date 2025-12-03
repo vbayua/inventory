@@ -41,7 +41,7 @@ const productTypeConfig = {
 export const columns: ColumnDef<ProductIndex>[] = [
     {
         accessorKey: 'sku',
-        header: 'SKU',
+        header: 'Kode Item',
         cell: ({ cell }) => {
             return <Link href={route('products.show', { id: cell.row.original.id })}>{cell.getValue() as string}</Link>;
         },

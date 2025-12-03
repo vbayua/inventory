@@ -31,8 +31,8 @@ class StoreBatchRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:suppliers,id',
-                new SupplierBelongsToProduct((int) $this->input('product_id'))
-            ]
+                new SupplierBelongsToProduct((int) $this->input('product_id')),
+            ],
         ];
     }
 }

@@ -17,8 +17,8 @@ class Location extends Model
 
     public function scopeFilter($query, $filters)
     {
-        if (!empty($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        if (! empty($filters['name'])) {
+            $query->where('name', 'like', '%'.$filters['name'].'%');
         }
     }
 

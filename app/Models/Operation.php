@@ -18,7 +18,6 @@ class Operation extends Model
         'operation_date' => 'datetime',
     ];
 
-
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

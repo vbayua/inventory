@@ -1,3 +1,4 @@
+import ContainerLayout from '@/components/container-layout';
 import { columns } from '@/components/stocks/columns';
 import { DataTable } from '@/components/stocks/data-table';
 import StockStatus from '@/components/stocks/stock-status';
@@ -36,39 +37,39 @@ export default function Index({ stocks, stats }: { stocks: any[]; stats: { total
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Operation List" />
-            <div className={'py-12'}>
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <StockStatus stats={stockStatus} />
-                    <div className={'mt-6 flex items-center justify-start'}>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="default">
-                                    <ChevronDown className="h-4 w-4" />
-                                    Stock Operations
-                                    <span className="sr-only">Open menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="space-y-2 p-2">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link href={route('operations.create')}>
-                                        <PlusIcon className="mr-2 h-4 w-4" />
-                                        Create Stock Operation
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href={route('operations.index')}>
-                                        <Database className="mr-2 h-4 w-4" />
-                                        View Stock Operation
-                                    </Link>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+            <ContainerLayout>
+                <StockStatus stats={stockStatus} />
+                <div className={'mt-6 flex items-center justify-start'}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="default">
+                                <ChevronDown className="h-4 w-4" />
+                                Stock Operations
+                                <span className="sr-only">Open menu</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="space-y-2 p-2">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link href={route('operations.create')}>
+                                    <PlusIcon className="mr-2 h-4 w-4" />
+                                    Create Stock Operation
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link href={route('operations.index')}>
+                                    <Database className="mr-2 h-4 w-4" />
+                                    View Stock Operation
+                                </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <div className="my-4">
                     <DataTable columns={columns} data={stocks} clientSide={true} />
                 </div>
-            </div>
+            </ContainerLayout>
         </AppLayout>
     );
 }

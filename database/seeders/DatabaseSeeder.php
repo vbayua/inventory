@@ -35,8 +35,7 @@ class DatabaseSeeder extends Seeder
         \App\Models\Category::factory()->count(5)->create();
         \App\Models\Supplier::factory()->count(5)->create();
 
-
-        $rawMaterial =  \App\Models\ProductType::factory()->create([
+        $rawMaterial = \App\Models\ProductType::factory()->create([
             'name' => 'Raw Material',
             'description' => 'This is a raw material product type.',
             'type_code' => 'RMP',
@@ -60,26 +59,25 @@ class DatabaseSeeder extends Seeder
             $packagingMaterial2,
         ];
 
-
         User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
         ]);
-        $service =  app(StockOperationService::class);
+        $service = app(StockOperationService::class);
         // Raw Material Products
         Product::factory()->count(10)->create()->each(function ($product) use ($service, $productTypes) {
             $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
             $product->productType()->associate($productTypes['0']); // Raw Material
-            $product->brand_name = 'Brand ' . $product->name;
-            $product->scientific_name = 'Scientific ' . $product->name;
-            $product->sku = 'RMP' . rand(1000, 9999); // Generate a random SKU
+            $product->brand_name = 'Brand '.$product->name;
+            $product->scientific_name = 'Scientific '.$product->name;
+            $product->sku = 'RMP'.rand(1000, 9999); // Generate a random SKU
             $product->save();
 
             // Create a default batch for each product
             $batch = \App\Models\Batch::factory()->create([
                 'product_id' => $product->id,
-                'batch_number' => '25' . 'RMP' . $product->sku,
+                'batch_number' => '25'.'RMP'.$product->sku,
                 'expiry_date' => now()->addYear(),
             ]);
             // Create initial stock for each product
@@ -95,16 +93,16 @@ class DatabaseSeeder extends Seeder
         Product::factory()->count(10)->create()->each(function ($product) use ($service, $productTypes) {
             $product->suppliers()->attach(\App\Models\Supplier::inRandomOrder()->first());
             $product->productType()->associate($productTypes['1']); // Primary Packaging Material
-            $product->brand_name = 'Brand ' . $product->name;
-            $product->scientific_name = 'Scientific ' . $product->name;
+            $product->brand_name = 'Brand '.$product->name;
+            $product->scientific_name = 'Scientific '.$product->name;
             $product->unit = 'pcs'; // Assuming unit is 'pcs' for packaging materials
-            $product->sku = 'PP' . rand(1000, 9999); // Generate a random SKU
+            $product->sku = 'PP'.rand(1000, 9999); // Generate a random SKU
             $product->save();
 
             // Create a default batch for each product
             $batch = \App\Models\Batch::factory()->create([
                 'product_id' => $product->id,
-                'batch_number' => '25' . 'PP' . $product->sku,
+                'batch_number' => '25'.'PP'.$product->sku,
                 'expiry_date' => now()->addYear(),
             ]);
             // Create initial stock for each product

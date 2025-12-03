@@ -70,7 +70,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                     placeholder="Search batch or product"
                     value={(table.getState().globalFilter as string) ?? ''}
                     onChange={(event) => table.setGlobalFilter(event.target.value)}
-                    className="h-8 w-[150px] lg:w-[250px]"
+                    className="h-8 w-full max-w-sm"
                 />
                 {table.getColumn('product_type') && (
                     <DataTableFacetedFilter column={table.getColumn('product_type')} title="Product Type" options={productTypes} />

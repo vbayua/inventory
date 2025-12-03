@@ -21,6 +21,7 @@ export interface NavItem {
     icon?: LucideIcon | null;
     isActive?: boolean;
     items?: SubItems[];
+    uri?: string;
 }
 export interface MainNavItem {
     title: string;
@@ -34,15 +35,28 @@ export interface SubItems {
     href: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    uri?: string;
 }
 
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
+    permissions: Permission;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
     [key: string]: unknown;
+}
+
+export interface Permission {
+    viewAny: boolean;
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+    restore: boolean;
+    forceDelete: boolean;
+    isAdmin: boolean;
 }
 
 export interface User {

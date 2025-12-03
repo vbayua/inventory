@@ -171,7 +171,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'product_sku',
         accessorKey: 'SKU',
         accessorFn: (row) => row.product?.sku,
-        header: 'SKU',
+        header: 'Kode Item (SKU)',
         filterFn: (row, id, value) => {
             if (!value) return true;
             const cell = row.getValue<string | undefined>(id);

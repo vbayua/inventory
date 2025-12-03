@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 

@@ -8,9 +8,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
 
     Route::prefix('operations')->group(function () {
         Route::get('/', [\App\Http\Controllers\OperationController::class, 'index'])->name('operations.index');
@@ -54,8 +52,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
-require __DIR__ . '/products.php';
-require __DIR__ . '/suppliers.php';
-require __DIR__ . '/warehouses.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
+require __DIR__.'/products.php';
+require __DIR__.'/suppliers.php';
+require __DIR__.'/warehouses.php';
