@@ -43,9 +43,9 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
                 <Input
-                    placeholder="Filter product name..."
-                    value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+                    placeholder="product name or item code..."
+                    value={(table.getState().globalFilter as string) ?? ''}
+                    onChange={(event) => table.setGlobalFilter(event.target.value)}
                     className="h-8 w-full max-w-sm"
                 />
                 {productTypeColumn && productTypeFilterOptions && (
@@ -55,7 +55,14 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                     <DataTableFacetedFilter column={categoriesColumn} title="Category" options={categoriesFilterOptions} />
                 )}
                 {isFiltered && (
-                    <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
+                    <Button
+                        variant="ghost"
+                        onClick={() => {
+                            table.resetColumnFilters();
+                            table.resetGlobalFilter();
+                        }}
+                        className="h-8 px-2 lg:px-3"
+                    >
                         Reset
                         <X />
                     </Button>

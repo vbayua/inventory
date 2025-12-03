@@ -37,11 +37,21 @@ const productTypeConfig = {
         color: 'bg-yellow-100 text-yellow-800',
         label: 'Secondary Packaging',
     },
+    PT: {
+        color: 'bg-purple-100 text-purple-800',
+        label: 'Tertiary Packaging',
+    },
+    PC: {
+        color: 'bg-red-100 text-red-800',
+        label: 'Consume Packaging',
+    },
 };
 export const columns: ColumnDef<ProductIndex>[] = [
     {
         accessorKey: 'sku',
-        header: 'Kode Item',
+        header: ({ column }) => {
+            return <DataTableColumnHeader column={column} title="Kode Item" />;
+        },
         cell: ({ cell }) => {
             return <Link href={route('products.show', { id: cell.row.original.id })}>{cell.getValue() as string}</Link>;
         },

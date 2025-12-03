@@ -1,100 +1,108 @@
-
-import * as React from "react"
-import { Input } from "../ui/input"
-import { DataTableViewOptions } from "../data-table-view-options"
-import { Button } from "../ui/button"
-import { DataTableFacetedFilter } from "./data-table-faceted-filter"
-import { Table } from "@tanstack/react-table"
-import { X } from "lucide-react"
+import { cn } from '@/lib/utils';
+import { Table } from '@tanstack/react-table';
+import { format } from 'date-fns';
+import { CalendarIcon, X } from 'lucide-react';
+import * as React from 'react';
+import { DateRange } from 'react-day-picker';
+import { Button } from '../ui/button';
+import { Calendar } from '../ui/calendar';
+import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { DataTableFacetedFilter } from './data-table-faceted-filter';
 
 interface Options {
-    label: string
-    value: string
-    icon?: React.ComponentType<{ className?: string }>
-};
-
-interface DataTableToolbarProps<TData> {
-    table: Table<TData>,
-    options?: Options[]
+    label: string;
+    value: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }
 
-export function DataTableToolbar<TData>({
-    table,
-}: DataTableToolbarProps<TData>) {
-    const isFiltered = table.getState().columnFilters.length > 0
-    const productColumn =
-        table.getColumn("product_name")
-            ? Array.from(table.getColumn("product_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
-                label: value,
-                value: value,
-            }))
-            : [];
+interface DataTableToolbarProps<TData> {
+    table: Table<TData>;
+    options?: Options[];
+}
 
-    const batchColumn = table.getColumn("batch_number")
-        ? Array.from(table.getColumn("batch_number")!.getFacetedUniqueValues().keys()).map((value: string) => ({
-            label: value,
-            value: value,
-        }))
+export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+    const isFiltered = table.getState().columnFilters.length > 0;
+    const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
+
+    React.useEffect(() => {
+        table.getColumn('operation_date')?.setFilterValue(dateRange);
+    }, [dateRange, table]);
+    const productColumn = table.getColumn('product_name')
+        ? Array.from(table.getColumn('product_name')!.getFacetedUniqueValues().keys()).map((value: string) => ({
+              label: value,
+              value: value,
+          }))
+        : [];
+
+    const batchColumn = table.getColumn('batch_number')
+        ? Array.from(table.getColumn('batch_number')!.getFacetedUniqueValues().keys()).map((value: string) => ({
+              label: value,
+              value: value,
+          }))
         : [];
 
     const operationType = [
-        { label: "Initial", value: "initial" },
-        { label: "Inbound", value: "inbound" },
-        { label: "Oubound", value: "outbound" },
-        { label: "Transfer", value: "transfer" },
-        { label: "Adjustment", value: "adjustment" },
-    ]
-    const productFacetedFilter: Options[] = [
-        { label: "All", value: "" },
-        ...productColumn,
+        { label: 'Initial', value: 'initial' },
+        { label: 'Inbound', value: 'inbound' },
+        { label: 'Oubound', value: 'outbound' },
+        { label: 'Transfer', value: 'transfer' },
+        { label: 'Adjustment', value: 'adjustment' },
     ];
+    const productFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...productColumn];
 
-    const batchFacetedFilter: Options[] = [
-        { label: "All", value: "" },
-        ...batchColumn,
-    ];
+    const batchFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...batchColumn];
 
-    const operationTypeFacetedFilter: Options[] = [
-        { label: "All", value: "" },
-        ...operationType,
-    ];
+    const operationTypeFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...operationType];
 
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
                 <Input
                     placeholder="Search batch or product"
-                    value={(table.getState().globalFilter as string) ?? ""}
-                    onChange={(event) =>
-                        table.setGlobalFilter(event.target.value)
-                    }
+                    value={(table.getState().globalFilter as string) ?? ''}
+                    onChange={(event) => table.setGlobalFilter(event.target.value)}
                     className="h-8 w-[150px] lg:w-[250px]"
                 />
-                {table.getColumn("batch_number") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("batch_number")}
-                        title="Batch"
-                        options={batchFacetedFilter}
-                    />
+                {table.getColumn('batch_number') && (
+                    <DataTableFacetedFilter column={table.getColumn('batch_number')} title="Batch" options={batchFacetedFilter} />
                 )}
-                {table.getColumn("operation_type") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("operation_type")}
-                        title="Operation Type"
-                        options={operationTypeFacetedFilter}
-                    />
+                {table.getColumn('operation_type') && (
+                    <DataTableFacetedFilter column={table.getColumn('operation_type')} title="Operation Type" options={operationTypeFacetedFilter} />
+                )}
+                {table.getColumn('operation_date') && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={'outline'}
+                                className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                            {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, 'LLL dd, y')
+                                    )
+                                ) : (
+                                    <span>Operation Date Range</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar initialFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
+                        </PopoverContent>
+                    </Popover>
                 )}
                 {isFiltered && (
-                    <Button
-                        variant="ghost"
-                        onClick={() => table.resetColumnFilters()}
-                        className="h-8 px-2 lg:px-3"
-                    >
+                    <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
                         Reset
                         <X />
                     </Button>
                 )}
             </div>
         </div>
-    )
+    );
 }
