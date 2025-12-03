@@ -241,14 +241,14 @@ export default function Create({
                     <div className="grid gap-2">
                         <div>
                             <Label htmlFor="sku">
-                                SKU <span className="text-red-500">*</span>
+                                Item Code <span className="text-red-500">*</span>
                             </Label>
                             <div className="max-md flex w-full items-center gap-2">
                                 <Input
                                     id="sku"
                                     value={data.sku}
                                     onChange={(e) => setData('sku', e.target.value)}
-                                    placeholder="SKU"
+                                    placeholder="Item Code"
                                     className="mt-1 block w-full"
                                     required
                                 />

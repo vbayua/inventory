@@ -44,7 +44,7 @@ export default function Create() {
     const createPartner: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('supplier.store'), {
+        post(route('partners.store'), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
