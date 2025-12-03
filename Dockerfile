@@ -16,7 +16,13 @@ FROM node:20 AS frontend
 WORKDIR /var/www/html
 
 COPY package.json package-lock.json ./
-RUN npm config delete proxy && npm config delete https-proxy && npm config set strict-ssl false && npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm config set fetch-retry-maxtimeout 600000 && npm ci
+RUN npm config delete proxy \
+    && npm config delete https-proxy \
+    && npm config set strict-ssl false \
+    && npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 600000 \
+    && npm ci
 
 COPY resources ./resources
 COPY tsconfig.json vite.config.ts components.json ./
@@ -28,6 +34,7 @@ WORKDIR /var/www/html
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        bash \
         git \
         unzip \
         libzip-dev \
