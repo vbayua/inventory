@@ -150,9 +150,9 @@ export default function Create({
     };
 
     const operationTypes = [
-        { value: 'outbound', label: 'Usage Stock' },
-        { value: 'inbound', label: 'Receive Stock' },
-        { value: 'adjustment', label: 'Adjust Stock' },
+        { value: 'outbound', label: 'Stock Out' },
+        { value: 'inbound', label: 'Stock In' },
+        { value: 'adjustment', label: 'Stock Adjust' },
         { value: 'transfer', label: 'Transfer Stock' },
     ];
 
@@ -236,38 +236,26 @@ export default function Create({
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Search product..." />
-                                        <CommandList>
-                                            <CommandEmpty>No products found</CommandEmpty>
-                                            <CommandGroup>
-                                                {productList.map((product: any) => (
-                                                    <CommandItem
-                                                        key={product.id}
-                                                        value={product.id.toString()}
-                                                        onSelect={(value) => {
-                                                            setData('product', value);
-                                                            setData('batch', ''); // Reset batch when product changes
-                                                            setData('unit', product.unit.name.toString()); // Set default unit from product
-                                                            setData('location', ''); // Reset location when product changes
-                                                            setData('quantity', 0); // Reset quantity when product changes
-                                                            setData('date', ''); // Reset date when product changes
-                                                            setData('remarks', ''); // Reset remarks when product changes
-                                                        }}
-                                                        className="relative flex cursor-pointer items-center px-2 py-1.5 select-none hover:bg-gray-100"
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                'mr-2 h-4 w-4',
-                                                                data.product === product.id.toString() ? 'opacity-100' : 'opacity-0',
-                                                            )}
-                                                        />
-                                                        {product.name}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
+                                    <SelectCommand
+                                        lists={productList}
+                                        getKey={(item) => item.id}
+                                        getId={(item) => item.id}
+                                        getLabel={(item) => item.name}
+                                        onSelect={(item) => {
+                                            setData('product', String(item.id));
+                                            setData('batch', '');
+                                            setData('location', '');
+                                        }}
+                                        placeholder="Search product..."
+                                        emptyText="No product found"
+                                        getSearchValue={(item) => `${item.name} ${item.sku}`}
+                                        renderItem={(item) => (
+                                            <span>
+                                                {item.name}
+                                                <span className="text-muted-foreground ml-2 text-sm">({item.sku})</span>
+                                            </span>
+                                        )}
+                                    />
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -286,33 +274,27 @@ export default function Create({
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Search batch..." />
-                                        <CommandList>
-                                            <CommandEmpty>No batch found</CommandEmpty>
-                                            <CommandGroup>
-                                                {filteredBatches.map((batch: any) => (
-                                                    <CommandItem
-                                                        key={batch.id}
-                                                        value={batch.id.toString()}
-                                                        onSelect={(value) => {
-                                                            setData('batch', value);
-                                                            setData('location', '');
-                                                        }}
-                                                        className="relative flex cursor-pointer items-center px-2 py-1.5 select-none hover:bg-gray-100"
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                'mr-2 h-4 w-4',
-                                                                data.batch === batch.id.toString() ? 'opacity-100' : 'opacity-0',
-                                                            )}
-                                                        />
-                                                        {batch.batch_number}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
+                                    <SelectCommand
+                                        lists={filteredBatches}
+                                        getKey={(item) => item.id}
+                                        getId={(item) => item.id}
+                                        getLabel={(item) => item.batch_number}
+                                        onSelect={(item) => {
+                                            setData('batch', String(item.id));
+                                            setData('location', '');
+                                        }}
+                                        placeholder="Search batch..."
+                                        emptyText={
+                                            <>
+                                                <span>No batch found for the selected product.</span>
+                                                <br />
+                                                <Button variant={'link'} onClick={() => {}}>
+                                                    Create new batch?
+                                                </Button>
+                                            </>
+                                        }
+                                        renderItem={(item) => <span>{item.batch_number}</span>}
+                                    />
                                 </PopoverContent>
                             </Popover>
                         </div>

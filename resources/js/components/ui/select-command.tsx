@@ -5,7 +5,7 @@ type SelectCommandProps<T> = {
     lists?: T[];
     onSelect: (item: T) => void;
     placeholder?: string;
-    emptyText?: string;
+    emptyText?: string | ReactNode;
     renderItem?: (item: T) => ReactNode;
     getKey?: (item: T, index: number) => string | number;
     getId?: (item: T) => string | number;
