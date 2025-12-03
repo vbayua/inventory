@@ -34,10 +34,10 @@ class ProductController extends Controller
         $data = Product::with(['categories:id,name', 'productType:id,type_code'])
             ->orderBy('created_at', 'desc')
             ->get();
-        $products = Cache::remember('products_index', 3600, fn () => $data);
+        // $products = Cache::remember('products_index', 3600, fn () => $data);
 
         return Inertia::render('Products/Index', [
-            'products' => $products,
+            'products' => $data,
             'name' => request()->name,
             'count' => Product::count(),
         ])->with($permissions);
