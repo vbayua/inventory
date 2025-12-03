@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Models\Partner;
 use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class SupplierController extends Controller
 {
@@ -16,6 +16,7 @@ class SupplierController extends Controller
     {
         $this->authorizeResource(Supplier::class, 'supplier');
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -33,8 +34,9 @@ class SupplierController extends Controller
     {
         $this->authorize('create', Supplier::class);
         $relatedPartnerIds = Supplier::pluck('partner_id')->all();
+
         return Inertia::render('Suppliers/Create', [
-            'partners' => Inertia::lazy(fn() => Partner::select('id', 'name')
+            'partners' => Inertia::lazy(fn () => Partner::select('id', 'name')
                 ->whereNotIn('id', $relatedPartnerIds)
                 ->orderBy('name')
                 ->get()),
@@ -67,7 +69,7 @@ class SupplierController extends Controller
             'products' => $productsFromSupplier,
             'totalProducts' => $totalProducts,
             'allProducts' => Inertia::lazy(
-                fn() => Product::select('id', 'name', 'sku')
+                fn () => Product::select('id', 'name', 'sku')
                     ->whereNotIn('id', $relatedProductIds)
                     ->orderBy('name')
                     ->get()
@@ -83,7 +85,7 @@ class SupplierController extends Controller
         return Inertia::render('Suppliers/Edit', [
             'supplier' => [
                 'id' => $supplier->id,
-                'name' => $supplier->name
+                'name' => $supplier->name,
             ],
         ]);
     }
@@ -99,7 +101,7 @@ class SupplierController extends Controller
 
         $supplier->products()->syncWithoutDetaching($productIds);
 
-        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added to' . $supplier->name);
+        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added to'.$supplier->name);
     }
 
     /**

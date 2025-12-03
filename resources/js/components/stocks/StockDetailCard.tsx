@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '../ui/badge';
 import { Hash, MapPin, Package, Warehouse } from 'lucide-react';
-
+import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
 
 export default function StockDetailCard({
     batch_number,
@@ -10,23 +10,29 @@ export default function StockDetailCard({
     location_name,
     quantity,
     unit,
-    status
+    status,
+    minimum_quantity,
 }: {
-    batch_number: string,
-    product_name: string,
-    warehouse_name: string,
-    location_name: string,
-    quantity: number,
-    unit: string,
-    status: "available" | "out_of_stock" | "reserved" | "low_stock",
+    batch_number: string;
+    product_name: string;
+    warehouse_name: string;
+    location_name: string;
+    quantity: number;
+    unit: string;
+    status: 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
+    minimum_quantity: number;
 }) {
     const getStatusBadge = () => {
         switch (status) {
-            case "out_of_stock":
-                return <Badge variant="destructive" className='bg-red-100 text-red-800'>Expired</Badge>;
-            case "low_stock":
+            case 'out_of_stock':
+                return (
+                    <Badge variant="destructive" className="bg-red-100 text-red-800">
+                        Expired
+                    </Badge>
+                );
+            case 'low_stock':
                 return <Badge className="bg-orange-100 text-orange-800">Low Stock</Badge>;
-            case "reserved":
+            case 'reserved':
                 return <Badge className="bg-yellow-100 text-yellow-800">Reserved</Badge>;
             default:
                 return <Badge className="bg-green-100 text-green-800">Available</Badge>;
@@ -41,53 +47,58 @@ export default function StockDetailCard({
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className='flex items-start gap-3'>
-                        <div className='p-2 rounded-lg bg-primary/10'>
-                            <Hash className="h-6 w-6 text-primary" />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 rounded-lg p-2">
+                            <Hash className="text-primary h-6 w-6" />
                         </div>
-                        <div className='flex-1'>
-                            <CardDescription className="text-sm text-muted-foreground">Batch Number</CardDescription>
+                        <div className="flex-1">
+                            <CardDescription className="text-muted-foreground text-sm">Batch Number</CardDescription>
                             <p className="font-medium">{batch_number}</p>
                         </div>
                     </div>
-                    <div className='flex items-start gap-3'>
-                        <div className="p-2 rounded-lg bg-primary/10">
-                            <Package className="h-6 w-6 text-primary" />
+                    <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 rounded-lg p-2">
+                            <Package className="text-primary h-6 w-6" />
                         </div>
-                        <div className='flex-1'>
-                            <CardDescription className="text-sm text-muted-foreground">Product Name</CardDescription>
+                        <div className="flex-1">
+                            <CardDescription className="text-muted-foreground text-sm">Product Name</CardDescription>
                             <p className="font-medium">{product_name}</p>
                         </div>
                     </div>
-                    <div className='flex items-start gap-3'>
-                        <div className="p-2 rounded-lg bg-primary/10">
-                            <Warehouse className="h-6 w-6 text-primary" />
+                    <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 rounded-lg p-2">
+                            <Warehouse className="text-primary h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                            <CardDescription className="text-sm text-muted-foreground">Warehouse</CardDescription>
+                            <CardDescription className="text-muted-foreground text-sm">Warehouse</CardDescription>
                             <p className="font-medium">{warehouse_name}</p>
                         </div>
                     </div>
-                    <div className='flex items-start gap-3'>
-                        <div className="p-2 rounded-lg bg-primary/10">
-                            <MapPin className="h-6 w-6 text-primary" />
+                    <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 rounded-lg p-2">
+                            <MapPin className="text-primary h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                            <CardDescription className="text-sm text-muted-foreground">Location</CardDescription>
+                            <CardDescription className="text-muted-foreground text-sm">Location</CardDescription>
                             <p className="font-medium">{location_name}</p>
                         </div>
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className='pt-4 border-t border-border'>
-                <div className='w-full'>
-                    <div className='flex items-center justify-between'>
-                        <CardDescription className="text-sm text-muted-foreground">Current Quantity</CardDescription>
-                        <p className="font-medium text-2xl text-primary">{`${quantity} ${unit}`}</p>
+            <CardFooter className="border-border border-t pt-4">
+                <div className="w-full">
+                    <div className="flex items-center justify-between">
+                        <CardDescription className="text-muted-foreground text-sm">Current Quantity</CardDescription>
+                        <p className="text-primary text-2xl font-medium">{`${quantity} ${unit}`}</p>
+                    </div>
+                    <Separator className="my-3" />
+                    <div className="mt-2 flex items-center justify-between">
+                        <CardDescription className="text-muted-foreground text-sm">Minimum Quantity</CardDescription>
+                        <p className="text-muted-foreground text-sm">{`${minimum_quantity} ${unit}`}</p>
                     </div>
                 </div>
             </CardFooter>
         </Card>
-    )
+    );
 }

@@ -4,8 +4,8 @@ namespace App\Rules\Permissions;
 
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
-use Inertia\RenderContext;
 use Inertia\ProvidesInertiaProperties;
+use Inertia\RenderContext;
 
 class MenuItemViewPermissions implements ProvidesInertiaProperties
 {

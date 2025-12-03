@@ -15,6 +15,5 @@ return [
         // Add more product type codes and their corresponding policies here
     ],
 
-
     'default_expiry_date' => env('BATCH_DEFAULT_EXPIRY_DATE', 365), // Default expiry days for batches
 ];

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Unit;
 use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\UpdateUnitRequest;
+use App\Models\Unit;
 use App\Rules\Permissions\Product\ProductPermissions;
 use Inertia\Inertia;
 
@@ -17,7 +17,7 @@ class UnitController extends Controller
     {
         return Inertia::render('Units/Index', [
             'units' => Unit::all(),
-            $permissions
+            $permissions,
         ]);
     }
 

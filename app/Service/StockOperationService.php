@@ -8,23 +8,27 @@ use App\Models\Stock;
 use App\Models\StockAdjustment;
 use App\Models\Unit;
 use App\Service\StockCalculatorService as UnitConverter;
-use App\Service\BatchAssignmentService;
-use Exception;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use InvalidArgumentException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class StockOperationService
 {
     protected $unitConverter;
+
     protected $batchService;
+
     protected const INITIAL = 'initial';
+
     protected const INBOUND = 'inbound';
+
     protected const OUTBOUND = 'outbound';
+
     protected const TRANSFER = 'transfer';
+
     protected const ADJUSTMENT = 'adjustment';
+
     public function __construct(UnitConverter $unitConverter, BatchAssignmentService $batchService)
     {
         $this->unitConverter = $unitConverter;
@@ -34,7 +38,7 @@ class StockOperationService
     public function createInitialStock(Product|int $product, array $stockData)
     {
         // dd($product->id, $product, $stockData);
-        return DB::transaction(function () use ($product, $stockData) {;
+        return DB::transaction(function () use ($product, $stockData) {
             $supplierId = $stockData['supplier_id'] ?? null;
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
@@ -71,6 +75,7 @@ class StockOperationService
                 'set',
                 $stockData['with_container'] ?? false
             );
+
             return $operation;
         });
     }
@@ -97,7 +102,7 @@ class StockOperationService
                 'quantity' => $quantity,
                 'unit' => $unit,
                 'adjustment_type' => $type,
-                'remarks' => $remarks ?? ''
+                'remarks' => $remarks ?? '',
             ]);
 
             if ($type === 'addition') {
@@ -126,7 +131,7 @@ class StockOperationService
         });
     }
 
-    public function createInboundOperation(Product|int $product, Stock|array $stockData, float $receiveQuantity, string $unit, string $remarks = "Inbound Operation", $operationDate = null)
+    public function createInboundOperation(Product|int $product, Stock|array $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $receiveQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -146,10 +151,12 @@ class StockOperationService
                 'increment',
                 $stockData['with_container'] ?? false
             );
+
             return $operation;
         });
     }
-    public function createOutboundOperation(Product|int $product, Stock|array $stockData, float $usageQuantity, string $unit, string $remarks = "Outbound Operation", $operationDate = null)
+
+    public function createOutboundOperation(Product|int $product, Stock|array $stockData, float $usageQuantity, string $unit, string $remarks = 'Outbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -169,14 +176,14 @@ class StockOperationService
                 'decrement',
                 $stockData['with_container'] ?? false
             );
+
             return $operation;
         });
     }
 
-
     public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
     {
-        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate, $withContainer) {
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
                 'transfer',
                 $product,
@@ -200,7 +207,6 @@ class StockOperationService
         });
     }
 
-
     // Helper methods
 
     /**
@@ -212,14 +218,13 @@ class StockOperationService
      * data array or Stock-like structure. The operation date defaults to the current
      * timestamp when not explicitly supplied.
      *
-     * @param string                 $type           The type/category of the operation (e.g., 'ISSUE', 'ADJUSTMENT', 'RECEIPT').
-     * @param Product|int            $product        Product model instance or its primary key.
-     * @param Stock|array            $stockData      Stock instance or associative array containing at least 'location_id' and optionally 'batch_id'.
-     * @param float                  $usageQuantity  The quantity involved in the operation (stored as given; no unit conversion performed here).
-     * @param Unit|string            $unit           Unit model instance or its name string used for the operation record.
-     * @param string                 $remarks        Free-form remarks or notes (empty string if null/omitted).
-     * @param \DateTimeInterface|string|null $operationDate Explicit operation date/time; if null, current time is used.
-     *
+     * @param  string  $type  The type/category of the operation (e.g., 'ISSUE', 'ADJUSTMENT', 'RECEIPT').
+     * @param  Product|int  $product  Product model instance or its primary key.
+     * @param  Stock|array  $stockData  Stock instance or associative array containing at least 'location_id' and optionally 'batch_id'.
+     * @param  float  $usageQuantity  The quantity involved in the operation (stored as given; no unit conversion performed here).
+     * @param  Unit|string  $unit  Unit model instance or its name string used for the operation record.
+     * @param  string  $remarks  Free-form remarks or notes (empty string if null/omitted).
+     * @param  \DateTimeInterface|string|null  $operationDate  Explicit operation date/time; if null, current time is used.
      * @return Operation The newly created Operation model instance.
      *
      * @throws \Throwable If the database transaction fails.
@@ -278,8 +283,8 @@ class StockOperationService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$stock && $mode === 'set') {
-                $stock = new Stock();
+            if (! $stock && $mode === 'set') {
+                $stock = new Stock;
                 $stock->product_id = $productId;
                 $stock->location_id = $stockData['location_id'];
                 $stock->batch_id = $stockData['batch_id'] ?? null;
@@ -294,7 +299,6 @@ class StockOperationService
                 // Relock newly reted row to be safe in high contention
                 $stock = Stock::where('id', $stock->id)->lockForUpdate()->firstOrFail();
             }
-
 
             $stockUnit = $this->getUnitRecord($stock->unit);
 
@@ -346,13 +350,12 @@ class StockOperationService
                 ->where('batch_id', $batchId)
                 ->firstOrFail();
 
-
             $destinationStockData = Stock::where('product_id', $product->id)
                 ->where('location_id', $destinationStockLocation)
                 ->where('batch_id', $batchId)
                 ->first();
 
-            if (!$destinationStockData) {
+            if (! $destinationStockData) {
                 // Create destination stock record if it doesn't exist
                 $destinationStockData = Stock::create([
                     'product_id' => $product->id,
@@ -369,7 +372,7 @@ class StockOperationService
             $newStockSource = $this->decrementStock($product, $sourceStockData, $quantity, $unit);
             $newStockDestination = $this->incrementStock($product, $destinationStockData, $quantity, $unit);
             // If everything was moved, delete the source stock row
-            if ($newStockSource && ($newStockSource->status === 'out_of_stock' || (float)$newStockSource->quantity <= 0.0)) {
+            if ($newStockSource && ($newStockSource->status === 'out_of_stock' || (float) $newStockSource->quantity <= 0.0)) {
                 $newStockSource->delete();
             }
         });
@@ -383,6 +386,7 @@ class StockOperationService
     private function lockAndLoadStock(Product|int $product, array $stockData): Stock
     {
         $productId = $product instanceof Product ? $product->id : $product;
+
         return Stock::where('product_id', $productId)
             ->where('location_id', $stockData['location_id'])
             ->where('batch_id', $stockData['batch_id'] ?? null)
@@ -408,7 +412,7 @@ class StockOperationService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$stock) {
+            if (! $stock) {
                 throw new \Exception("No stock for product {$product->name} at the specified location/batch");
             }
 
@@ -442,6 +446,7 @@ class StockOperationService
         if ($quantity <= 0) {
             throw new \InvalidArgumentException('Quantity must be a positive number.');
         }
+
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit) {
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
             $unit = $unit ?? $product->unit; // Default to product unit if not provided
@@ -453,7 +458,7 @@ class StockOperationService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$stock) {
+            if (! $stock) {
                 throw new \Exception("No stock for product {$product->name} at the specified location/batch");
             }
             $stockUnit = $this->getUnitRecord($stock->unit);
@@ -468,7 +473,7 @@ class StockOperationService
             $currentStockInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
 
             if ($currentStockInBase < $qtyInBase) {
-                throw new \Exception('Insufficient stock for product: ' . $product->name);
+                throw new \Exception('Insufficient stock for product: '.$product->name);
             }
 
             $newInBase = $currentStockInBase - $qtyInBase;
@@ -478,7 +483,7 @@ class StockOperationService
                 'quantity' => $newQuantity,
                 'status' => $newInBase > 0
                     ? $this->setStockStatus($newQuantity, $stock->minimum_quantity)
-                    : 'out_of_stock'
+                    : 'out_of_stock',
             ]);
 
             return $stock->fresh();

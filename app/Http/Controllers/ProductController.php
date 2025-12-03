@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-use App\Service\StockOperationService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\Partner;
+use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\Unit;
 use App\Rules\Permissions\Product\ProductPermissions;
 use App\Service\BatchAssignmentService;
+use App\Service\StockOperationService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,11 +20,11 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-
     public function __construct()
     {
         $this->authorizeResource(Product::class, 'product');
     }
+
     /**
      * Display a listing of the resource.
      */
@@ -32,9 +32,9 @@ class ProductController extends Controller
     {
         // $this->authorize('viewAny', Product::class);
         $data = Product::with(['categories:id,name', 'productType:id,type_code'])
-                ->orderBy('created_at', 'desc')
-                ->get();
-        $products =  Cache::remember('products_index', 3600, fn() => $data );
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $products = Cache::remember('products_index', 3600, fn () => $data);
 
         return Inertia::render('Products/Index', [
             'products' => $products,
@@ -49,11 +49,10 @@ class ProductController extends Controller
     public function create()
     {
         // $this->authorize('create', Product::class);
-        $suppliers = Inertia::lazy(fn () =>
-            Cache::remember('suppliers_list', 3600, fn() => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
+        $suppliers = Inertia::lazy(fn () => Cache::remember('suppliers_list', 3600, fn () => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
         );
         $partners = Inertia::lazy(function () {
-            return Cache::remember('partners_list', 3600, fn() => Partner::select('id', 'name')->get());
+            return Cache::remember('partners_list', 3600, fn () => Partner::select('id', 'name')->get());
         });
 
         return Inertia::render('Products/Create', [
@@ -67,7 +66,6 @@ class ProductController extends Controller
         ]);
     }
 
-
     public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
         // $this->authorize('create', Product::class);
@@ -77,12 +75,11 @@ class ProductController extends Controller
             'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
         ]);
 
-
         $product = $request->safe()->except([
             'supplier_id',
             'location_id',
             'quantity',
-            'minimum_quantity'
+            'minimum_quantity',
         ]);
 
         DB::beginTransaction();
@@ -109,14 +106,15 @@ class ProductController extends Controller
             ]);
 
             $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
-            if (!$stock) {
+            if (! $stock) {
                 DB::rollback();
                 throw ValidationException::withMessages([
-                    'stock' => 'Failed to create stock'
+                    'stock' => 'Failed to create stock',
                 ]);
             }
         }
         DB::commit();
+
         return redirect()->route('products.index')
             ->with('success', 'Product Created Sucessfully!');
     }
@@ -135,11 +133,12 @@ class ProductController extends Controller
 
         $totalStock = $product->getAllStockQty();
         $suppliers = $product->suppliers;
+
         // Product
         return Inertia::render('Products/Show', [
             'product' => $product,
             'suppliers' => $suppliers,
-            'total_stock_qty' => $totalStock
+            'total_stock_qty' => $totalStock,
         ]);
     }
 
@@ -149,18 +148,15 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         // $this->authorize('update', $product);
-        $categories = Cache::remember('categories_list', 3600, fn () =>
-            Category::select('id', 'name')->get()
+        $categories = Cache::remember('categories_list', 3600, fn () => Category::select('id', 'name')->get()
         );
-        $locations = Cache::remember('locations_list', 3600, fn () =>
-            Location::select('id', 'name', 'warehouse_id')->get()
+        $locations = Cache::remember('locations_list', 3600, fn () => Location::select('id', 'name', 'warehouse_id')->get()
         );
-        $suppliers = Cache::remember('suppliers_list', 3600, fn() =>
-            Supplier::select('id', 'name')->get()
+        $suppliers = Cache::remember('suppliers_list', 3600, fn () => Supplier::select('id', 'name')->get()
         );
-        $units = Cache::remember('units_list', 3600, fn() =>
-            Unit::select('name')->get()
+        $units = Cache::remember('units_list', 3600, fn () => Unit::select('name')->get()
         );
+
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
@@ -192,9 +188,10 @@ class ProductController extends Controller
             $request->supplier_id => [
                 'price' => $request->price,
                 'updated_at' => now(),
-            ]
+            ],
         ]);
         Cache::forget('products_index');
+
         return redirect()->route('products.index')
             ->with('success', 'Product Updated Sucessfully!');
     }
@@ -206,6 +203,7 @@ class ProductController extends Controller
     {
         // $this->authorize('delete', $product);
         $product->delete();
+
         return redirect()->route('products.index');
     }
 }

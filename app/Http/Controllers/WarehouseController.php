@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Warehouse;
 use App\Http\Requests\StoreWarehouseRequest;
 use App\Http\Requests\UpdateWarehouseRequest;
+use App\Models\Warehouse;
 use App\Rules\Permissions\WarehousePermissions;
 use Illuminate\Support\Facades\Cache;
 
@@ -14,17 +14,18 @@ class WarehouseController extends Controller
     {
         $this->authorizeResource(Warehouse::class, 'warehouse');
     }
+
     /**
      * Display a listing of the resource.
      */
     public function index(WarehousePermissions $permissions)
     {
         $warehouseData = Warehouse::with('locations')->orderBy('created_at', 'desc')->get();
-        $warehouses = Cache::remember('warehouses_index', 3600, fn() => $warehouseData);
+        $warehouses = Cache::remember('warehouses_index', 3600, fn () => $warehouseData);
 
         return Inertia('Warehouses/Index', [
             'warehouses' => $warehouses,
-            $permissions
+            $permissions,
         ]);
     }
 
@@ -44,6 +45,7 @@ class WarehouseController extends Controller
         $validated = $request->validated();
         Warehouse::create($validated);
         Cache::forget('warehouses_index'); // Clear cache after creating a new warehouse
+
         return redirect()->route('warehouse.index')->with('success', 'Warehouse created successfully.');
     }
 
@@ -54,9 +56,10 @@ class WarehouseController extends Controller
     {
         $warehouse->load('locations');
         $stocks = $warehouse->stocks->count();
+
         return inertia('Warehouses/Show', [
             'warehouse' => $warehouse,
-            'stockCount' => $stocks
+            'stockCount' => $stocks,
         ]);
     }
 
@@ -79,6 +82,7 @@ class WarehouseController extends Controller
         $validated = $request->validated();
         $warehouse->update($validated);
         Cache::forget('warehouses_index'); // Clear cache after updating a warehouse
+
         return redirect()->route('warehouse.show', $warehouse->id)
             ->with('success', 'Warehouse updated successfully.');
     }

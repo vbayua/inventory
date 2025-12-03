@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Location;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
+use App\Models\Location;
 
 class LocationController extends Controller
 {
@@ -12,12 +12,14 @@ class LocationController extends Controller
     {
         $this->authorizeResource(Location::class, 'location');
     }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $locations = Location::with(['warehouse'])->orderBy('created_at', 'desc');
+
         return Inertia('Locations/Index', [
             'locations' => $locations->get(),
             'name' => request()->name,
@@ -30,7 +32,7 @@ class LocationController extends Controller
     public function create()
     {
         return Inertia('Locations/Create', [
-            'warehouses' => \App\Models\Warehouse::all()->map(fn($warehouse) => [
+            'warehouses' => \App\Models\Warehouse::all()->map(fn ($warehouse) => [
                 'id' => $warehouse->id,
                 'name' => $warehouse->name,
             ]),
@@ -43,6 +45,7 @@ class LocationController extends Controller
     public function store(StoreLocationRequest $request)
     {
         Location::create($request->validated());
+
         return redirect()->route('location.index')->with('success', 'Location created successfully.');
     }
 
@@ -60,6 +63,7 @@ class LocationController extends Controller
                 ]);
             },
         ]);
+
         return Inertia('Locations/Show', [
             'location' => $location,
         ]);
@@ -72,7 +76,7 @@ class LocationController extends Controller
     {
         return Inertia('Locations/Edit', [
             'location' => $location->load(['warehouse']),
-            'warehouses' => \App\Models\Warehouse::all()->map(fn($warehouse) => [
+            'warehouses' => \App\Models\Warehouse::all()->map(fn ($warehouse) => [
                 'id' => $warehouse->id,
                 'name' => $warehouse->name,
             ]),
@@ -85,6 +89,7 @@ class LocationController extends Controller
     public function update(UpdateLocationRequest $request, Location $location)
     {
         $location->update($request->validated());
+
         return redirect()->route('location.show', $location->id)->with('success', 'Location updated successfully.');
     }
 
@@ -94,6 +99,7 @@ class LocationController extends Controller
     public function destroy(Location $location)
     {
         $location->delete();
+
         return redirect()->route('location.index')->with('success', 'Location deleted successfully.');
     }
 }

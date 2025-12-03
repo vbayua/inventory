@@ -27,7 +27,7 @@ class StoreSupplierRequest extends FormRequest
             'contact_person' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:13',
             'address' => 'nullable|string|max:255',
-            'notes' => 'nullable|string|max:255'
+            'notes' => 'nullable|string|max:255',
         ];
     }
 }

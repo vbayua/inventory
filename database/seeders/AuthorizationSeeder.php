@@ -11,14 +11,14 @@ class AuthorizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $resources = ['product', 'partner', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment'];
+        $resources = ['product', 'partner', 'stock', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment'];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
         $permissions = collect($resources)->flatMap(function (string $resource) use ($actions) {
             return collect($actions)->map(function (string $action) use ($resource) {
                 return Permission::firstOrCreate(
                     ['name' => "{$resource}.{$action}"],
-                    ['description' => ucfirst($action) . ' ' . $resource]
+                    ['description' => ucfirst($action).' '.$resource]
                 );
             });
         });
@@ -41,6 +41,11 @@ class AuthorizationSeeder extends Seeder
                 'operation.viewAny',
                 'operation.view',
                 'operation.create',
+                'stock.view',
+                'stock.viewAny',
+                'stock.create',
+                'stock.update',
+                'operation.update',
             ])->pluck('id')->all()
         );
 

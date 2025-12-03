@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Partner;
 use App\Http\Requests\StorePartnerRequest;
 use App\Http\Requests\UpdatePartnerRequest;
+use App\Models\Partner;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -38,10 +38,8 @@ class PartnerController extends Controller
      */
     public function store(StorePartnerRequest $request)
     {
-        DB::transaction(function () use ($request) {
-            $validatedData = $request->validated();
-            Partner::create($validatedData);
-        });
+        $validatedData = $request->validated();
+        Partner::create($validatedData);
 
         return redirect()->route('partners.index')->with('success', 'Partner created successfully.');
     }

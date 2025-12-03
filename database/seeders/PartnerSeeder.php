@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PartnerSeeder extends Seeder
@@ -40,7 +39,8 @@ class PartnerSeeder extends Seeder
             'Dus Box Cirebon',
             'Pixel Print Surabaya',
             'Citra Plastik',
-            'Khalif Azzam'
+            'Khalif Azzam',
+            'PT.Indokemika',
         ];
         foreach ($names as $name) {
             \App\Models\Partner::firstOrCreate(

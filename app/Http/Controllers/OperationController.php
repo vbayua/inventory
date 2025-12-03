@@ -2,23 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Operation;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
+use App\Models\Operation;
 use App\Models\Stock;
 use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class OperationController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Operation::class, 'operation');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $this->authorize('viewAny', Operation::class);
+
         return Inertia('Operations/Index', [
             'operations' => Operation::with(['product', 'batch', 'location', 'user:id,name'])->latest()->get(),
         ]);
@@ -34,13 +39,13 @@ class OperationController extends Controller
 
         $stock = \App\Models\Stock::with(['product.unit'])
             ->select([
-                "id",
-                "product_id",
-                "batch_id",
-                "location_id",
-                "quantity",
-                "unit",
-                "sku"
+                'id',
+                'product_id',
+                'batch_id',
+                'location_id',
+                'quantity',
+                'unit',
+                'sku',
             ])
             ->get();
         $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
@@ -54,6 +59,7 @@ class OperationController extends Controller
         $stockId = $request->get('stock_id');
         $operationType = $request->get('operation_type');
         $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
+
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => $products,
@@ -61,7 +67,7 @@ class OperationController extends Controller
             'units' => $units,
             'locations' => $locations,
             'stockQuery' => $stockQuery,
-            'operationType' => $operationType
+            'operationType' => $operationType,
         ]);
     }
 
@@ -111,7 +117,7 @@ class OperationController extends Controller
         $operationType = $validatedData['operationType'];
 
         if ($operationType === 'inbound') {
-            if (!$stockData) {
+            if (! $stockData) {
                 $stockData = [
                     'location_id' => $validatedData['location'],
                     'batch_id' => $validatedData['batch'],
@@ -182,6 +188,7 @@ class OperationController extends Controller
     public function show(Operation $operation)
     {
         $this->authorize('view', $operation);
+
         return Inertia('Operations/Show', [
             'operation' => $operation->load(['product', 'batch', 'location']),
         ]);

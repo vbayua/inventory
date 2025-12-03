@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Rules\Permissions;
+
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
-use Inertia\RenderContext;
 use Inertia\ProvidesInertiaProperties;
+use Inertia\RenderContext;
 
 class LocationPermissions implements ProvidesInertiaProperties
 {
@@ -23,7 +25,7 @@ class LocationPermissions implements ProvidesInertiaProperties
                 'delete' => $this->user?->hasPermission('location.delete') ?? false,
                 'restore' => $this->user?->hasPermission('location.restore') ?? false,
                 'forceDelete' => $this->user?->hasPermission('location.forceDelete') ?? false,
-                ]
+            ],
         ];
     }
 }

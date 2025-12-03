@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Rules\Permissions;
+
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
-use Inertia\RenderContext;
 use Inertia\ProvidesInertiaProperties;
+use Inertia\RenderContext;
 
 class WarehousePermissions implements ProvidesInertiaProperties
 {
@@ -23,7 +25,7 @@ class WarehousePermissions implements ProvidesInertiaProperties
                 'delete' => $this->user?->hasPermission('warehouse.delete') ?? false,
                 'restore' => $this->user?->hasPermission('warehouse.restore') ?? false,
                 'forceDelete' => $this->user?->hasPermission('warehouse.forceDelete') ?? false,
-                ]
+            ],
         ];
     }
 }

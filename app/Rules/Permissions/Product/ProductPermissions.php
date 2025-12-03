@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Rules\Permissions\Product;
+
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
-use Inertia\RenderContext;
 use Inertia\ProvidesInertiaProperties;
+use Inertia\RenderContext;
 
 class ProductPermissions implements ProvidesInertiaProperties
 {
@@ -23,7 +25,7 @@ class ProductPermissions implements ProvidesInertiaProperties
                 'delete' => $this->user?->hasPermission('product.delete') ?? false,
                 'restore' => $this->user?->hasPermission('product.restore') ?? false,
                 'forceDelete' => $this->user?->hasPermission('product.forceDelete') ?? false,
-                ]
+            ],
         ];
     }
 }

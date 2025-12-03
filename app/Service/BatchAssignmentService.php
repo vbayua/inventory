@@ -14,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 class BatchAssignmentService
 {
     protected array $policies;
+
     protected string $defaultPolicy;
 
     /**
@@ -30,6 +31,7 @@ class BatchAssignmentService
     {
         $typeCode = optional($product->productType)->type_code;
         $policyClass = Arr::get($this->policies, $typeCode, $this->defaultPolicy);
+
         return app($policyClass);
     }
 
@@ -41,17 +43,17 @@ class BatchAssignmentService
      * inbound, initial, and other operation types, and ensures supplier validity when required.
      * If a new batch is needed, it generates a batch number and expiry date according to policy.
      *
-     * @param Product|int $product The product instance or product ID.
-     * @param int|null $requestedBatchId Optional. The specific batch ID requested for the operation.
-     * @param string $operationType Optional. The type of operation ('inbound', 'initial', etc.). Defaults to 'inbound'.
-     * @param string|null $operationDate Optional. The date of the operation. Defaults to current date/time if not provided.
-     * @param int|null $supplierId Optional. The supplier ID to associate with the batch, if applicable.
+     * @param  Product|int  $product  The product instance or product ID.
+     * @param  int|null  $requestedBatchId  Optional. The specific batch ID requested for the operation.
+     * @param  string  $operationType  Optional. The type of operation ('inbound', 'initial', etc.). Defaults to 'inbound'.
+     * @param  string|null  $operationDate  Optional. The date of the operation. Defaults to current date/time if not provided.
+     * @param  int|null  $supplierId  Optional. The supplier ID to associate with the batch, if applicable.
      * @return int|null The determined batch ID, or null if no suitable batch is found.
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the product is not found.
      * @throws \Illuminate\Validation\ValidationException If the supplier is not associated with the product.
      */
-    public function determineBatch(Product|int $product,  ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null, ?int $supplierId = null): ?int
+    public function determineBatch(Product|int $product, ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null, ?int $supplierId = null): ?int
     {
         $productId = $product instanceof Product ? $product->id : (int) $product;
         $product = Product::with(['productType', 'batches', 'operations'])->findOrFail($productId);
@@ -63,9 +65,9 @@ class BatchAssignmentService
 
         $policy = $this->resolvePolicy($product);
 
-        if ($operationType === 'inbound' && !$supplierExists && !$requestedBatchId) {
+        if ($operationType === 'inbound' && ! $supplierExists && ! $requestedBatchId) {
             throw ValidationException::withMessages([
-                'supplier_id' => 'Supplier is not associated with this product.'
+                'supplier_id' => 'Supplier is not associated with this product.',
             ]);
         }
 
@@ -90,7 +92,6 @@ class BatchAssignmentService
                 return $policy->determineBatch($product, $lastInbound->batch_id);
             }
         }
-
 
         $proposedNumber = $product->sku;
         // $proposedNumber = ($product->productType->type_code ?? 'DEFAULT') . '-' . $product->sku;

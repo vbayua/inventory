@@ -12,7 +12,6 @@ class Supplier extends Model
     /** @use HasFactory<\Database\Factories\SupplierFactory> */
     use HasFactory;
 
-
     public $guarded = ['id'];
 
     // public function scopeFilter($query, $filters)
@@ -39,7 +38,7 @@ class Supplier extends Model
         return $this->hasMany(Batch::class);
     }
 
-    public static function booted():void
+    public static function booted(): void
     {
         static::saved(function (Supplier $supplier) {
             Cache::forget('suppliers_list');

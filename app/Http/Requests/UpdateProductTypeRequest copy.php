@@ -24,7 +24,7 @@ class UpdateProductTypeRequest extends FormRequest
         return [
             'name' => ['required', 'unique:product_types,name', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'type_code' => ['required', 'unique:product_types,type_code', 'string']
+            'type_code' => ['required', 'unique:product_types,type_code', 'string'],
         ];
     }
 }

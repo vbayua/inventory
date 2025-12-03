@@ -9,11 +9,12 @@ class ProductType extends Model
 {
     /** @use HasFactory<\Database\Factories\ProductTypeFactory> */
     use HasFactory;
+
     protected $fillable = [
         'name',
         'description',
         'type_code',
-        'batch_interval_days'
+        'batch_interval_days',
     ];
 
     public function products()
