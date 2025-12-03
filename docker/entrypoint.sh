@@ -73,13 +73,28 @@ if [ ! -f "$DB_PATH" ]; then
   run_as_app_user touch "$DB_PATH"
   ensure_app_ownership "$DB_PATH"
 fi
+
+# Seed sqlite from project root on first run if present and destination is empty
+SEED_DB="$APP_DIR/database.sqlite"
+if [ -f "$SEED_DB" ] && [ ! -s "$DB_PATH" ]; then
+  echo "Seeding sqlite database from $SEED_DB to $DB_PATH"
+  run_as_app_user cp "$SEED_DB" "$DB_PATH"
+  ensure_app_ownership "$DB_PATH"
+fi
+
 mkdir -p "$APP_DIR/database"
 if [ "$DB_PATH" != "$APP_DIR/database/database.sqlite" ]; then
   ln -sf "$DB_PATH" "$APP_DIR/database/database.sqlite"
   ensure_app_ownership "$APP_DIR/database/database.sqlite"
 fi
+if  [ -f "$SEED_DB" ] && [ ! -s "$DB_PATH" ]; then
+  cp "$SEED_DB" "$DB_PATH"
+  ensure_app_ownership "$DB_PATH"
+fi
 
-run_as_app_user php artisan migrate --force >/dev/null 2>&1 || true
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+  run_as_app_user php artisan migrate --force
+fi
 
 if [ "$(id -u)" -eq 0 ]; then
   exec gosu www-data "$@"
