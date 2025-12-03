@@ -21,15 +21,16 @@ class PerishableBatchPolicy implements BatchPolicyInterface
 
     public function generateBatchNumber(Product $product, string $proposedNumber): string
     {
-        $base = 'P-' . $proposedNumber;
+        $base = 'P-'.$proposedNumber;
         $newNumber = $base;
         $counter = 1;
 
         while (Batch::where('batch_number', $newNumber)->exists()) {
 
-            $newNumber = $base . '-' . $counter;
+            $newNumber = $base.'-'.$counter;
             $counter++;
         }
+
         return $newNumber;
     }
 }

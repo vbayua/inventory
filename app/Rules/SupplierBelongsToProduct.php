@@ -26,7 +26,7 @@ class SupplierBelongsToProduct implements ValidationRule
             ->where('supplier_id', $value)
             ->exists();
 
-        if (!$exists) {
+        if (! $exists) {
             $fail('The selected supplier is not associated with the chosen product.');
         }
     }

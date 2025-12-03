@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Stock;
 use App\Http\Requests\StoreStockRequest;
 use App\Http\Requests\UpdateStockRequest;
 use App\Models\Operation;
+use App\Models\Stock;
 use App\Service\StockOperationService;
 
 class StockController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Stock::class, 'stock');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -23,8 +28,10 @@ class StockController extends Controller
             'location:id,name,warehouse_id',
             'location.warehouse:id,name',
             'batch:id,batch_number,supplier_id',
-            'batch.supplier:id,name',
+            'batch.supplier:id,partner_id',
+            'batch.supplier.partner:id,name',
         ])->get();
+
         return Inertia('Stocks/Index', [
             'stocks' => $stocks,
             'stats' => [
@@ -60,6 +67,7 @@ class StockController extends Controller
             ->where('batch_id', $stock->batch_id)
             ->orderBy('operation_date', 'desc')
             ->get();
+
         return Inertia('Stocks/Show', [
             'stock' => $stock->load([
                 'product:id,name,sku,product_type_id',
@@ -90,7 +98,7 @@ class StockController extends Controller
 
         // Use incoming values if present; otherwise fall back to current model values
         $minQty = array_key_exists('minimum_quantity', $data) ? $data['minimum_quantity'] : $stock->minimum_quantity;
-        $qty    = array_key_exists('quantity', $data) ? $data['quantity'] : $stock->quantity;
+        $qty = array_key_exists('quantity', $data) ? $data['quantity'] : $stock->quantity;
 
         // Compute status based on the effective quantities
         $data['status'] = $stockService->setStockStatus($qty, $minQty);

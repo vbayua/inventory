@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Location extends Model
 {
@@ -16,8 +17,8 @@ class Location extends Model
 
     public function scopeFilter($query, $filters)
     {
-        if (!empty($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        if (! empty($filters['name'])) {
+            $query->where('name', 'like', '%'.$filters['name'].'%');
         }
     }
 
@@ -39,5 +40,12 @@ class Location extends Model
     public function stockAdjustments(): HasMany
     {
         return $this->hasMany(StockAdjustment::class);
+    }
+
+    public static function booted(): void
+    {
+        static::saved(function (Location $location) {
+            Cache::forget('locations_list');
+        });
     }
 }

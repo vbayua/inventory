@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Category extends Model
 {
@@ -24,6 +25,9 @@ class Category extends Model
         });
         static::updating(function (Category $category) {
             $category->slug = str($category->name)->slug();
+        });
+        static::saved(function (Category $category) {
+            Cache::forget('categories_list');
         });
     }
 }

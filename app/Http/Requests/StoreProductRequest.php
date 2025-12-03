@@ -30,12 +30,15 @@ class StoreProductRequest extends FormRequest
             'with_begin_stock' => ['required', 'boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'brand_name' => ['nullable', 'string'],
+            'manufacturer' => ['nullable', 'string'],
             'scientific_name' => ['nullable', 'string'],
             'price' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
             'supplier_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:suppliers,id'],
             'location_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:locations,id'],
             'quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
             'minimum_quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
+            'container_capacity' => ['nullable', 'numeric', 'min:0'],
+            'container_unit' => ['nullable', 'string'],
         ];
     }
 }

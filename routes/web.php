@@ -8,9 +8,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
 
     Route::prefix('operations')->group(function () {
         Route::get('/', [\App\Http\Controllers\OperationController::class, 'index'])->name('operations.index');
@@ -43,10 +41,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [\App\Http\Controllers\StockAdjustmentController::class, 'store'])->name('stock-adjustments.store');
         Route::get('/{stockAdjustment}', [\App\Http\Controllers\StockAdjustmentController::class, 'show'])->name('stock-adjustments.show');
     });
+
+    Route::prefix('partners')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PartnerController::class, 'index'])->name('partners.index');
+        Route::get('/create', [\App\Http\Controllers\PartnerController::class, 'create'])->name('partners.create');
+        Route::post('/', [\App\Http\Controllers\PartnerController::class, 'store'])->name('partners.store');
+        Route::get('/{partner}', [\App\Http\Controllers\PartnerController::class, 'show'])->name('partners.show');
+        Route::get('/{partner}/edit', [\App\Http\Controllers\PartnerController::class, 'edit'])->name('partners.edit');
+        Route::put('/{partner}', [\App\Http\Controllers\PartnerController::class, 'update'])->name('partners.update');
+    });
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
-require __DIR__ . '/products.php';
-require __DIR__ . '/suppliers.php';
-require __DIR__ . '/warehouses.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
+require __DIR__.'/products.php';
+require __DIR__.'/suppliers.php';
+require __DIR__.'/warehouses.php';

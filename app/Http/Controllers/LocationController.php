@@ -2,34 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Location;
 use App\Http\Requests\StoreLocationRequest;
 use App\Http\Requests\UpdateLocationRequest;
+use App\Models\Location;
 
 class LocationController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Location::class, 'location');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // $filters = request()->only(['name', 'warehouse_id']);
-        // $query = Location::with(['warehouse'])->orderBy('created_at', 'desc');
         $locations = Location::with(['warehouse'])->orderBy('created_at', 'desc');
-        // $locations = $query->filter($filters)
-        //     ->paginate(10)
-        //     ->appends($filters)
-        //     ->withQueryString()
-        //     ->through(fn($location) => [
-        //         'id' => $location->id,
-        //         'name' => $location->name,
-        //         'warehouse' => [
-        //             'id' => $location->warehouse->id,
-        //             'name' => $location->warehouse->name,
-        //         ],
-        //         'created_at' => $location->created_at,
-        //         'updated_at' => $location->updated_at,
-        //     ]);
 
         return Inertia('Locations/Index', [
             'locations' => $locations->get(),
@@ -43,7 +32,7 @@ class LocationController extends Controller
     public function create()
     {
         return Inertia('Locations/Create', [
-            'warehouses' => \App\Models\Warehouse::all()->map(fn($warehouse) => [
+            'warehouses' => \App\Models\Warehouse::all()->map(fn ($warehouse) => [
                 'id' => $warehouse->id,
                 'name' => $warehouse->name,
             ]),
@@ -56,6 +45,7 @@ class LocationController extends Controller
     public function store(StoreLocationRequest $request)
     {
         Location::create($request->validated());
+
         return redirect()->route('location.index')->with('success', 'Location created successfully.');
     }
 
@@ -73,6 +63,7 @@ class LocationController extends Controller
                 ]);
             },
         ]);
+
         return Inertia('Locations/Show', [
             'location' => $location,
         ]);
@@ -85,7 +76,7 @@ class LocationController extends Controller
     {
         return Inertia('Locations/Edit', [
             'location' => $location->load(['warehouse']),
-            'warehouses' => \App\Models\Warehouse::all()->map(fn($warehouse) => [
+            'warehouses' => \App\Models\Warehouse::all()->map(fn ($warehouse) => [
                 'id' => $warehouse->id,
                 'name' => $warehouse->name,
             ]),
@@ -98,6 +89,7 @@ class LocationController extends Controller
     public function update(UpdateLocationRequest $request, Location $location)
     {
         $location->update($request->validated());
+
         return redirect()->route('location.show', $location->id)->with('success', 'Location updated successfully.');
     }
 
@@ -107,6 +99,7 @@ class LocationController extends Controller
     public function destroy(Location $location)
     {
         $location->delete();
+
         return redirect()->route('location.index')->with('success', 'Location deleted successfully.');
     }
 }

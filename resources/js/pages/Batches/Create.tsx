@@ -1,20 +1,17 @@
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import React, { FormEventHandler, MouseEventHandler, useRef } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import InputError from '@/components/input-error';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList, CommandItem } from "@/components/ui/command";
+import React, { FormEventHandler, useRef } from 'react';
 
-import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, set } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { CalendarIcon, ChevronsUpDown } from 'lucide-react';
-
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,47 +24,48 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 interface CreateBatchForm {
-    batch_number?: string,
-    product_id?: number | string,
-    supplier_id?: number | string,
-    manufacture_date?: Date | null,
-    expiry_date?: Date | null,
+    batch_number?: string;
+    product_id?: number | string;
+    supplier_id?: number | string;
+    manufacture_date?: Date | null;
+    expiry_date?: Date | null;
 }
 
 interface Supplier {
-    id?: number,
-    name?: string,
+    id?: number;
+    partner?: {
+        name?: string;
+    };
 }
 
-type Product = { id: number, name: string, sku: string, suppliers: any }
-export default function Create({ products, suppliers }: { products: Product[], suppliers: Supplier[] }) {
-
-    const batchNumber = useRef<HTMLInputElement>(null)
+type Product = { id: number; name: string; sku: string; suppliers: Supplier[] };
+export default function Create({ products, suppliers }: { products: Product[]; suppliers: Supplier[] }) {
+    const batchNumber = useRef<HTMLInputElement>(null);
     const { data, setData, post, reset, processing, errors } = useForm<Required<CreateBatchForm>>({
         batch_number: '',
         product_id: '',
         supplier_id: '',
         manufacture_date: null,
         expiry_date: null,
-    })
+    });
 
     const createBatch: FormEventHandler = (e) => {
-        e.preventDefault()
+        e.preventDefault();
         console.log('Creating batch with data:', data);
         post(route('batch.store'), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                reset()
+                reset();
             },
             onError: (errors) => {
                 if (errors.batch_number) {
-                    reset('batch_number')
-                    batchNumber.current?.focus()
+                    reset('batch_number');
+                    batchNumber.current?.focus();
                 }
-            }
-        })
-    }
+            },
+        });
+    };
 
     // If manufacture_date is set, set expiry_date to 1 year later
     if (data.manufacture_date && !data.expiry_date) {
@@ -76,11 +74,10 @@ export default function Create({ products, suppliers }: { products: Product[], s
         expiryDate.setFullYear(expiryDate.getFullYear() + 1);
         setData('expiry_date', expiryDate);
     }
-    const selectedProduct = products.find(p => p.id === data.product_id);
+    const selectedProduct = products.find((p) => p.id === data.product_id);
     const selectedSupplier = suppliers.find((s) => s.id === data.supplier_id);
 
     const filteredSupplier = data.product_id ? selectedProduct?.suppliers.map((s: Supplier) => s) : [];
-    console.log(filteredSupplier);
 
     const generateBatchNumber = (e: React.MouseEvent<HTMLButtonElement>, product?: Product) => {
         e.preventDefault();
@@ -89,31 +86,41 @@ export default function Create({ products, suppliers }: { products: Product[], s
             const formattedDate = format(date, 'yy');
             setData('batch_number', `${formattedDate}${selectedProduct?.sku}`);
         }
-    }
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Batch" />
-            <form onSubmit={createBatch} className='space-y-6 p-4 mt-12 w-full max-w-2xl mx-auto shadow-md rounded-lg'>
-
-                <div className='grid gap-2'>
-                    <Label htmlFor='product_id'>Product <span className='text-red-500'>*</span></Label>
+            <form onSubmit={createBatch} className="mx-auto mt-12 w-full max-w-2xl space-y-6 rounded-lg p-4 shadow-md">
+                <div className="grid gap-2">
+                    <Label htmlFor="product_id">
+                        Product <span className="text-red-500">*</span>
+                    </Label>
 
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
-                                variant={"outline"}
-                                className={cn("w-full justify-between", errors.product_id && "border-red-500 text-muted-foreground")}
+                                variant={'outline'}
+                                className={cn('w-full justify-between', errors.product_id && 'text-muted-foreground border-red-500')}
                             >
-                                {data.product_id ? `${selectedProduct?.sku} ${selectedProduct?.name}` : <span className="text-muted-foreground">Select a product</span>}
+                                {data.product_id ? (
+                                    `${selectedProduct?.sku} ${selectedProduct?.name}`
+                                ) : (
+                                    <span className="text-muted-foreground">Select a product</span>
+                                )}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent align='end' className="p-1.5 sm:min-w-[425px]">
+                        <PopoverContent align="end" className="p-1.5 sm:min-w-[425px]">
                             <Command>
                                 <CommandInput placeholder="Search products..." />
                                 <CommandList>
-                                    <CommandEmpty>No products found. <Link href={route('products.create')} className='text-sky-800'>Create Product</Link> </CommandEmpty>
+                                    <CommandEmpty>
+                                        No products found.{' '}
+                                        <Link href={route('products.create')} className="text-sky-800">
+                                            Create Product
+                                        </Link>{' '}
+                                    </CommandEmpty>
                                     <CommandGroup>
                                         {products.map((product) => (
                                             <CommandItem
@@ -123,10 +130,10 @@ export default function Create({ products, suppliers }: { products: Product[], s
                                                     setData('batch_number', ''); // Reset batch number when product changes
                                                     batchNumber.current?.focus();
                                                 }}
-                                                className='cursor-pointer select-none relative px-2 py-1.5 hover:bg-gray-100'
+                                                className="relative cursor-pointer px-2 py-1.5 select-none hover:bg-gray-100"
                                             >
                                                 {product.name}
-                                                {product.sku && <span className='text-xs text-gray-500 ml-2'>({product.sku})</span>}
+                                                {product.sku && <span className="ml-2 text-xs text-gray-500">({product.sku})</span>}
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
@@ -136,16 +143,22 @@ export default function Create({ products, suppliers }: { products: Product[], s
                         <InputError message={errors.product_id} />
                     </Popover>
                 </div>
-                <div className='grid gap-2'>
-                    <Label htmlFor='supplier_id'>Supplier <span className='text-red-500'>*</span></Label>
+                <div className="grid gap-2">
+                    <Label htmlFor="supplier_id">
+                        Supplier <span className="text-red-500">*</span>
+                    </Label>
 
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
-                                variant={"outline"}
-                                className={cn("w-full justify-between", errors.supplier_id && "border-red-500 text-muted-foreground")}
+                                variant={'outline'}
+                                className={cn('w-full justify-between', errors.supplier_id && 'text-muted-foreground border-red-500')}
                             >
-                                {data.supplier_id ? `${selectedSupplier?.name}` : <span className="text-muted-foreground">Select supplier</span>}
+                                {data.supplier_id ? (
+                                    `${selectedSupplier?.partner?.name}`
+                                ) : (
+                                    <span className="text-muted-foreground">Select supplier</span>
+                                )}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
@@ -155,7 +168,7 @@ export default function Create({ products, suppliers }: { products: Product[], s
                                 <CommandList>
                                     <CommandEmpty>No suppliers found. </CommandEmpty>
                                     <CommandGroup>
-                                        {filteredSupplier.map((supplier: any) => (
+                                        {filteredSupplier?.map((supplier: any) => (
                                             <CommandItem
                                                 key={supplier.id}
                                                 onSelect={() => {
@@ -163,9 +176,9 @@ export default function Create({ products, suppliers }: { products: Product[], s
                                                     setData('batch_number', ''); // Reset batch number when supplier changes
                                                     batchNumber.current?.focus();
                                                 }}
-                                                className='cursor-pointer select-none relative px-2 py-1.5 hover:bg-gray-100'
+                                                className="relative cursor-pointer px-2 py-1.5 select-none hover:bg-gray-100"
                                             >
-                                                {supplier.name}
+                                                {supplier.partner?.name}
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
@@ -177,17 +190,19 @@ export default function Create({ products, suppliers }: { products: Product[], s
                 </div>
 
                 <div className="grid gap-2">
-                    <Label className="block mb-2">
-                        Manufacture Date
-                    </Label>
+                    <Label className="mb-2 block">Manufacture Date</Label>
 
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
-                                variant={"outline"}
-                                className={cn("pl-3 text-left font-normal w-full", errors.manufacture_date && "border-red-500 text-muted-foreground")}
+                                variant={'outline'}
+                                className={cn('w-full pl-3 text-left font-normal', errors.manufacture_date && 'text-muted-foreground border-red-500')}
                             >
-                                {data.manufacture_date ? format(new Date(data.manufacture_date), 'yyyy-MM-dd') : <span className="text-muted-foreground">Select manufacture_date</span>}
+                                {data.manufacture_date ? (
+                                    format(new Date(data.manufacture_date), 'yyyy-MM-dd')
+                                ) : (
+                                    <span className="text-muted-foreground">Select manufacture_date</span>
+                                )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                         </PopoverTrigger>
@@ -195,7 +210,7 @@ export default function Create({ products, suppliers }: { products: Product[], s
                             <Calendar
                                 mode="single"
                                 selected={data.manufacture_date ? new Date(data.manufacture_date) : undefined}
-                                captionLayout='dropdown'
+                                captionLayout="dropdown"
                                 onSelect={(date) => setData('manufacture_date', date ?? null)}
                                 endMonth={new Date(2099, 11, 31)} // Prevents selecting dates beyond 2099
                                 startMonth={new Date(1970, 0, 1)} // Prevents
@@ -204,17 +219,19 @@ export default function Create({ products, suppliers }: { products: Product[], s
                     </Popover>
                 </div>
                 <div className="grid gap-2">
-                    <Label className="block mb-2">
-                        Expiry Date
-                    </Label>
+                    <Label className="mb-2 block">Expiry Date</Label>
 
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
-                                variant={"outline"}
-                                className={cn("pl-3 text-left font-normal w-full", errors.expiry_date && "border-red-500 text-muted-foreground")}
+                                variant={'outline'}
+                                className={cn('w-full pl-3 text-left font-normal', errors.expiry_date && 'text-muted-foreground border-red-500')}
                             >
-                                {data.expiry_date ? format(new Date(data.expiry_date), 'yyyy-MM-dd') : <span className="text-muted-foreground">Select expiry_date</span>}
+                                {data.expiry_date ? (
+                                    format(new Date(data.expiry_date), 'yyyy-MM-dd')
+                                ) : (
+                                    <span className="text-muted-foreground">Select expiry_date</span>
+                                )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                         </PopoverTrigger>
@@ -222,7 +239,7 @@ export default function Create({ products, suppliers }: { products: Product[], s
                             <Calendar
                                 mode="single"
                                 selected={data.expiry_date ? new Date(data.expiry_date) : undefined}
-                                captionLayout='dropdown'
+                                captionLayout="dropdown"
                                 onSelect={(date) => setData('expiry_date', date ?? null)}
                                 endMonth={new Date(2099, 11, 31)} // Prevents selecting dates beyond 2099
                                 startMonth={new Date(1970, 0, 1)} // Prevents
@@ -235,6 +252,6 @@ export default function Create({ products, suppliers }: { products: Product[], s
                     <Button disabled={processing}>Create Batch</Button>
                 </div>
             </form>
-        </AppLayout >
+        </AppLayout>
     );
 }

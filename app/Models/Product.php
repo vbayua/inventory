@@ -14,13 +14,13 @@ class Product extends Model
 
     public function scopeFilter($query, $filters)
     {
-        if (!empty($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        if (! empty($filters['name'])) {
+            $query->where('name', 'like', '%'.$filters['name'].'%');
         }
-        if (!empty($filters['sku'])) {
-            $query->where('sku', 'like', '%' . $filters['sku'] . '%');
+        if (! empty($filters['sku'])) {
+            $query->where('sku', 'like', '%'.$filters['sku'].'%');
         }
-        if (!empty($sort = $filters['sort'] ?? null)) {
+        if (! empty($sort = $filters['sort'] ?? null)) {
             $query->orderBy($sort, $filters['direction'] ?? 'asc');
         } else {
             $query->orderBy('created_at', 'desc');
@@ -84,5 +84,16 @@ class Product extends Model
         return $this->relationLoaded('stocks')
             ? (int) $this->stocks->sum('quantity')
             : (int) $this->stocks()->sum('quantity');
+    }
+
+    public static function booted(): void
+    {
+        static::saved(function (Product $product) {
+            \Illuminate\Support\Facades\Cache::forget('products_index');
+        });
+
+        static::deleted(function (Product $product) {
+            \Illuminate\Support\Facades\Cache::forget('products_index');
+        });
     }
 }

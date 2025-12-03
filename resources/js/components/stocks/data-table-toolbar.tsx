@@ -1,117 +1,96 @@
-
-import * as React from "react"
-import { Input } from "../ui/input"
-import { Button } from "../ui/button"
-import { DataTableFacetedFilter } from "./data-table-faceted-filter"
-import { Table } from "@tanstack/react-table"
-import { CalendarIcon, X } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { Calendar } from "../ui/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { DateRange } from "react-day-picker"
-import { stat } from "fs"
+import { cn } from '@/lib/utils';
+import { Table } from '@tanstack/react-table';
+import { format } from 'date-fns';
+import { CalendarIcon, X } from 'lucide-react';
+import * as React from 'react';
+import { DateRange } from 'react-day-picker';
+import { Button } from '../ui/button';
+import { Calendar } from '../ui/calendar';
+import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { DataTableFacetedFilter } from './data-table-faceted-filter';
 
 interface Options {
-    label: string
-    value: string
-    icon?: React.ComponentType<{ className?: string }>
-};
-
-interface DataTableToolbarProps<TData> {
-    table: Table<TData>,
-    options?: Options[]
+    label: string;
+    value: string;
+    icon?: React.ComponentType<{ className?: string }>;
 }
 
-export function DataTableToolbar<TData>({
-    table,
-}: DataTableToolbarProps<TData>) {
-    const isFiltered = table.getState().columnFilters.length > 0
-    const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
+interface DataTableToolbarProps<TData> {
+    table: Table<TData>;
+    options?: Options[];
+}
+
+export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
+    const isFiltered = table.getState().columnFilters.length > 0;
+    const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
 
     React.useEffect(() => {
-        table.getColumn("updated_at")?.setFilterValue(dateRange)
-    }, [dateRange, table])
+        table.getColumn('updated_at')?.setFilterValue(dateRange);
+    }, [dateRange, table]);
 
-    const productColumn = table.getColumn("product_name")
-        ? Array.from(table.getColumn("product_name")!.getFacetedUniqueValues().keys()).map((value: string) => ({
-            label: value,
-            value: value,
-        }))
+    const productColumn = table.getColumn('product_name')
+        ? Array.from(table.getColumn('product_name')!.getFacetedUniqueValues().keys()).map((value: string) => ({
+              label: value,
+              value: value,
+          }))
         : [];
 
     const products: Options[] = [
-        { label: "All", value: "" },
+        { label: 'All', value: '' },
         ...productColumn, // Assuming warehouse names are similar to location names
     ];
 
-    const productTypeColumn = table.getColumn("product_type")
-        ? Array.from(table.getColumn("product_type")!.getFacetedUniqueValues().keys()).map((value: string) => ({
-            label: value,
-            value: value,
-        }))
+    const productTypeColumn = table.getColumn('product_type')
+        ? Array.from(table.getColumn('product_type')!.getFacetedUniqueValues().keys()).map((value: string) => ({
+              label: value,
+              value: value,
+          }))
         : [];
 
-    const productTypes: Options[] = [
-        { label: "All", value: "" },
-        ...productTypeColumn,
-    ];
+    const productTypes: Options[] = [{ label: 'All', value: '' }, ...productTypeColumn];
 
     const status: Options[] = [
-        { label: "All", value: "" },
-        { label: "Available", value: "available" },
-        { label: "Low Stock", value: "low_stock" },
-        { label: "Out of Stock", value: "out_of_stock" },
-        { label: "Reserved", value: "reserved" },
+        { label: 'All', value: '' },
+        { label: 'Available', value: 'available' },
+        { label: 'Low Stock', value: 'low_stock' },
+        { label: 'Out of Stock', value: 'out_of_stock' },
+        { label: 'Reserved', value: 'reserved' },
     ];
 
     const handleReset = () => {
-        table.resetColumnFilters()
-        setDateRange(undefined)
-    }
+        table.resetColumnFilters();
+        setDateRange(undefined);
+    };
 
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
                 <Input
                     placeholder="Search batch or product"
-                    value={(table.getState().globalFilter as string) ?? ""}
+                    value={(table.getState().globalFilter as string) ?? ''}
                     onChange={(event) => table.setGlobalFilter(event.target.value)}
-                    className="h-8 w-[150px] lg:w-[250px]"
+                    className="h-8 w-full max-w-sm"
                 />
-                {table.getColumn("product_type") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("product_type")}
-                        title="Product Type"
-                        options={productTypes}
-                    />
+                {table.getColumn('product_type') && (
+                    <DataTableFacetedFilter column={table.getColumn('product_type')} title="Product Type" options={productTypes} />
                 )}
-                {table.getColumn("status") && (
-                    <DataTableFacetedFilter
-                        column={table.getColumn("status")}
-                        title="Status"
-                        options={status}
-                    />
-                )}
-                {table.getColumn("updated_at") && (
+                {table.getColumn('status') && <DataTableFacetedFilter column={table.getColumn('status')} title="Status" options={status} />}
+                {table.getColumn('updated_at') && (
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "h-8 w-[250px] justify-start text-left font-normal",
-                                    !dateRange && "text-muted-foreground"
-                                )}
+                                variant={'outline'}
+                                className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {dateRange?.from ? (
                                     dateRange.to ? (
                                         <>
-                                            {format(dateRange.from, "LLL dd, y")} -{" "}
-                                            {format(dateRange.to, "LLL dd, y")}
+                                            {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
                                         </>
                                     ) : (
-                                        format(dateRange.from, "LLL dd, y")
+                                        format(dateRange.from, 'LLL dd, y')
                                     )
                                 ) : (
                                     <span>Last updated</span>
@@ -119,13 +98,7 @@ export function DataTableToolbar<TData>({
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                initialFocus
-                                mode="range"
-                                selected={dateRange}
-                                onSelect={setDateRange}
-                                numberOfMonths={2}
-                            />
+                            <Calendar initialFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
                         </PopoverContent>
                     </Popover>
                 )}
@@ -133,17 +106,16 @@ export function DataTableToolbar<TData>({
                     <Button
                         variant="ghost"
                         onClick={() => {
-                            handleReset()
-                            table.resetGlobalFilter()
+                            handleReset();
+                            table.resetGlobalFilter();
                         }}
                         className="h-8 px-2 lg:px-3"
                     >
-                        Reset
+                        Reset Filters
                         <X />
                     </Button>
                 )}
             </div>
-
         </div>
-    )
+    );
 }

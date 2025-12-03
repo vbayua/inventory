@@ -1,13 +1,11 @@
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import { columns } from '@/components/categories/columns';
-import { Head, Link } from '@inertiajs/react';
-import { buttonVariants } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { DataTable } from '@/components/categories/data-table';
-import { PlusIcon } from 'lucide-react';
 import ContainerLayout from '@/components/container-layout';
-
+import { buttonVariants } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import { SharedData, type BreadcrumbItem } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { PlusIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -17,19 +15,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Index({ categories }: { categories: any }) {
+    const { permissions } = usePage<SharedData>().props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Category Lists" />
             <ContainerLayout>
-                <div className='flex items-center justify-between mb-4'>
+                <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold mb-4">Categories</h1>
-                        <p className="text-sm text-muted-foreground mb-6">Manage your categories here. You can create, edit, and delete categories.</p>
+                        <h1 className="mb-4 text-2xl font-bold">Categories</h1>
+                        <p className="text-muted-foreground mb-6 text-sm">
+                            Manage your categories here. You can create, edit, and delete categories.
+                        </p>
                     </div>
-                    <Link className={buttonVariants({ variant: 'default' })} href={`/categories/create`}>
-                        <PlusIcon className='w-4 h-4 mr-2' />
-                        Create Category
-                    </Link>
+                    {permissions.create && (
+                        <Link className={buttonVariants({ variant: 'default' })} href={`/categories/create`}>
+                            <PlusIcon className="mr-2 h-4 w-4" />
+                            Create Category
+                        </Link>
+                    )}
                 </div>
                 <DataTable columns={columns} data={categories} clientSide={true} />
             </ContainerLayout>
