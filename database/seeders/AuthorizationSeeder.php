@@ -58,5 +58,16 @@ class AuthorizationSeeder extends Seeder
         if ($operatorUser) {
             $operatorUser->roles()->syncWithoutDetaching([$operatorRole->id]);
         }
+        $userBimo = User::where('email', 'bimo.gudang@imperialkosmetika.id')->first();
+        if ($userBimo) {
+            $userBimo->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
+
+        $userDesi = User::where('email', 'desi.gudang@imperialkosmetika.id')->first();
+        if ($userDesi) {
+            $userDesi->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
+
+        $this->command->info('Authorization seeding completed successfully.');
     }
 }
