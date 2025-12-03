@@ -74,23 +74,14 @@ if [ ! -f "$DB_PATH" ]; then
   ensure_app_ownership "$DB_PATH"
 fi
 
-# Seed sqlite from project root on first run if present and destination is empty
-SEED_DB="$APP_DIR/database.sqlite"
-if [ -f "$SEED_DB" ] && [ ! -s "$DB_PATH" ]; then
-  echo "Seeding sqlite database from $SEED_DB to $DB_PATH"
-  run_as_app_user cp "$SEED_DB" "$DB_PATH"
-  ensure_app_ownership "$DB_PATH"
-fi
+# Skip seeding/copying a prebuilt sqlite database; rely on migrations to initialize schema
 
 mkdir -p "$APP_DIR/database"
 if [ "$DB_PATH" != "$APP_DIR/database/database.sqlite" ]; then
   ln -sf "$DB_PATH" "$APP_DIR/database/database.sqlite"
   ensure_app_ownership "$APP_DIR/database/database.sqlite"
 fi
-if  [ -f "$SEED_DB" ] && [ ! -s "$DB_PATH" ]; then
-  cp "$SEED_DB" "$DB_PATH"
-  ensure_app_ownership "$DB_PATH"
-fi
+# No seeding from image; database will be created empty and migrations can populate schema
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
   run_as_app_user php artisan migrate --force

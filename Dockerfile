@@ -43,9 +43,7 @@ COPY --from=vendor /usr/bin/composer /usr/local/bin/composer
 COPY . ./
 COPY --from=vendor /var/www/html/vendor ./vendor
 COPY --from=frontend /var/www/html/public/build ./public/build
-RUN install -d -m 775 -o www-data -g www-data storage/database && \
-      cp database.sqlite storage/database/database.sqlite && \
-      chown www-data:www-data storage/database/database.sqlite
+RUN install -d -m 775 -o www-data -g www-data storage/database
 RUN mkdir -p \
       storage/framework/cache/data \
       storage/framework/sessions \
