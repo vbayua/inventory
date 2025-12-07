@@ -30,19 +30,19 @@ const productNavItems: NavItem[] = [
     },
 
     {
-        title: 'Categories',
+        title: 'Kategori Produk',
         href: '/categories',
         icon: Boxes,
         uri: 'category',
     },
     {
-        title: 'Unit',
+        title: 'Data Unit',
         href: '/units',
         icon: Cog,
         uri: 'unit',
     },
     {
-        title: 'Product Types',
+        title: 'Jenis Produk',
         href: '/product-types',
         icon: Box,
         uri: 'productType',
@@ -51,13 +51,13 @@ const productNavItems: NavItem[] = [
 
 const warehouseNavItems: NavItem[] = [
     {
-        title: 'Warehouse',
+        title: 'Gudang',
         href: '/warehouse',
         icon: Building2,
         uri: 'warehouse',
     },
     {
-        title: 'Location',
+        title: 'Lokasi',
         href: '/location',
         icon: MapPin,
         uri: 'location',
@@ -66,24 +66,24 @@ const warehouseNavItems: NavItem[] = [
 
 const stockNavItems: NavItem[] = [
     {
-        title: 'Stock',
+        title: 'Stock List',
         href: '/stocks',
         icon: ChartBar,
         uri: 'stock',
     },
     {
-        title: 'Batches',
+        title: 'Batch',
         href: '/batches',
         icon: Boxes,
     },
     {
-        title: 'Operations',
+        title: 'Operasi Stock',
         href: '/operations',
         icon: Cog,
         uri: 'operation',
     },
     {
-        title: 'Stock Adjustments',
+        title: 'Adjustment Stock',
         href: '/stock-adjustments',
         icon: CheckCheck,
         uri: 'adjustment',
@@ -92,13 +92,13 @@ const stockNavItems: NavItem[] = [
 
 const supplierNavItem: NavItem[] = [
     {
-        title: 'Partners / Companies',
+        title: 'Mitra / Perusahaan',
         href: '/partners',
         icon: Building,
         uri: 'partner',
     },
     {
-        title: 'Suppliers',
+        title: 'Approved Supplier List',
         href: '/suppliers',
         icon: Building,
         uri: 'supplier',
@@ -113,28 +113,28 @@ const mainNavItems: NavItem[] = [
         uri: 'dashboard',
     },
     {
-        title: 'Products',
+        title: 'Data Produk',
         href: '/products',
         icon: Box,
         items: productNavItems,
         uri: 'product',
     },
     {
-        title: 'Warehouse',
+        title: 'Data Gudang',
         href: '/warehouse',
         icon: Building2,
         items: warehouseNavItems,
         uri: 'warehouse',
     },
     {
-        title: 'Stock',
+        title: 'Data Stock',
         href: '/stocks',
         icon: ChartBar,
         items: stockNavItems,
         uri: 'stock',
     },
     {
-        title: 'Suppliers',
+        title: 'Data Supplier',
         href: '/suppliers',
         icon: Building,
         items: supplierNavItem,
@@ -161,7 +161,8 @@ export function AppSidebar() {
     const { viewPermissions } = page.props.auth;
     const permissions = Object.keys(viewPermissions).filter((key) => viewPermissions[key] === true);
 
-    const cleanUrl = page.url.search(/\?.*$/) ? page.url.replace(/\?.*$/, '') : page.url;
+    // const cleanUrl = page.url.startsWith('/') ? page.url.slice(1) : page.url;
+
     const filteredNavItems = mainNavItems.filter((item) => item.items?.some((subItem) => permissions.includes(subItem.uri)));
     return (
         <Sidebar collapsible="offcanvas" variant="inset" className="w-64 flex-shrink-0">
@@ -202,7 +203,7 @@ export function AppSidebar() {
                                 key={item.title}
                                 title={item.title}
                                 className="group/collapsible"
-                                defaultOpen={item.items.some((subItem) => subItem.href === cleanUrl)}
+                                defaultOpen={item.items.some((subItem) => page.url.startsWith(subItem.href))}
                             >
                                 <SidebarGroup>
                                     <SidebarGroupLabel
@@ -222,7 +223,15 @@ export function AppSidebar() {
                                             <SidebarMenu>
                                                 {item.items?.map((item) => (
                                                     <SidebarMenuItem key={item.title}>
-                                                        <SidebarMenuButton asChild isActive={item.href === page.url}>
+                                                        <SidebarMenuButton
+                                                            asChild
+                                                            isActive={item.href === page.url}
+                                                            className={
+                                                                page.url.startsWith(item.href)
+                                                                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                                                                    : ''
+                                                            }
+                                                        >
                                                             <Link href={item.href}>{item.title}</Link>
                                                         </SidebarMenuButton>
                                                     </SidebarMenuItem>
