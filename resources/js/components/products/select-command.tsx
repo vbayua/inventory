@@ -45,7 +45,7 @@ export default function SelectCommand<T>({
                     {lists && <div>{emptyText}</div>}
                 </CommandEmpty>
                 {lists && lists.length > 0 && (
-                    <CommandGroup>
+                    <CommandGroup className="max-h-60 overflow-y-auto">
                         {lists.map((item, index) => {
                             const key = resolveKey(item as any, index);
                             const label = resolveLabel(item as any);
@@ -57,7 +57,7 @@ export default function SelectCommand<T>({
                                     onSelect={() => {
                                         onSelect(item);
                                     }}
-                                    className="flex w-full justify-between"
+                                    className="flex w-full justify-between p-2"
                                 >
                                     {renderItem ? renderItem(item) : label}
                                 </CommandItem>
