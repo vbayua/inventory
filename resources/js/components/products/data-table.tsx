@@ -61,7 +61,7 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
     });
     return (
         <div>
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between overflow-x-auto">
                 <DataTableToolbar table={table} />
                 <div className="flex items-center space-x-2">
                     <DataTableViewOptions table={table} />

@@ -43,7 +43,7 @@ const productTypeConfig = {
     },
     PC: {
         color: 'bg-red-100 text-red-800',
-        label: 'Consume Packaging',
+        label: 'Packaging Contribute',
     },
 };
 export const columns: ColumnDef<ProductIndex>[] = [
