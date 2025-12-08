@@ -13,9 +13,9 @@ class DefaultBatchPolicy implements BatchPolicyInterface
         return $requestedBatchId;
     }
 
-    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null): string
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate): string
     {
-        $YEAR = date('y');
+        $YEAR = date('y', $operationDate ? strtotime($operationDate) : time());
         $YEAR_INDEX = 0;
         $SKU_INDEX = 1;
         $SEQUENCE_INDEX = 2;

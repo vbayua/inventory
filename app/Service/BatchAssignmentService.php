@@ -95,7 +95,7 @@ class BatchAssignmentService
 
         $proposedNumber = $product->sku;
         // $proposedNumber = ($product->productType->type_code ?? 'DEFAULT') . '-' . $product->sku;
-        $batchNumber = $policy->generateBatchNumber($product, $proposedNumber, $supplierId);
+        $batchNumber = $policy->generateBatchNumber($product, $proposedNumber, $supplierId, $operationDate->toDateString());
         $expiryDate = $product->productType->defaultExpiryDate();
 
         if ($expiryDate) {

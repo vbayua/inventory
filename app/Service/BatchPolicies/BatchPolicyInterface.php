@@ -14,5 +14,5 @@ interface BatchPolicyInterface
     /**
      * Generate a unique batch number for a product.
      */
-    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null): string;
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate): string;
 }
