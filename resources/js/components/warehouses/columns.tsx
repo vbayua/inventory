@@ -1,68 +1,70 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button, buttonVariants } from '../ui/button'
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
-import { Link, router } from '@inertiajs/react'
-import { toast } from 'sonner'
-import { DataTableColumnHeader } from '../data-table-column-header'
+import { Link } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { DataTableColumnHeader } from '../data-table-column-header';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 type WarehouseIndex = {
     id: number;
     name: string;
     created_at: string;
     updated_at: string;
-}
+};
 
 export const columns: ColumnDef<WarehouseIndex>[] = [
     {
-        accessorKey: "name",
-        header: "Warehouse Name",
+        accessorKey: 'name',
+        header: 'Nama Gudang',
+        cell: ({ row }) => {
+            return (
+                <Button asChild variant="link" size="sm" className="p-0">
+                    <Link href={route('warehouse.show', { id: row.original.id })}>{row.original.name}</Link>
+                </Button>
+            );
+        },
     },
     {
-        accessorKey: "created_at",
+        accessorKey: 'created_at',
         cell: ({ row }) => {
-            const createdAt = new Date(row.original.created_at)
+            const createdAt = new Date(row.original.created_at);
             return createdAt.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-            })
+            });
         },
         enableSorting: true,
         enableHiding: true,
         sortingFn: 'datetime',
-        header: ({ column }) => (
-            <DataTableColumnHeader column={column} title="Created At" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
     },
     {
-        accessorKey: "updated_at",
+        accessorKey: 'updated_at',
         cell: ({ row }) => {
-            const updatedAt = new Date(row.original.updated_at)
+            const updatedAt = new Date(row.original.updated_at);
             return updatedAt.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-            })
+            });
         },
         enableSorting: true,
         enableHiding: true,
         sortingFn: 'datetime',
-        header: ({ column }) => (
-            <DataTableColumnHeader column={column} title="Updated At" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
         enableColumnFilter: false,
     },
     {
-        id: "actions",
+        id: 'actions',
         cell: ({ row }) => {
-            const warehouse = row.original
-            const viewWarehouse = route('warehouse.show', { id: warehouse.id })
-            const editWarehouse = route('warehouse.edit', { id: warehouse.id })
+            const warehouse = row.original;
+            const viewWarehouse = route('warehouse.show', { id: warehouse.id });
+            const editWarehouse = route('warehouse.edit', { id: warehouse.id });
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -71,7 +73,7 @@ export const columns: ColumnDef<WarehouseIndex>[] = [
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
+                    <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewWarehouse} className={'w-full'}>
@@ -85,7 +87,7 @@ export const columns: ColumnDef<WarehouseIndex>[] = [
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
-        }
-    }
-]
+            );
+        },
+    },
+];

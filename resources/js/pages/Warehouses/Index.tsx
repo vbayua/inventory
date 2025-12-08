@@ -9,7 +9,7 @@ import { PlusIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Warehouses',
+        title: 'Gudang',
         href: '/warehouse',
     },
 ];
@@ -18,17 +18,17 @@ export default function Index({ warehouses }: { warehouses: any }) {
     const { permissions } = usePage<SharedData>().props;
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Warehouse Lists" />
+            <Head title="List Gudang" />
             <ContainerLayout>
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <h1 className="mb-4 text-2xl font-bold">Warehouses</h1>
-                        <p className="text-muted-foreground mb-6 text-sm">Manage warehouses. You can create, edit, and delete warehouses.</p>
+                        <h1 className="mb-4 text-2xl font-bold">Warehouses (Gudang)</h1>
+                        <p className="text-muted-foreground mb-6 text-sm">List data gudang</p>
                     </div>
                     {permissions.create && (
                         <Link className={buttonVariants({ variant: 'default' })} href={route('warehouse.create')}>
                             <PlusIcon className="mr-2 h-4 w-4" />
-                            Create Warehouse
+                            Register Gudang Baru
                         </Link>
                     )}
                 </div>
