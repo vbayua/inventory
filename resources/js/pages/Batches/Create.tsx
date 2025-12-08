@@ -29,6 +29,7 @@ interface CreateBatchForm {
     supplier_id?: number | string;
     manufacture_date?: Date | null;
     expiry_date?: Date | null;
+    operation_date?: Date | null;
 }
 
 interface Supplier {
@@ -47,6 +48,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
         supplier_id: '',
         manufacture_date: null,
         expiry_date: null,
+        operation_date: null,
     });
 
     const createBatch: FormEventHandler = (e) => {
@@ -106,14 +108,14 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                 {data.product_id ? (
                                     `${selectedProduct?.sku} ${selectedProduct?.name}`
                                 ) : (
-                                    <span className="text-muted-foreground">Select a product</span>
+                                    <span className="text-muted-foreground">Pilih Product</span>
                                 )}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent align="end" className="p-1.5 sm:min-w-[425px]">
                             <Command>
-                                <CommandInput placeholder="Search products..." />
+                                <CommandInput placeholder="Cari product..." />
                                 <CommandList>
                                     <CommandEmpty>
                                         No products found.{' '}
@@ -157,7 +159,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                 {data.supplier_id ? (
                                     `${selectedSupplier?.partner?.name}`
                                 ) : (
-                                    <span className="text-muted-foreground">Select supplier</span>
+                                    <span className="text-muted-foreground">Pilih supplier</span>
                                 )}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -190,7 +192,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                 </div>
 
                 <div className="grid gap-2">
-                    <Label className="mb-2 block">Manufacture Date</Label>
+                    <Label className="mb-2 block">Tanggal Manufacture</Label>
 
                     <Popover>
                         <PopoverTrigger asChild>
@@ -201,7 +203,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                 {data.manufacture_date ? (
                                     format(new Date(data.manufacture_date), 'yyyy-MM-dd')
                                 ) : (
-                                    <span className="text-muted-foreground">Select manufacture_date</span>
+                                    <span className="text-muted-foreground">Pilih tanggal manufacture</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -230,7 +232,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                 {data.expiry_date ? (
                                     format(new Date(data.expiry_date), 'yyyy-MM-dd')
                                 ) : (
-                                    <span className="text-muted-foreground">Select expiry_date</span>
+                                    <span className="text-muted-foreground">Pilih tanggal expire</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -241,6 +243,35 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                 selected={data.expiry_date ? new Date(data.expiry_date) : undefined}
                                 captionLayout="dropdown"
                                 onSelect={(date) => setData('expiry_date', date ?? null)}
+                                endMonth={new Date(2099, 11, 31)} // Prevents selecting dates beyond 2099
+                                startMonth={new Date(1970, 0, 1)} // Prevents
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="operation_date">Tanggal Kedatangan</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={'outline'}
+                                className={cn('w-full pl-3 text-left font-normal', errors.operation_date && 'text-muted-foreground border-red-500')}
+                            >
+                                {data.operation_date ? (
+                                    format(new Date(data.operation_date), 'yyyy-MM-dd')
+                                ) : (
+                                    <span className="text-muted-foreground">Pilih tanggal kedatangan</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                            <Calendar
+                                mode="single"
+                                selected={data.operation_date ? new Date(data.operation_date) : undefined}
+                                captionLayout="dropdown"
+                                onSelect={(date) => setData('operation_date', date ?? null)}
                                 endMonth={new Date(2099, 11, 31)} // Prevents selecting dates beyond 2099
                                 startMonth={new Date(1970, 0, 1)} // Prevents
                             />

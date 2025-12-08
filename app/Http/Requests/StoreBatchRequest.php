@@ -27,6 +27,7 @@ class StoreBatchRequest extends FormRequest
             'product_id' => ['required', 'exists:products,id'],
             'manufacture_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:manufacture_date'],
+            'operation_date' => ['nullable', 'date'],
             'supplier_id' => [
                 'required',
                 'integer',

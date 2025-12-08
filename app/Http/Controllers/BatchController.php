@@ -43,7 +43,8 @@ class BatchController extends Controller
     {
         DB::transaction(function () use ($request, $batchAssignmentService) {
             $batch = $request->validated();
-            $batchAssignmentService->determineBatch($batch['product_id'], supplierId: $batch['supplier_id']);
+            $operationDate = $batch['operation_date'] ?? now();
+            $batchAssignmentService->determineBatch($batch['product_id'], supplierId: $batch['supplier_id'], operationDate: $operationDate );
         });
 
         return redirect()->route('batch.index')->with('success', 'Batch created successfully.');
