@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [\App\Http\Controllers\StockController::class, 'index'])->name('stocks.index');
         Route::get('/{stock}', [\App\Http\Controllers\StockController::class, 'show'])->name('stocks.show');
         Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
+        Route::get('/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'stockCard'])->name('stocks.stock-card');
     });
 
     Route::prefix('stock-adjustments')->group(function () {
@@ -49,6 +50,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{partner}', [\App\Http\Controllers\PartnerController::class, 'show'])->name('partners.show');
         Route::get('/{partner}/edit', [\App\Http\Controllers\PartnerController::class, 'edit'])->name('partners.edit');
         Route::put('/{partner}', [\App\Http\Controllers\PartnerController::class, 'update'])->name('partners.update');
+    });
+
+    Route::prefix('admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.index');
+        Route::get('/users', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.users.index');
+        Route::get('/users/create', [\App\Http\Controllers\AdminController::class, 'create'])->name('admin.users.create');
+        Route::post('/users', [\App\Http\Controllers\AdminController::class, 'store'])->name('admin.users.store');
+        Route::get('/users/{user}', [\App\Http\Controllers\AdminController::class, 'show'])->name('admin.users.show');
+        Route::get('/users/{user}/edit', [\App\Http\Controllers\AdminController::class, 'edit'])->name('admin.users.edit');
+        Route::put('/users/{user}', [\App\Http\Controllers\AdminController::class, 'update'])->name('admin.users.update');
+        Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroy'])->name('admin.users.destroy');
     });
 });
 

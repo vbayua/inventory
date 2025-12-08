@@ -10,22 +10,18 @@ type OperationIndex = {
     operation_type: string;
     product: {
         id: number;
-        [key: string]: any; // Adjust this type based on your warehouse structure
-    };
+    } & Record<string, unknown>;
     location: {
         id: number;
-        [key: string]: any; // Adjust this type based on your warehouse structure
-    };
+    } & Record<string, unknown>;
     batch: {
         id: number;
         batch_number: string;
-        [key: string]: any; // Adjust this type based on your warehouse structure
-    };
+    } & Record<string, unknown>;
     user?: {
         id: number;
         name: string;
-        [key: string]: any; // Adjust this type based on your user structure
-    };
+    } & Record<string, unknown>;
     unit: string;
     quantity: number;
     remarks: string;
@@ -147,6 +143,43 @@ export const columns: ColumnDef<OperationIndex>[] = [
                 second: '2-digit',
             });
             return <span className="text-muted-foreground text-sm">{localeDateString}</span>;
+        },
+        filterFn: (row, id, value) => {
+            // value is expected to be a DateRange from react-day-picker: { from?: Date; to?: Date }
+            if (!value || (!value.from && !value.to)) {
+                return true;
+            }
+            const rowDate = new Date(row.original.operation_date);
+
+            const normalizeStartOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(0, 0, 0, 0);
+                return nd;
+            };
+
+            const normalizeEndOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(23, 59, 59, 999);
+                return nd;
+            };
+
+            const hasFrom = !!value.from;
+            const hasTo = !!value.to;
+
+            if (hasFrom && hasTo) {
+                const start = normalizeStartOfDay(value.from as Date);
+                const end = normalizeEndOfDay(value.to as Date);
+                return rowDate >= start && rowDate <= end;
+            }
+            if (hasFrom) {
+                const start = normalizeStartOfDay(value.from as Date);
+                return rowDate >= start;
+            }
+            if (hasTo) {
+                const end = normalizeEndOfDay(value.to as Date);
+                return rowDate <= end;
+            }
+            return true;
         },
     },
     {
