@@ -9,7 +9,7 @@ import { PlusIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Locations',
+        title: 'Lokasi',
         href: '/location',
     },
 ];
@@ -17,16 +17,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Index({ locations }: { locations: any }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Location Lists" />
+            <Head title="List Lokasi" />
             <ContainerLayout>
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Locations</h1>
-                        <p className="text-muted-foreground mb-6 text-sm">Manage locations. You can create, edit, and delete locations.</p>
+                        <h1 className="text-2xl font-bold">Lokasi</h1>
+                        <p className="text-muted-foreground mb-6 text-sm">List data lokasi</p>
                     </div>
                     <Link className={buttonVariants({ variant: 'default' })} href={route('location.create')}>
                         <PlusIcon className="mr-2 h-4 w-4" />
-                        Create Location
+                        Register Lokasi Baru
                     </Link>
                 </div>
                 <DataTable columns={columns} data={locations} clientSide={true} />
