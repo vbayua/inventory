@@ -81,7 +81,7 @@ export default function Create() {
             <ContainerFormLayout>
                 <div className="mb-6 flex items-center justify-between">
                     <div className="">
-                        <h1 className="text2xl mb-4 font-bold">Create New Parnter</h1>
+                        <h1 className="text2xl mb-4 font-bold">Create New Partner</h1>
                         <p className="text-muted-foreground mb-6 text-sm">Create a new partner</p>
                     </div>
                     <div className="">
