@@ -1,4 +1,5 @@
 import ContainerFormLayout from '@/components/container-form-layout';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -150,10 +151,9 @@ export default function Create({
     };
 
     const operationTypes = [
-        { value: 'outbound', label: 'Stock Out' },
-        { value: 'inbound', label: 'Stock In' },
-        { value: 'adjustment', label: 'Stock Adjust' },
-        { value: 'transfer', label: 'Transfer Stock' },
+        { value: 'outbound', label: 'Stock Out (Keluar/Pengeluaran)' },
+        { value: 'inbound', label: 'Stock In (Masuk/Penerimaan)' },
+        { value: 'transfer', label: 'Transfer Stock (Pindah)' },
     ];
 
     return (
@@ -161,9 +161,9 @@ export default function Create({
             <Head title="Create Operation" />
             <ContainerFormLayout>
                 <form onSubmit={createOperation} className="space-y-6">
-                    <h1 className="mb-12 text-xl font-semibold">{data.operationType.toString().toUpperCase()} OPERATION</h1>
+                    <h1 className="mb-12 text-2xl font-semibold">Operasi Stok</h1>
                     <div className="mb-6">
-                        <Label className="mb-4 block">Operation Type</Label>
+                        <Label className="mb-4 block">Jenis Operasi</Label>
                         <Select
                             onValueChange={(value) => {
                                 setData('operationType', value);
@@ -177,7 +177,7 @@ export default function Create({
                             value={data.operationType}
                         >
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select operation type" />
+                                <SelectValue placeholder="Pilih jenis operasi (In, Out, Transfer)" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
@@ -189,12 +189,14 @@ export default function Create({
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
+
+                        <InputError message={errors.operationType} />
                     </div>
 
                     {/*ADJUSTMENT SECTION*/}
                     {data.operationType === 'adjustment' && (
                         <div className="mb-6">
-                            <Label className="mb-4 block">Adjustment Type</Label>
+                            <Label className="mb-4 block">Jenis Adjustment</Label>
                             <Select
                                 onValueChange={(value) => {
                                     setData('adjustmentType', value);
@@ -223,7 +225,7 @@ export default function Create({
 
                     <div className="space-y-6">
                         <div>
-                            <Label className="mb-2 block">Product Name</Label>
+                            <Label className="mb-2 block">Nama Product</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -231,7 +233,7 @@ export default function Create({
                                         role="combobox"
                                         className={cn('w-full justify-between', errors.product && 'text-muted-foreground border-red-500')}
                                     >
-                                        {selectedProduct?.name ?? 'Select a product'}
+                                        {selectedProduct?.name ?? 'Pilih product'}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -246,7 +248,7 @@ export default function Create({
                                             setData('batch', '');
                                             setData('location', '');
                                         }}
-                                        placeholder="Search product..."
+                                        placeholder="Cari product..."
                                         emptyText="No product found"
                                         getSearchValue={(item) => `${item.name} ${item.sku}`}
                                         renderItem={(item) => (
@@ -269,7 +271,7 @@ export default function Create({
                                         role="combobox"
                                         className={cn('w-full justify-between', errors.batch && 'text-muted-foreground border-red-500')}
                                     >
-                                        {selectedBatch?.batch_number ?? 'Select a batch'}
+                                        {selectedBatch?.batch_number ?? 'Pilih batch'}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                 </PopoverTrigger>
@@ -283,13 +285,13 @@ export default function Create({
                                             setData('batch', String(item.id));
                                             setData('location', '');
                                         }}
-                                        placeholder="Search batch..."
+                                        placeholder="Cari batch..."
                                         emptyText={
                                             <>
-                                                <span>No batch found for the selected product.</span>
+                                                <span>Tidak ada batch untuk product yang dipilih</span>
                                                 <br />
                                                 <Button variant={'link'} onClick={() => {}}>
-                                                    Create new batch?
+                                                    Register Batch Baru?
                                                 </Button>
                                             </>
                                         }
@@ -303,7 +305,7 @@ export default function Create({
                         {data.operationType === 'transfer' && (
                             <>
                                 <div>
-                                    <Label className="mb-2 block">From Location</Label>
+                                    <Label className="mb-2 block">Lokasi Sumber</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -311,7 +313,7 @@ export default function Create({
                                                 role="combobox"
                                                 className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
                                             >
-                                                {selectedLocation?.name ?? 'Select a location'}
+                                                {selectedLocation?.name ?? 'Pilih sumber lokasi'}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
@@ -349,7 +351,7 @@ export default function Create({
                                 </div>
 
                                 <div>
-                                    <Label className="mb-2 block">To Location</Label>
+                                    <Label className="mb-2 block">Lokasi Tujuan</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -357,7 +359,7 @@ export default function Create({
                                                 role="combobox"
                                                 className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
                                             >
-                                                {selectedLocationDestination?.name ?? 'Select a destination'}
+                                                {selectedLocationDestination?.name ?? 'Pilih lokasi tujuan'}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
@@ -398,7 +400,7 @@ export default function Create({
                                 </div>
 
                                 <div>
-                                    <Label className="mb-2 block">Source Quantity</Label>
+                                    <Label className="mb-2 block">Quantity pada Lokasi Sumber</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="text"
@@ -411,7 +413,7 @@ export default function Create({
                                 </div>
 
                                 <div>
-                                    <Label className="mb-2 block">Quantity</Label>
+                                    <Label className="mb-2 block">Quantity yang akan dipindah</Label>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
@@ -431,7 +433,7 @@ export default function Create({
                                                     className={cn('w-full justify-between', errors.unit && 'text-muted-foreground border-red-500')}
                                                     disabled={!selectedBatch || stockQuantity <= 0}
                                                 >
-                                                    {data.unit ? data.unit : 'Select unit'}
+                                                    {data.unit ? data.unit : 'Pilih unit'}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -444,7 +446,7 @@ export default function Create({
                                                     onSelect={(item) => {
                                                         setData('unit', item.name);
                                                     }}
-                                                    placeholder="Select unit"
+                                                    placeholder="Pilih unit"
                                                     renderItem={(item) => <span>{item.name}</span>}
                                                 />
                                             </PopoverContent>
@@ -464,7 +466,7 @@ export default function Create({
                         {data.operationType === 'outbound' && (
                             <>
                                 <div>
-                                    <Label className="mb-2 block">Location</Label>
+                                    <Label className="mb-2 block">Lokasi</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -472,7 +474,7 @@ export default function Create({
                                                 role="combobox"
                                                 className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
                                             >
-                                                {selectedLocation?.name ?? 'Select a location'}
+                                                {selectedLocation?.name ?? 'Pilih lokasi'}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
@@ -514,7 +516,7 @@ export default function Create({
                                                     className={cn('w-full justify-between', errors.unit && 'text-muted-foreground border-red-500')}
                                                     disabled={!selectedBatch || stockQuantity <= 0}
                                                 >
-                                                    {data.unit ? data.unit : 'Select unit'}
+                                                    {data.unit ? data.unit : 'Pilih unit'}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -527,7 +529,7 @@ export default function Create({
                                                     onSelect={(item) => {
                                                         setData('unit', item.name);
                                                     }}
-                                                    placeholder="Select unit"
+                                                    placeholder="Pilih unit"
                                                     renderItem={(item) => <span>{item.name}</span>}
                                                 />
                                             </PopoverContent>
@@ -547,10 +549,10 @@ export default function Create({
                         {data.operationType === 'inbound' && (
                             <>
                                 <div>
-                                    <Label className="mb-2 block">Location</Label>
+                                    <Label className="mb-2 block">Lokasi</Label>
                                     <Select onValueChange={(value) => setData('location', value)} value={data.location}>
                                         <SelectTrigger className={cn('w-full', errors.location && 'text-muted-foreground border-red-500')}>
-                                            <SelectValue placeholder="Select a location" />
+                                            <SelectValue placeholder="Pilih lokasi" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
@@ -598,7 +600,7 @@ export default function Create({
                                                     onSelect={(item) => {
                                                         setData('unit', item.name);
                                                     }}
-                                                    placeholder="Select unit"
+                                                    placeholder="Pilih unit"
                                                     renderItem={(item) => <span>{item.name}</span>}
                                                 />
                                             </PopoverContent>
@@ -619,7 +621,7 @@ export default function Create({
                                     <Label className="mb-2 block">Location</Label>
                                     <Select onValueChange={(value) => setData('location', value)} value={data.location}>
                                         <SelectTrigger className={cn('w-full', errors.location && 'text-muted-foreground border-red-500')}>
-                                            <SelectValue placeholder="Select a location" />
+                                            <SelectValue placeholder="Pilih lokasi" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
@@ -673,7 +675,7 @@ export default function Create({
                         )}
 
                         <div>
-                            <Label className="mb-2 block">Operation Date</Label>
+                            <Label className="mb-2 block">Tanggal Operasi Stok</Label>
 
                             <div className="flex items-center gap-2">
                                 <Popover>
@@ -721,12 +723,12 @@ export default function Create({
                         </div>
 
                         <div className="col-span-1 md:col-span-2">
-                            <Label className="mb-2 block">Remarks</Label>
+                            <Label className="mb-2 block">Keterangan</Label>
                             <Textarea
                                 value={data.remarks}
                                 onChange={(e) => setData('remarks', e.target.value)}
                                 className={cn('w-full', errors.remarks && 'text-muted-foreground border-red-500')}
-                                placeholder="Enter any remarks"
+                                placeholder="Keterangan stok"
                             />
                         </div>
                     </div>
@@ -737,7 +739,7 @@ export default function Create({
                             className="w-full sm:w-auto"
                             disabled={processing || !data.product || !data.batch || !data.location || !data.quantity || Number(data.quantity) <= 0}
                         >
-                            Create Usage Operation
+                            Buat Operasi Pengeluaran
                         </Button>
                     )}
                     {data.operationType === 'inbound' && (
@@ -747,7 +749,7 @@ export default function Create({
                             className="w-full sm:w-auto"
                             disabled={processing || !data.product || !data.location || !data.quantity || Number(data.quantity) <= 0}
                         >
-                            Create Receive Operation
+                            Buat Operasi Penerimaan
                         </Button>
                     )}
                     {data.operationType === 'adjustment' && (
@@ -775,7 +777,7 @@ export default function Create({
                                 Number(data.quantity) <= 0
                             }
                         >
-                            Create Transfer Operation
+                            Buat Operasi Transfer
                         </Button>
                     )}
                 </form>
