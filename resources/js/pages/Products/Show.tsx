@@ -21,6 +21,7 @@ interface Product {
     name: string;
     brand_name?: string;
     scientific_name?: string;
+    manufacturer_name?: string;
     sku: string;
     unit: string;
     price: number;
@@ -100,6 +101,35 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
                             </CardContent>
                         </Card>
                     </div>
+                    <div className="my-8 grid grid-cols-2 gap-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-xl">Brand</CardTitle>
+                                <CardDescription>Brand name of the product.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-md">{product.brand_name ?? '-'}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-xl">Scientific Name</CardTitle>
+                                <CardDescription>Scientific name of the product.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-md">{product.scientific_name ?? '-'}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-xl">Manufacturer</CardTitle>
+                            <CardDescription>Pabrik pembuat product</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-md">{product.manufacturer_name ?? '-'}</p>
+                        </CardContent>
+                    </Card>
                     <Card className="mt-8">
                         <CardHeader>
                             <CardTitle className="text-xl">Supplier</CardTitle>
@@ -122,12 +152,12 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
                                                     <TableCell className="text-md font-medium">{supplier.partner?.name}</TableCell>
                                                     <TableCell>{supplier.pivot.price ?? '-'}</TableCell>
                                                     <TableCell className="text-right">
-                                                        <Link href={route('supplier.show', supplier.id)}>
-                                                            <Button variant={'ghost'} size={'sm'} className="hover:cursor-pointer">
+                                                        <Button variant={'ghost'} size={'sm'} className="hover:cursor-pointer" asChild>
+                                                            <Link href={route('supplier.show', supplier.id)}>
                                                                 View
                                                                 <ExternalLink className="h-3 w-3" />
-                                                            </Button>
-                                                        </Link>
+                                                            </Link>
+                                                        </Button>
                                                     </TableCell>
                                                 </TableRow>
                                             ))
