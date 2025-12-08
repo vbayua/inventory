@@ -22,8 +22,8 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required'],
-            'sku' => ['required', 'string'],
+            'name' => ['required', 'string',],
+            'sku' => ['required', 'unique:products,sku', 'string'],
             'unit' => ['required', 'string'],
             'is_active' => ['required', 'boolean'],
             'product_type_id' => ['required', 'exists:product_types,id'],
@@ -32,8 +32,9 @@ class StoreProductRequest extends FormRequest
             'brand_name' => ['nullable', 'string'],
             'manufacturer' => ['nullable', 'string'],
             'scientific_name' => ['nullable', 'string'],
-            'price' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
-            'supplier_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:suppliers,id'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'supplier_id' => ['nullable', 'required_if:has_supplier,true', 'required_if:with_begin_stock,true', 'exists:suppliers,id'],
+            'warehouse_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:warehouses,id'],
             'location_id' => ['nullable', 'required_if:with_begin_stock,true', 'exists:locations,id'],
             'quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],
             'minimum_quantity' => ['nullable', 'required_if:with_begin_stock,true', 'numeric', 'min:0'],

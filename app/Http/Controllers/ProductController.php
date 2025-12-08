@@ -49,8 +49,9 @@ class ProductController extends Controller
     public function create()
     {
         // $this->authorize('create', Product::class);
-        $suppliers = Inertia::lazy(fn () => Cache::remember('suppliers_list', 3600, fn () => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
+        $suppliers = Inertia::lazy(fn () => Cache::remember('suppliers_list', 300, fn () => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
         );
+        // $suppliers = \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get();
         $partners = Inertia::lazy(function () {
             return Cache::remember('partners_list', 3600, fn () => Partner::select('id', 'name')->get());
         });
@@ -76,7 +77,7 @@ class ProductController extends Controller
         ]);
 
         $product = $request->safe()->except([
-            'supplier_id',
+            'warehouse_id',
             'location_id',
             'quantity',
             'minimum_quantity',
@@ -86,10 +87,18 @@ class ProductController extends Controller
         //  Create a default batch for the product
         $newProduct = new Product($product);
         $newProduct->save();
+        if ($request->has_supplier) {
+            $newProduct->suppliers()->attach($request->supplier_id, [
+                'price' => $request->price,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
         if ($request->with_begin_stock) {
             $stockData = $request->safe()->only(
                 [
                     'supplier_id',
+                    'warehouse_id',
                     'location_id',
                     'quantity',
                     'minimum_quantity',
@@ -98,12 +107,12 @@ class ProductController extends Controller
                 ]
             );
 
-            // If with_begin_stock is true and stock is created then attach the product to the supplier.
-            $newProduct->suppliers()->attach($request->supplier_id, [
-                'price' => $request->price,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // // If with_begin_stock is true and stock is created then attach the product to the supplier.
+            // $newProduct->suppliers()->attach($request->supplier_id, [
+            //     'price' => $request->price,
+            //     'created_at' => now(),
+            //     'updated_at' => now(),
+            // ]);
 
             $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
             if (! $stock) {
@@ -150,18 +159,14 @@ class ProductController extends Controller
         // $this->authorize('update', $product);
         $categories = Cache::remember('categories_list', 3600, fn () => Category::select('id', 'name')->get()
         );
-        $locations = Cache::remember('locations_list', 3600, fn () => Location::select('id', 'name', 'warehouse_id')->get()
-        );
-        $suppliers = Cache::remember('suppliers_list', 3600, fn () => Supplier::select('id', 'name')->get()
+        $locations = Cache::remember('locations_list', 3600, fn () => Location::select('id', 'name', 'warehouse_id')->with('warehouse:id,name')->get()
         );
         $units = Cache::remember('units_list', 3600, fn () => Unit::select('name')->get()
         );
-
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
             'locations' => $locations,
-            'suppliers' => $suppliers,
             'units' => $units,
             'productHasStock' => $product->stocks()->exists(),
         ]);
@@ -172,24 +177,7 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
-        // $this->authorize('update', $product);
-        $product->update($request->validate([
-            'name' => ['required'],
-            'sku' => ['nullable', 'string'],
-            'unit' => ['nullable', 'string'],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'supplier_id' => ['nullable', 'exists:suppliers,id'],
-            'is_active' => ['nullable', 'boolean'],
-            'brand_name' => ['nullable', 'string'],
-            'scientific_name' => ['nullable', 'string'],
-        ]));
-        $product->suppliers()->syncWithoutDetaching([
-            $request->supplier_id => [
-                'price' => $request->price,
-                'updated_at' => now(),
-            ],
-        ]);
+        $product->update($request->validated());
         Cache::forget('products_index');
 
         return redirect()->route('products.index')
