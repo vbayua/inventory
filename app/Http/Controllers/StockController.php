@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateStockRequest;
 use App\Models\Operation;
 use App\Models\Stock;
 use App\Service\StockOperationService;
+use Inertia\Inertia;
 
 class StockController extends Controller
 {
@@ -62,11 +63,25 @@ class StockController extends Controller
      */
     public function show(Stock $stock)
     {
-        $operations = Operation::where('product_id', $stock->product_id)
-            ->where('location_id', $stock->location_id)
-            ->where('batch_id', $stock->batch_id)
-            ->orderBy('operation_date', 'desc')
-            ->get();
+        $operationsData = Operation::with([
+            'product:id,name,sku,product_type_id',
+            'product.productType:id,name,type_code',
+            'location:id,name,warehouse_id',
+            'location.warehouse:id,name',
+            'batch:id,batch_number,supplier_id',
+            'batch.supplier:id,partner_id',
+            'batch.supplier.partner:id,name',
+            'user:id,name'
+        ])
+        ->where('product_id', $stock->product_id)
+        ->where('location_id', $stock->location_id)
+        ->where('batch_id', $stock->batch_id)
+        ->latest()
+        ->get();
+        $operations = Inertia::lazy(fn() => $operationsData);
+
+
+        // dd($operations);
 
         return Inertia('Stocks/Show', [
             'stock' => $stock->load([
@@ -75,9 +90,57 @@ class StockController extends Controller
                 'location:id,name,warehouse_id',
                 'location.warehouse:id,name',
                 'batch:id,batch_number,supplier_id',
-                'batch.supplier:id,name',
+                'batch.supplier:id,partner_id',
+                'batch.supplier.partner:id,name',
+                'user:id,name'
             ]),
             'operations' => $operations,
+        ]);
+    }
+
+    /**
+     * Display the stock card for the specified resource.
+     */
+    public function stockCard(Stock $stock)
+    {
+        $operationsData = Operation::with([
+            'product:id,name,sku,product_type_id',
+            'product.productType:id,name,type_code',
+            'location:id,name,warehouse_id',
+            'location.warehouse:id,name',
+            'batch:id,batch_number,supplier_id',
+            'batch.supplier:id,partner_id',
+            'batch.supplier.partner:id,name',
+            'user:id,name'
+        ])
+        ->where('product_id', $stock->product_id)
+        ->where('batch_id', $stock->batch_id)
+        ->latest()
+        ->get();
+        $operations = Inertia::lazy(fn() => $operationsData);
+
+        $totalLocations = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->distinct('location_id')
+            ->count();
+
+        $totalStockQuantityAcrossLocations = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->sum('quantity');
+
+        return Inertia('Stocks/StockCard', [
+            'stock' => $stock->load([
+                'product:id,name,sku,product_type_id',
+                'product.productType:id,name,type_code',
+                'location:id,name,warehouse_id',
+                'location.warehouse:id,name',
+                'batch:id,batch_number,supplier_id',
+                'batch.supplier:id,partner_id',
+                'batch.supplier.partner:id,name',
+                'user:id,name']),
+            'operations' => $operationsData,
+            'total_locations' => $totalLocations,
+            'total_stock_quantity_across_locations' => $totalStockQuantityAcrossLocations,
         ]);
     }
 
