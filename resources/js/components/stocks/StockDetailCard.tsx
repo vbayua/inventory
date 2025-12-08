@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Hash, MapPin, Package, Warehouse } from 'lucide-react';
+import { Hash, MapPin, Package, Truck, Warehouse } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 
@@ -8,6 +8,7 @@ export default function StockDetailCard({
     product_name,
     warehouse_name,
     location_name,
+    supplier_name,
     quantity,
     unit,
     status,
@@ -17,6 +18,7 @@ export default function StockDetailCard({
     product_name: string;
     warehouse_name: string;
     location_name: string;
+    supplier_name: string;
     quantity: number;
     unit: string;
     status: 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
@@ -82,6 +84,15 @@ export default function StockDetailCard({
                         <div className="flex-1">
                             <CardDescription className="text-muted-foreground text-sm">Location</CardDescription>
                             <p className="font-medium">{location_name}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                        <div className="bg-primary/10 rounded-lg p-2">
+                            <Truck className="text-primary h-6 w-6" />
+                        </div>
+                        <div className="flex-1">
+                            <CardDescription className="text-muted-foreground text-sm">Supplier</CardDescription>
+                            <p className="font-medium">{supplier_name}</p>
                         </div>
                     </div>
                 </div>
