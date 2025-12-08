@@ -1,17 +1,20 @@
 import ContainerFormLayout from '@/components/container-form-layout';
 import InputError from '@/components/input-error';
 import SelectCommand from '@/components/products/select-command';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { FormEventHandler, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -44,6 +47,8 @@ type CreateProductForm = {
     status?: string;
     product_type_id?: string | null;
     is_active?: boolean;
+    has_supplier?: boolean;
+    has_manufacturer?: boolean;
 };
 
 type Category = {
@@ -120,17 +125,24 @@ export default function Create({
         scientific_name: '',
         manufacturer_name: '',
         is_active: true,
+        has_supplier: false,
+        has_manufacturer: false,
     });
 
     const isBeginStockChecked = data.with_begin_stock;
+    const [unitPopover, setUnitPopover] = useState(false);
+    const [supplierPopover, setSupplierPopover] = useState(false);
+    const [manufacturePopover, setManufacturePopover] = useState(false);
+    const [warehousePopover, setWarehousePopover] = useState(false);
+    const [locationPopover, setLocationPopover] = useState(false);
+
     const selectedSupplier = suppliers?.find((supplier) => supplier.id?.toString() === data.supplier_id);
-    console.log(selectedSupplier);
 
     useEffect(() => {
-        if (isBeginStockChecked && !suppliers && !partners) {
+        if (supplierPopover && !suppliers && !partners) {
             router.reload({ only: ['suppliers', 'partners'] });
         }
-    }, [isBeginStockChecked, suppliers, partners]);
+    }, [supplierPopover, partners, suppliers]);
     const createProductHandler: FormEventHandler = (e) => {
         e.preventDefault();
         if (data.category_id === 'none') setData('category_id', null);
@@ -145,6 +157,8 @@ export default function Create({
             onError: (errors) => {
                 // reset()
                 setData('with_begin_stock', false);
+                setData('supplier_id', '');
+                setData('manufacturer_name', '');
                 Object.entries(errors).forEach(([field, message]) => {
                     toast.error(`${field}: ${message}`, { id: `error-${field}` });
                 });
@@ -165,22 +179,26 @@ export default function Create({
     const brandNameIsChecked = !!data.brand_name;
     const productIsRawMaterial = data.product_type_id && productTypeById.get(String(data.product_type_id))?.type_code === 'RMP';
     const filteredLocations = locations.filter((location) => location.warehouse_id === (data.warehouse_id ? Number(data.warehouse_id) : undefined));
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create New Product" />
+            <Head title="Register New Product" />
             <ContainerFormLayout>
+                <div className="mb-4">
+                    <Button variant={'link'} asChild>
+                        <Link href={route('products.index')}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Kembali Ke Daftar Produk
+                        </Link>
+                    </Button>
+                </div>
                 <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Create New Product</h1>
-                    <Link href={route('products.index')} className={buttonVariants({ variant: 'secondary' })}>
-                        Back to Products
-                    </Link>
+                    <h1 className="text-2xl font-bold">Register New Product</h1>
                 </div>
 
                 <form onSubmit={createProductHandler} className="space-y-6">
                     <div className="grid gap-2">
                         <Label htmlFor="product_type">
-                            Product Type <span className="text-red-500">*</span>
+                            Jenis/Tipe Produk <span className="text-red-500">*</span>
                         </Label>
                         <Select
                             onValueChange={(value) => {
@@ -192,7 +210,7 @@ export default function Create({
                             required
                         >
                             <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a product type" />
+                                <SelectValue placeholder="Pilih jenis / tipe produk" />
                             </SelectTrigger>
                             <SelectContent>
                                 {product_types.map((type) => (
@@ -209,7 +227,7 @@ export default function Create({
                     <div className={`grid gap-2 ${productIsRawMaterial ? 'md:grid-cols-2' : ''}`}>
                         <div className="grid gap-2">
                             <Label htmlFor="name" className="">
-                                Product Name <span className="text-red-500">*</span>
+                                Nama Produk <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="name"
@@ -218,7 +236,7 @@ export default function Create({
                                     setData('name', e.target.value);
                                 }}
                                 className="mt-1 block w-full"
-                                placeholder="Product Name"
+                                placeholder="Isi Nama Produk"
                                 required
                             />
                             <InputError message={errors.name} />
@@ -231,7 +249,7 @@ export default function Create({
                                     value={data.scientific_name}
                                     onChange={(e) => setData('scientific_name', e.target.value)}
                                     className="mt-1 block w-full"
-                                    placeholder="Product Scientific Name"
+                                    placeholder="Inci Name Produk"
                                 />
                                 <InputError message={errors.scientific_name} />
                             </div>
@@ -241,7 +259,7 @@ export default function Create({
                     <div className="grid gap-2">
                         <div>
                             <Label htmlFor="sku">
-                                Item Code <span className="text-red-500">*</span>
+                                Kode Item <span className="text-red-500">*</span>
                             </Label>
                             <div className="max-md flex w-full items-center gap-2">
                                 <Input
@@ -255,31 +273,33 @@ export default function Create({
                                 <InputError message={errors.sku} />
                                 {data.name && (
                                     <Button className="md:self-end" variant={'secondary'} onClick={generateSku}>
-                                        Generate SKU
+                                        Generate
                                     </Button>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid gap-2 md:grid-cols-2">
+                    <div className="grid gap-2">
                         <div className="grid gap-2">
                             <Label htmlFor="unit">
                                 Unit <span className="text-red-500">*</span>
                             </Label>
-                            <Popover>
+                            <Popover open={unitPopover} onOpenChange={setUnitPopover}>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="text-muted-foreground w-full justify-between">
-                                        {data.unit ? data.unit : 'Select a unit'}
+                                    <Button variant="outline" className={cn('w-full justify-between', !data.unit && 'text-muted-foreground')}>
+                                        {data.unit ? data.unit : 'Pilih Satuan (pcs, ml, gr, etc)'}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-full p-0" align="start">
                                     <SelectCommand
                                         lists={units}
                                         getId={(item) => String(item.name)}
+                                        placeholder="Pilih Satuan"
                                         getLabel={(item) => String(item.name)}
                                         onSelect={(item) => {
                                             setData('unit', item.name ?? '');
+                                            setUnitPopover(false);
                                         }}
                                     />
                                 </PopoverContent>
@@ -287,62 +307,28 @@ export default function Create({
 
                             <InputError message={errors.unit} />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="category">Category</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="text-muted-foreground w-full justify-between">
-                                        {data.category_id
-                                            ? categories.find((category) => category.id?.toString() === data.category_id)?.name
-                                            : 'Select a category'}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" align="start">
-                                    <SelectCommand
-                                        lists={categories}
-                                        getId={(item) => String(item.id)}
-                                        getLabel={(item) => String(item.name)}
-                                        onSelect={(item) => {
-                                            setData('category_id', item.id ? String(item.id) : '');
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                            <InputError message={errors.category_id} />
-                        </div>
                     </div>
 
                     <Separator className="my-4" />
-                    <div className="flex items-center gap-4">
-                        <Label htmlFor="">Options :</Label>
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="with_begin_stock"
-                                name="with_begin_stock"
-                                checked={data.with_begin_stock}
-                                onCheckedChange={(checked) => setData('with_begin_stock', !!checked)}
-                                className="h-4 w-4"
-                            />
-                            <Label htmlFor="with_begin_stock">With Initial Stock</Label>
-                            <InputError message={errors.with_begin_stock} />
-                        </div>
 
-                        {data.supplier_id && (
-                            <div className="flex items-center gap-2">
-                                <Checkbox
-                                    id="add_brand_name"
-                                    name="add_brand_name"
-                                    checked={!!data.brand_name}
-                                    disabled={!data.name}
-                                    onCheckedChange={(checked) => {
-                                        setData('brand_name', checked ? data.name : '');
-                                    }}
-                                />
-                                <Label htmlFor="add_brand_name">With Brand Name</Label>
-                            </div>
-                        )}
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="add_brand_name"
+                            name="add_brand_name"
+                            checked={!!data.brand_name}
+                            disabled={!data.name}
+                            onCheckedChange={(checked) => {
+                                setData('brand_name', checked ? data.name : '');
+                            }}
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="add_brand_name">Brand Produk</Label>
+                            <p className="text-muted-foreground text-sm">
+                                Isi nama produk terlebih dahulu. Nama brand akan sama dengan nama produk secara default.
+                            </p>
+                        </div>
                     </div>
-                    {brandNameIsChecked && data.supplier_id && (
+                    {brandNameIsChecked && (
                         <div className="grid gap-2">
                             <Label htmlFor="name">Brand Name</Label>
 
@@ -358,58 +344,157 @@ export default function Create({
                         </div>
                     )}
 
+                    <Separator className="my-4" />
+
+                    <div className="space-y-6">
+                        <div className="flex items-start gap-3">
+                            <Checkbox
+                                id="has_supplier"
+                                name="has_supplier"
+                                checked={data.has_supplier}
+                                onCheckedChange={(checked) => {
+                                    setData('has_supplier', !!checked);
+                                    setData('supplier_id', '');
+                                }}
+                                className="mt-1"
+                            />
+                            <div className="grid gap-2">
+                                <Label htmlFor="has_supplier">Supplier (Pemasok)</Label>
+                                <p className="text-muted-foreground text-sm">
+                                    Daftarkan supplier untuk produk ini. Jika dicentang Anda dapat menambah stok awal pada product.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {data.has_supplier && (
+                        <>
+                            <div className="grid gap-2">
+                                <Label htmlFor="supplier">Supplier</Label>
+                                <Popover open={supplierPopover} onOpenChange={setSupplierPopover} defaultOpen={supplierPopover}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn('w-full justify-between', !data.supplier_id && 'text-muted-foreground')}
+                                        >
+                                            {data.supplier_id ? selectedSupplier?.partner?.name : 'Pilih supplier'}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0" align="start">
+                                        <SelectCommand
+                                            lists={suppliers}
+                                            getId={(item) => String(item.id)}
+                                            renderItem={(item) => item.partner?.name}
+                                            getLabel={(item) => String(item.partner?.name)}
+                                            onSelect={(item) => {
+                                                setData('supplier_id', String(item.id));
+                                                setSupplierPopover(false);
+                                            }}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <InputError message={errors.supplier_id} />
+                            </div>
+                        </>
+                    )}
+
+                    <Separator className="my-4" />
+
+                    <div className="flex items-start gap-3">
+                        <Checkbox
+                            id="has_manufacturer"
+                            name="has_manufacturer"
+                            checked={data.has_manufacturer}
+                            onCheckedChange={(checked) => {
+                                setData('has_manufacturer', !!checked);
+                                setData('manufacturer_name', '');
+                            }}
+                            className="mt-1"
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="has_manufacturer">Manufacturer (Pabrik Pembuat)</Label>
+                            <p className="text-muted-foreground text-sm">
+                                Daftarkan langsung manufacturer untuk produk ini jika ada. Jika tidak, biarkan kosong.
+                            </p>
+                        </div>
+                    </div>
+                    {data.has_manufacturer && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="manufacturer_name">Manufacturer Name</Label>
+                            <Popover open={manufacturePopover} onOpenChange={setManufacturePopover} defaultOpen={manufacturePopover}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn('w-full justify-between', !data.manufacturer_name && 'text-muted-foreground')}
+                                    >
+                                        {data.manufacturer_name ? data.manufacturer_name : 'Pilih manufacturer'}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0" align="start">
+                                    <SelectCommand
+                                        lists={partners}
+                                        getLabel={(p) => String(p.name)}
+                                        onSelect={(p) => {
+                                            setData('manufacturer_name', p.name ?? '');
+                                            setManufacturePopover(false);
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <InputError message={errors.manufacturer_name} />
+                        </div>
+                    )}
+
+                    <Separator className="my-4" />
+
+                    <div className="flex items-center gap-4">
+                        <Label htmlFor="">Opsional :</Label>
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="with_begin_stock"
+                                name="with_begin_stock"
+                                checked={data.with_begin_stock}
+                                disabled={!data.supplier_id}
+                                onCheckedChange={(checked) => {
+                                    setData('with_begin_stock', !!checked);
+                                    setData('warehouse_id', '');
+                                    setData('location_id', '');
+                                    setData('quantity', 0);
+                                    setData('minimum_quantity', 0);
+                                    setData('container_capacity', 0);
+                                    setData('container_unit', '');
+                                }}
+                                className="h-4 w-4"
+                            />
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Label htmlFor="with_begin_stock">Tambah Product Dengan Stock Awal</Label>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    Dicentang jika Anda ingin menambahkan produk ini dengan stok awal di gudang Anda dengan supplier yang dipilih.
+                                </TooltipContent>
+                            </Tooltip>
+                            <InputError message={errors.with_begin_stock} />
+                        </div>
+                    </div>
+
                     {/* WITH BEGIN STOCK */}
                     {data.with_begin_stock && (
                         <>
                             <div className={`grid gap-2 space-y-4`}>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="supplier">Supplier</Label>
-                                    <Popover>
+                                    <Label htmlFor="warehouse_id">
+                                        Gudang<span className="text-red-500">*</span>
+                                    </Label>
+                                    <Popover open={warehousePopover} onOpenChange={setWarehousePopover} defaultOpen={warehousePopover}>
                                         <PopoverTrigger asChild>
-                                            <Button variant="outline" className="text-muted-foreground w-full justify-between">
-                                                {data.supplier_id ? selectedSupplier?.partner?.name : 'Select a supplier'}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-full p-0" align="start">
-                                            <SelectCommand
-                                                lists={suppliers}
-                                                getId={(item) => String(item.id)}
-                                                renderItem={(item) => item.partner?.name}
-                                                getLabel={(item) => String(item.partner?.name)}
-                                                onSelect={(item) => {
-                                                    setData('supplier_id', String(item.id));
-                                                }}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <InputError message={errors.supplier_id} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="manufacturer_name">Manufacturer Name</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="outline" className="text-muted-foreground w-full justify-between">
-                                                {data.manufacturer_name ? data.manufacturer_name : 'Select a manufacturer'}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-full p-0" align="start">
-                                            <SelectCommand
-                                                lists={partners}
-                                                getLabel={(p) => String(p.name)}
-                                                onSelect={(p) => setData('manufacturer_name', p.name ?? '')}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <InputError message={errors.manufacturer_name} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="warehouse_id">Warehouse</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="outline" className="text-muted-foreground w-full justify-between">
+                                            <Button
+                                                variant="outline"
+                                                className={cn('w-full justify-between', !data.warehouse_id && 'text-muted-foreground')}
+                                            >
                                                 {data.warehouse_id
                                                     ? warehouses.find((warehouse) => warehouse.id?.toString() === data.warehouse_id)?.name
-                                                    : 'Select a warehouse'}
+                                                    : 'Pilih Gudang'}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-full p-0" align="start">
@@ -426,47 +511,42 @@ export default function Create({
                                     </Popover>
                                     <InputError message={errors.warehouse_id} />
                                 </div>
-                                {filteredLocations.length > 0 && (
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="location_id">Location</Label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="outline" className="text-muted-foreground w-full justify-between">
-                                                    {data.location_id
-                                                        ? filteredLocations.find((location) => location.id?.toString() === data.location_id)?.name
-                                                        : 'Select a location'}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-full p-0" align="start">
-                                                <SelectCommand
-                                                    lists={filteredLocations}
-                                                    getId={(item) => String(item.id)}
-                                                    getLabel={(item) => String(item.name)}
-                                                    onSelect={(item) => {
-                                                        setData('location_id', item.id ? String(item.id) : '');
-                                                    }}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <InputError message={errors.location_id} />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="price">Price Per Unit</Label>
-                                <Input
-                                    id="price"
-                                    type="number"
-                                    min={0}
-                                    value={data.price}
-                                    onChange={(e) => setData('price', Number(e.target.value))}
-                                    className="mt-1 block w-full"
-                                />
-                                <InputError message={errors.price} />
+                                {/*{filteredLocations.length > 0 && (*/}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="location_id">
+                                        Lokasi Stok <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Popover open={locationPopover} onOpenChange={setLocationPopover} defaultOpen={locationPopover}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className={cn('w-full justify-between', !data.location_id && 'text-muted-foreground')}
+                                            >
+                                                {data.location_id
+                                                    ? filteredLocations.find((location) => location.id?.toString() === data.location_id)?.name
+                                                    : 'Select a location'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-full p-0" align="start">
+                                            <SelectCommand
+                                                lists={filteredLocations}
+                                                getId={(item) => String(item.id)}
+                                                getLabel={(item) => String(item.name)}
+                                                onSelect={(item) => {
+                                                    setData('location_id', item.id ? String(item.id) : '');
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <InputError message={errors.location_id} />
+                                </div>
+                                {/*)}*/}
                             </div>
                             <div className="grid gap-4 md:grid-cols-2 md:gap-2">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="quantity">Set Initial Quantity</Label>
+                                    <Label htmlFor="quantity">
+                                        Jumlah Stok Awal (Initial Quantity) <span className="text-red-500">*</span>
+                                    </Label>
                                     <Input
                                         id="quantity"
                                         type="number"
@@ -512,8 +592,11 @@ export default function Create({
                                     <Label htmlFor="container_unit">Container Unit</Label>
                                     <Popover>
                                         <PopoverTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between">
-                                                {data.container_unit ? data.container_unit : 'Select Unit'}
+                                            <Button
+                                                variant="outline"
+                                                className={cn('w-full justify-between', !data.container_unit && 'text-muted-foreground')}
+                                            >
+                                                {data.container_unit ? data.container_unit : 'Pilih unit kapasitas container'}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-full p-0" align="start">

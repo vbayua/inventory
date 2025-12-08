@@ -1,7 +1,7 @@
 import ContainerLayout from '@/components/container-layout';
 import { columns } from '@/components/products/columns';
 import { DataTable } from '@/components/products/data-table';
-import { buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { SharedData, type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -9,7 +9,7 @@ import { PlusIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Products',
+        title: 'Product Master',
         href: '/products',
     },
 ];
@@ -19,18 +19,20 @@ export default function Index({ products }: { products: any }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Products Lists" />
+            <Head title="Products Master" />
             <ContainerLayout>
-                <div className="mb-4 flex items-center justify-between">
+                <div className="bg-warning mb-4 flex items-center justify-between">
                     <div>
-                        <h1 className="mb-4 text-2xl font-bold">Products</h1>
-                        <p className="text-muted-foreground mb-6 text-sm">Manage your products here. You can create, edit, and delete products.</p>
+                        <h1 className="mb-4 text-2xl font-bold">Data Product Master</h1>
+                        <p className="text-muted-foreground mb-6 text-sm">List data product master.</p>
                     </div>
                     {permissions.create && (
-                        <Link className={buttonVariants({ variant: 'default' })} href={`/products/create`}>
-                            <PlusIcon className="mr-2 h-4 w-4" />
-                            New Product
-                        </Link>
+                        <Button variant={'default'} size={'lg'} asChild>
+                            <Link href={`/products/create`} className="text-primary text-lg font-medium">
+                                <PlusIcon className="mr-2 h-4 w-4" />
+                                Register Product
+                            </Link>
+                        </Button>
                     )}
                 </div>
                 <DataTable columns={columns} data={products} clientSide={true} />
