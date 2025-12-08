@@ -113,7 +113,7 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
                                 <CardTitle className="text-lg font-semibold">Jumlah Stock</CardTitle>
                                 <div data-slot="card-action" className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                                     <Button variant={'ghost'} size={'sm'} asChild>
-                                        <Link href={route('stocks.index')}>
+                                        <Link href={route('stocks.index', { product_sku: product.sku })}>
                                             View
                                             <ExternalLink className="h-3 w-3" />
                                         </Link>
