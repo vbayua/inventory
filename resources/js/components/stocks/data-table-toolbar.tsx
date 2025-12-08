@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { usePage } from '@inertiajs/react';
 import { Table } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { CalendarIcon, X } from 'lucide-react';
@@ -62,16 +63,25 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         table.resetColumnFilters();
         setDateRange(undefined);
     };
-
+    const url = usePage().url;
+    React.useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const productSku = params.get('product_sku');
+        // set global filter value
+        table.setGlobalFilter(productSku ?? '');
+    }, [url]);
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
+                <span className="text-sm font-medium">Cari:</span>
                 <Input
                     placeholder="Search batch or product"
                     value={(table.getState().globalFilter as string) ?? ''}
                     onChange={(event) => table.setGlobalFilter(event.target.value)}
-                    className="h-8 w-full max-w-sm"
+                    className="h-12 w-full max-w-sm"
                 />
+                <span className="text-sm font-medium">Filter:</span>
                 {table.getColumn('product_type') && (
                     <DataTableFacetedFilter column={table.getColumn('product_type')} title="Product Type" options={productTypes} />
                 )}
@@ -93,7 +103,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                                         format(dateRange.from, 'LLL dd, y')
                                     )
                                 ) : (
-                                    <span>Last updated</span>
+                                    <span>Last Update Range</span>
                                 )}
                             </Button>
                         </PopoverTrigger>

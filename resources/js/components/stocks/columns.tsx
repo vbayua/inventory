@@ -59,6 +59,8 @@ type Stock = {
     updated_at?: string;
 };
 
+type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
+
 const handleCopyBatchNumber = (batchNumber: string) => {
     return function () {
         navigator.clipboard
@@ -85,11 +87,14 @@ const handleViewStock = (id: number, product_name: any) => {
     };
 };
 
-const handleCreateOperation = (id: number) => {
+const handleCreateOperation = (id: number, operation_type: OperationType) => {
     return function () {
         router.get(
             route('operations.create'),
-            { stock_id: id },
+            {
+                stock_id: id,
+                operation_type: operation_type,
+            },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -126,7 +131,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'batch_number',
         accessorKey: 'Batch Number',
         accessorFn: (row) => row.batch?.batch_number ?? '-',
-        header: 'Batch Number',
+        header: 'No.Batch',
         meta: {
             filterVariant: 'select',
         },
@@ -143,7 +148,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'product_name',
         accessorKey: 'Product Name',
         accessorFn: (row) => row.product?.name,
-        header: 'Product Name',
+        header: 'Nama Product',
         meta: {
             filterVariant: 'select',
         },
@@ -153,7 +158,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'product_type',
         accessorKey: 'Product Type',
         accessorFn: (row) => row.product?.product_type?.type_code,
-        header: 'Product Type',
+        header: 'Jenis Product',
         meta: {
             filterVariant: 'select',
         },
@@ -183,7 +188,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'location_name',
         accessorKey: 'Location',
         accessorFn: (row) => row.location?.name,
-        header: 'Location',
+        header: 'Lokasi',
         meta: {
             filterVariant: 'select',
         },
@@ -192,14 +197,14 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'warehouse_name',
         accessorKey: 'Warehouse',
         accessorFn: (row) => row.location?.warehouse?.name, // for filtering and sorting
-        header: 'Warehouse',
+        header: 'Gudang',
         meta: {
             filterVariant: 'select',
         },
     },
     {
         accessorKey: 'Quantity',
-        header: 'Quantity',
+        header: 'Qty',
         cell: ({ row }) => {
             const quantity = row.original.quantity;
             const unit = row.original.unit ?? '';
@@ -279,12 +284,16 @@ export const columns: ColumnDef<Stock>[] = [
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}>Copy Batch Number</DropdownMenuItem>
+                    {/*<DropdownMenuItem onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}>Copy Batch Number</DropdownMenuItem>*/}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                        <Link href={route('stocks.show', { stock: row.original.id })}> View Details </Link>
+                        <Link href={route('stocks.show', { stock: row.original.id })}> View Detail </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, row.original.product?.name)}>Create Operation</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Operasi Stok</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'inbound')}>Stock In</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'outbound')}>Stock Out</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         ),

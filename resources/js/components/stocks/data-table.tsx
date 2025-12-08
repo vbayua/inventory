@@ -16,7 +16,6 @@ import * as React from 'react';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-import { usePage } from '@inertiajs/react';
 import { DataTablePagination } from '../data-table-pagination';
 import { DataTableViewOptions } from '../data-table-view-options';
 import { PaginationIndex } from '../ui/pagination-index';
@@ -38,27 +37,6 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
         minimum_qty: false,
         updated_at: false,
     });
-    const url = usePage().url;
-    React.useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const params = new URLSearchParams(window.location.search);
-        const productSku = params.get('product_sku');
-        const status = params.get('status');
-        const warehouseId = params.get('warehouse_id');
-        const locationId = params.get('location_id');
-        const batchNumber = params.get('batch_number');
-        setColumnFilters((prev) => {
-            const others = prev.filter((filter) => !['product_sku', 'status', 'warehouse_id', 'location_id', 'batch_number'].includes(filter.id));
-            return [
-                ...others,
-                ...(productSku ? [{ id: 'product_sku', value: productSku }] : []),
-                ...(batchNumber ? [{ id: 'batch_number', value: batchNumber }] : []),
-                ...(status ? [{ id: 'status', value: status }] : []),
-                ...(warehouseId ? [{ id: 'warehouse_id', value: warehouseId }] : []),
-                ...(locationId ? [{ id: 'location_id', value: locationId }] : []),
-            ];
-        });
-    }, [url]);
 
     const table = useReactTable({
         data,

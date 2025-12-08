@@ -36,31 +36,31 @@ export default function Index({ stocks, stats }: { stocks: any[]; stats: { total
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Operation List" />
+            <Head title="List Stock" />
             <ContainerLayout>
                 <StockStatus stats={stockStatus} />
                 <div className={'mt-6 flex items-center justify-start'}>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="default">
+                            <Button variant="secondary" className="px-4 py-2 hover:cursor-pointer">
+                                Actions
                                 <ChevronDown className="h-4 w-4" />
-                                Stock Operations
                                 <span className="sr-only">Open menu</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="space-y-2 p-2">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>Operasi Stock</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
+                            <DropdownMenuItem className="hover:cursor-pointer" asChild>
                                 <Link href={route('operations.create')}>
                                     <PlusIcon className="mr-2 h-4 w-4" />
-                                    Create Stock Operation
+                                    Buat Operasi Stock
                                 </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
+                            <DropdownMenuItem className="hover:cursor-pointer" asChild>
                                 <Link href={route('operations.index')}>
                                     <Database className="mr-2 h-4 w-4" />
-                                    View Stock Operation
+                                    Log Operasi Stock
                                 </Link>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
