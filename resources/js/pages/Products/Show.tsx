@@ -66,13 +66,51 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
             <Head title={`${product?.name}`} />
             <ContainerLayout>
                 <div className="p-4">
-                    <h2 className="mb-2.5 text-3xl font-semibold">{product.name}</h2>
-                    <p className="text-muted-foreground text-sm">SKU: {product.sku}</p>
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h2 className="mb-2.5 text-3xl font-semibold">{product.name}</h2>
+                            <p className="text-muted-foreground text-sm">Kode Item: {product.sku}</p>
+                        </div>
+                        <div className="space-x-2">
+                            <Button variant={'outline'} asChild>
+                                <Link href={route('products.edit', product.id)}>Edit Product</Link>
+                            </Button>
+                        </div>
+                    </div>
                     <hr className="my-8 h-px border-0 bg-gray-200 dark:bg-gray-700" />
+                    <div className="my-8 grid grid-cols-2 gap-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-xl">Nama Brand</CardTitle>
+                                <CardDescription>Nama brand product</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-md">{product.brand_name ?? '-'}</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-xl">Scientific Name (Inci Name)</CardTitle>
+                                <CardDescription>Inci name product</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-md">{product.scientific_name ?? '-'}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-xl">Manufacturer</CardTitle>
+                            <CardDescription>Pabrik pembuat product</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-md">{product.manufacturer_name ?? '-'}</p>
+                        </CardContent>
+                    </Card>
                     <div className="mt-4 grid grid-cols-2 gap-4">
                         <Card>
                             <CardHeader className="grid grid-cols-2">
-                                <CardTitle className="text-lg font-semibold">Stock</CardTitle>
+                                <CardTitle className="text-lg font-semibold">Jumlah Stock</CardTitle>
                                 <div data-slot="card-action" className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
                                     <Button variant={'ghost'} size={'sm'} asChild>
                                         <Link href={route('stocks.index')}>
@@ -101,39 +139,10 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
                             </CardContent>
                         </Card>
                     </div>
-                    <div className="my-8 grid grid-cols-2 gap-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-xl">Brand</CardTitle>
-                                <CardDescription>Brand name of the product.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-md">{product.brand_name ?? '-'}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-xl">Scientific Name</CardTitle>
-                                <CardDescription>Scientific name of the product.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-md">{product.scientific_name ?? '-'}</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-xl">Manufacturer</CardTitle>
-                            <CardDescription>Pabrik pembuat product</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-md">{product.manufacturer_name ?? '-'}</p>
-                        </CardContent>
-                    </Card>
                     <Card className="mt-8">
                         <CardHeader>
                             <CardTitle className="text-xl">Supplier</CardTitle>
-                            <CardDescription>A list of {product.name} suppliers.</CardDescription>
+                            <CardDescription>Daftar supplier product {product.name}.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="rounded-md border">
@@ -163,8 +172,8 @@ export default function Show({ product, suppliers, total_stock_qty }: { product:
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={2} className="h-24 text-center">
-                                                    No Results.
+                                                <TableCell colSpan={3} className="h-24 text-center">
+                                                    Belum ada supplier yang terkait dengan produk ini.
                                                 </TableCell>
                                             </TableRow>
                                         )}
