@@ -22,7 +22,7 @@ export default function Show({
 }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Warehouses',
+            title: 'List Gudang',
             href: '/warehouse',
         },
         {
@@ -47,6 +47,9 @@ export default function Show({
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <CardTitle>{warehouse.name}</CardTitle>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href={route('warehouse.edit', warehouse.id)}>Edit Gudang</Link>
+                            </Button>
                         </div>
                     </CardHeader>
                     <CardContent>
