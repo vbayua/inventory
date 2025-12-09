@@ -1,10 +1,13 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from '@inertiajs/react';
 import { Hash, MapPin, Package, Truck, Warehouse } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 
 export default function StockDetailCard({
     batch_number,
+    product_id,
     product_name,
     warehouse_name,
     location_name,
@@ -15,6 +18,7 @@ export default function StockDetailCard({
     minimum_quantity,
 }: {
     batch_number: string;
+    product_id: number;
     product_name: string;
     warehouse_name: string;
     location_name: string;
@@ -44,7 +48,7 @@ export default function StockDetailCard({
         <Card>
             <CardHeader>
                 <div className="flex items-start justify-between">
-                    <CardTitle>Stock Details</CardTitle>
+                    <CardTitle>Detail Stok</CardTitle>
                     {getStatusBadge()}
                 </div>
             </CardHeader>
@@ -55,7 +59,7 @@ export default function StockDetailCard({
                             <Hash className="text-primary h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                            <CardDescription className="text-muted-foreground text-sm">Batch Number</CardDescription>
+                            <CardDescription className="text-muted-foreground text-sm">No. Batch</CardDescription>
                             <p className="font-medium">{batch_number}</p>
                         </div>
                     </div>
@@ -64,16 +68,19 @@ export default function StockDetailCard({
                             <Package className="text-primary h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                            <CardDescription className="text-muted-foreground text-sm">Product Name</CardDescription>
-                            <p className="font-medium">{product_name}</p>
+                            <CardDescription className="text-muted-foreground text-sm">Nama Product</CardDescription>
+                            <Button variant="link" className="p-0 font-medium" asChild>
+                                <Link href={route('products.show', { id: product_id })}>{product_name}</Link>
+                            </Button>
                         </div>
                     </div>
+                    <Separator className="md:col-span-2" />
                     <div className="flex items-start gap-3">
                         <div className="bg-primary/10 rounded-lg p-2">
                             <Warehouse className="text-primary h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                            <CardDescription className="text-muted-foreground text-sm">Warehouse</CardDescription>
+                            <CardDescription className="text-muted-foreground text-sm">Gudang</CardDescription>
                             <p className="font-medium">{warehouse_name}</p>
                         </div>
                     </div>
@@ -82,10 +89,11 @@ export default function StockDetailCard({
                             <MapPin className="text-primary h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                            <CardDescription className="text-muted-foreground text-sm">Location</CardDescription>
+                            <CardDescription className="text-muted-foreground text-sm">Lokasi</CardDescription>
                             <p className="font-medium">{location_name}</p>
                         </div>
                     </div>
+                    <Separator className="md:col-span-2" />
                     <div className="flex items-start gap-3">
                         <div className="bg-primary/10 rounded-lg p-2">
                             <Truck className="text-primary h-6 w-6" />
@@ -100,7 +108,7 @@ export default function StockDetailCard({
             <CardFooter className="border-border border-t pt-4">
                 <div className="w-full">
                     <div className="flex items-center justify-between">
-                        <CardDescription className="text-muted-foreground text-sm">Current Quantity</CardDescription>
+                        <CardDescription className="text-muted-foreground text-sm">Quantity</CardDescription>
                         <p className="text-primary text-2xl font-medium">{`${quantity} ${unit}`}</p>
                     </div>
                     <Separator className="my-3" />
