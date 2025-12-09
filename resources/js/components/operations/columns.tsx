@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, Edit2, LogIn, MoreHorizontal, PlusCircle } from 'lucide-react';
+import { ArrowDown, ArrowDownUp, ArrowUp, Edit2, LogIn, MoreHorizontal } from 'lucide-react';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -32,28 +32,31 @@ type OperationIndex = {
 const operationConfig = {
     inbound: {
         id: 'inbound',
-        label: 'Inbound',
-        color: 'bg-green-100 text-green-800',
+        label: 'IN',
+        color: 'bg-green-200 text-green-800',
         variant: 'default' as const,
         icon: ArrowDown,
+        prefix: '+',
     },
     outbound: {
         id: 'outbound',
-        label: 'Outbound',
-        color: 'bg-blue-100 text-blue-800',
+        label: 'OUT',
+        color: 'bg-red-200 text-red-800',
         variant: 'secondary' as const,
         icon: ArrowUp,
+        prefix: '-',
     },
     initial: {
         id: 'initial',
-        label: 'Initial',
-        color: 'bg-purple-100 text-purple-800',
+        label: 'IN',
+        color: 'bg-purple-200 text-purple-800',
         variant: 'secondary' as const,
-        icon: PlusCircle,
+        icon: ArrowDown,
+        prefix: '+',
     },
     adjustment: {
         id: 'adjustment',
-        label: 'Adjustment',
+        label: 'ADJ',
         color: 'bg-yellow-100 text-yellow-800',
         variant: 'outline' as const,
         icon: Edit2,
@@ -64,6 +67,22 @@ const operationConfig = {
         color: 'bg-indigo-100 text-indigo-800',
         variant: 'default' as const,
         icon: LogIn,
+    },
+    transfer_in: {
+        id: 'transfer_in',
+        label: 'TRANSFER IN',
+        color: 'bg-teal-100 text-teal-800',
+        variant: 'default' as const,
+        icon: ArrowDownUp,
+        prefix: '+',
+    },
+    transfer_out: {
+        id: 'transfer_out',
+        label: 'TRANSFER OUT',
+        color: 'bg-indigo-100 text-indigo-800',
+        variant: 'default' as const,
+        icon: ArrowDownUp,
+        prefix: '-',
     },
 };
 
@@ -126,6 +145,13 @@ export const columns: ColumnDef<OperationIndex>[] = [
         accessorFn: (row) => row.remarks,
         header: 'Remarks',
         enableHiding: true,
+        cell: ({ row }) => {
+            return (
+                <div className="max-w-sm truncate" title={row.original.remarks}>
+                    {row.original.remarks ?? '-'}
+                </div>
+            );
+        },
     },
     {
         accessorKey: 'operation_date',

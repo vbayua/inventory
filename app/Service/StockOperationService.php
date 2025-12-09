@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Models\Location;
 use App\Models\Operation;
 use App\Models\Product;
 use App\Models\Stock;
@@ -11,6 +12,7 @@ use App\Service\StockCalculatorService as UnitConverter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class StockOperationService
@@ -181,24 +183,140 @@ class StockOperationService
         });
     }
 
-    public function createTransferOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
+    public function createTransferOperation(Product|int $product, int $batchId, int $sourceLocationId, int $destinationLocationId, float $quantity, ?string $unit, ?string $remarks = null, ?string $operationDate = null)
+    {
+        return DB::transaction(function () use ($product, $batchId, $sourceLocationId, $destinationLocationId, $quantity, $unit, $remarks, $operationDate) {
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+
+            // Lock source row
+            $sourceStock = Stock::where('product_id', $product->id)
+                ->where('location_id', $sourceLocationId)
+                ->where('batch_id', $batchId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Find or create destination, lock if exists
+            $destinationStock = Stock::where('product_id', $product->id)
+                ->where('location_id', $destinationLocationId)
+                ->where('batch_id', $batchId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $destinationStock) {
+                $destinationStock = Stock::create([
+                    'product_id' => $product->id,
+                    'location_id' => $destinationLocationId,
+                    'batch_id' => $batchId,
+                    'quantity' => 0,
+                    'minimum_quantity' => 0,
+                    'unit' => $sourceStock->unit,
+                    'status' => 'out_of_stock',
+                    'remarks' => 'Created for transfer',
+                ]);
+                // Relock newly created row
+                $destinationStock = Stock::where('id', $destinationStock->id)->lockForUpdate()->firstOrFail();
+            }
+
+            // Generate correlation ID and resolve location names
+            $correlationId = (string) Str::uuid();
+            $sourceLocationName = optional(Location::find($sourceLocationId))->name ?? (string) $sourceLocationId;
+            $destinationLocationName = optional(Location::find($destinationLocationId))->name ?? (string) $destinationLocationId;
+
+            // Build remarks with correlation ID
+            $baseRemarks = $remarks ?: 'Stock Transfer';
+            $outRemarks = "{$baseRemarks} | correlation_id={$correlationId} | from={$sourceLocationName} -> to={$destinationLocationName}";
+            $inRemarks = "{$baseRemarks} | correlation_id={$correlationId} | from={$sourceLocationName} -> to={$destinationLocationName}";
+
+            // Transfer out operation
+            $operationOut = $this->createOperation(
+                'transfer_out',
+                $product,
+                $sourceStock,
+                $quantity,
+                $unit ?? $sourceStock->unit,
+                $outRemarks,
+                $operationDate
+            );
+
+            $updatedSourceStock = $this->decrementStock(
+                $product,
+                $sourceStock,
+                $quantity,
+                $unit ?? $sourceStock->unit
+            );
+
+            // Transfer in operation
+            $operationIn = $this->createOperation(
+                'transfer_in',
+                $product,
+                $destinationStock,
+                $quantity,
+                $unit ?? $destinationStock->unit,
+                $inRemarks,
+                $operationDate
+            );
+
+            $updatedDestinationStock = $this->incrementStock(
+                $product,
+                $destinationStock,
+                $quantity,
+                $unit ?? $destinationStock->unit
+            );
+
+            // If source stock is depleted, delete the row
+            if ($updatedSourceStock && ($updatedSourceStock->status === 'out_of_stock' || (float) $updatedSourceStock->quantity <= 0.0)) {
+                $updatedSourceStock->delete();
+            }
+
+            return [
+                        'transfer_out' => $operationOut,
+                        'transfer_in' => $operationIn,
+                        'source' => $updatedSourceStock,
+                        'destination' => $updatedDestinationStock,
+                    ];
+        });
+    }
+
+    public function createTransferOutOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
-                'transfer',
+                'transfer_out',
                 $product,
                 $stockData,
                 $quantity,
                 $unit,
-                $remarks ?? 'Transfer Operation',
+                $remarks ?? 'Transfer Out Operation',
                 $operationDate
             );
 
-            $this->transferStock(
+            $this->decrementStock(
                 $product,
-                $stockData['source_location_id'],
-                $stockData['destination_location_id'],
-                $stockData['batch_id'],
+                $stockData,
+                $quantity,
+                $unit
+            );
+
+            return $operation;
+        });
+    }
+
+    public function createTransferInOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
+    {
+        return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
+            $operation = $this->createOperation(
+                'transfer_in',
+                $product,
+                $stockData,
+                $quantity,
+                $unit,
+                $remarks ?? 'Transfer In Operation',
+                $operationDate
+            );
+
+            $this->incrementStock(
+                $product,
+                $stockData,
                 $quantity,
                 $unit
             );

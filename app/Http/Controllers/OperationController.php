@@ -82,7 +82,7 @@ class OperationController extends Controller
             'operationType' => 'required|in:inbound,outbound,adjustment,transfer',
             'adjustmentType' => 'required|in:addition,subtraction',
             'product' => 'required|exists:products,id',
-            'location' => 'required|exists:locations,id',
+            'location' => 'required_unless:operationType,transfer|exists:locations,id',
             'batch' => 'required|exists:batches,id',
             'quantity' => 'required|numeric|min:0',
             'unit' => 'required|exists:units,name',
@@ -165,16 +165,32 @@ class OperationController extends Controller
                 $validatedData['remarks']
             );
         } elseif ($operationType === 'transfer') {
-            $stockData['source_location_id'] = $validatedData['source_location'];
-            $stockData['destination_location_id'] = $validatedData['destination_location'];
-            $operationService->createTransferOperation(
+            // $stockData['source_location_id'] = $validatedData['source_location'];
+            // $stockData['destination_location_id'] = $validatedData['destination_location'];
+            // $operationService->createTransferOperation(
+            //     $stockData->product,
+            //     $stockData,
+            //     $operationQuantity,
+            //     $validatedData['unit'],
+            //     $validatedData['remarks'] ?? '',
+            //     $validatedData['date'],
+            // );
+
+
+            // Call high-level transfer stock operation
+            $test = $operationService->createTransferOperation(
                 $stockData->product,
-                $stockData,
+                $stockData->batch_id,
+                $validatedData['source_location'],
+                $validatedData['destination_location'],
                 $operationQuantity,
                 $validatedData['unit'],
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
             );
+
+            dd($test);
+
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
         }
