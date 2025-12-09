@@ -53,7 +53,7 @@ class BatchAssignmentService
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the product is not found.
      * @throws \Illuminate\Validation\ValidationException If the supplier is not associated with the product.
      */
-    public function determineBatch(Product|int $product, ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null, ?int $supplierId = null): ?int
+    public function determineBatch(Product|int $product, ?int $requestedBatchId = null, string $operationType = 'inbound', ?string $operationDate = null, ?int $supplierId = null, ?int $minQty = 0): ?int
     {
         $productId = $product instanceof Product ? $product->id : (int) $product;
         $product = Product::with(['productType', 'batches', 'operations'])->findOrFail($productId);
@@ -106,6 +106,7 @@ class BatchAssignmentService
             'product_id' => $product->id,
             'batch_number' => $batchNumber,
             'expiry_date' => $expiryDate ?? null,
+            'minimum_quantity' => $minQty,
             'supplier_id' => $supplierId,
             'user_id' => Auth::id(),
         ]);
