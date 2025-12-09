@@ -93,7 +93,7 @@ export default function Create({
         operationType: operationType || 'outbound',
         adjustmentType: 'addition',
         remarks: '',
-        source_location: '',
+        source_location: locationId,
         destination_location: '',
     });
 
