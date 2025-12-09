@@ -1,3 +1,4 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { usePage } from '@inertiajs/react';
 import { Table } from '@tanstack/react-table';
@@ -59,6 +60,13 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         { label: 'Reserved', value: 'reserved' },
     ];
 
+    const quickDateTemplate = [
+        { label: 'Today', value: 'today' },
+        { label: 'This Week', value: 'this_week' },
+        { label: 'This Month', value: 'this_month' },
+        { label: 'This Year', value: 'this_year' },
+    ];
+
     const handleReset = () => {
         table.resetColumnFilters();
         setDateRange(undefined);
@@ -112,6 +120,57 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                         </PopoverContent>
                     </Popover>
                 )}
+                {table.getColumn('updated_at') && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="h-8 px-2 lg:px-3">
+                                Quick Date
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-auto p-0" align="start">
+                            {quickDateTemplate.map((item) => (
+                                <Button
+                                    key={item.value}
+                                    variant="ghost"
+                                    className="w-full justify-start"
+                                    onClick={() => {
+                                        const now = new Date();
+                                        let from: Date;
+                                        let to: Date;
+
+                                        switch (item.value) {
+                                            case 'today':
+                                                from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                                to = from;
+                                                break;
+                                            case 'this_week':
+                                                const firstDayOfWeek = now.getDate() - now.getDay();
+                                                from = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek);
+                                                to = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek + 6);
+                                                break;
+                                            case 'this_month':
+                                                from = new Date(now.getFullYear(), now.getMonth(), 1);
+                                                to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                                break;
+                                            case 'this_year':
+                                                from = new Date(now.getFullYear(), 0, 1);
+                                                to = new Date(now.getFullYear(), 11, 31);
+                                                break;
+                                            default:
+                                                from = now;
+                                                to = now;
+                                        }
+
+                                        setDateRange({ from, to });
+                                    }}
+                                >
+                                    {item.label}
+                                </Button>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+
                 {isFiltered && (
                     <Button
                         variant="ghost"

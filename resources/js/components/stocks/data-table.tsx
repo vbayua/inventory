@@ -33,7 +33,6 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
         warehouse_name: false,
-        location_name: false,
         minimum_qty: false,
         updated_at: false,
     });

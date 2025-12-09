@@ -128,6 +128,18 @@ const statusConfig = {
 
 export const columns: ColumnDef<Stock>[] = [
     {
+        id: 'product_sku',
+        accessorKey: 'SKU',
+        accessorFn: (row) => row.product?.sku,
+        header: 'Kode Item (SKU)',
+        filterFn: (row, id, value) => {
+            if (!value) return true;
+            const cell = row.getValue<string | undefined>(id);
+            return (cell ?? '').toLowerCase() === String(value).toLowerCase();
+        },
+        cell: ({ row }) => row.original.product?.sku ?? '-',
+    },
+    {
         id: 'batch_number',
         accessorKey: 'Batch Number',
         accessorFn: (row) => row.batch?.batch_number ?? '-',
@@ -165,24 +177,13 @@ export const columns: ColumnDef<Stock>[] = [
         cell: ({ row }) => row.original.product?.product_type?.type_code ?? '-',
     },
     {
-        id: 'supplier_name',
-        accessorKey: 'Supplier',
-        accessorFn: (row) => row.batch?.supplier?.partner?.name ?? '-',
-        header: 'Supplier',
-        meta: { filterVariant: 'select' },
-        cell: ({ row }) => row.original.batch?.supplier?.partner?.name ?? '-',
-    },
-    {
-        id: 'product_sku',
-        accessorKey: 'SKU',
-        accessorFn: (row) => row.product?.sku,
-        header: 'Kode Item (SKU)',
-        filterFn: (row, id, value) => {
-            if (!value) return true;
-            const cell = row.getValue<string | undefined>(id);
-            return (cell ?? '').toLowerCase() === String(value).toLowerCase();
+        accessorKey: 'Quantity',
+        header: 'Qty',
+        cell: ({ row }) => {
+            const quantity = row.original.quantity;
+            const unit = row.original.unit ?? '';
+            return quantity !== undefined ? `${quantity} ${unit}` : '-';
         },
-        cell: ({ row }) => row.original.product?.sku ?? '-',
     },
     {
         id: 'location_name',
@@ -203,13 +204,12 @@ export const columns: ColumnDef<Stock>[] = [
         },
     },
     {
-        accessorKey: 'Quantity',
-        header: 'Qty',
-        cell: ({ row }) => {
-            const quantity = row.original.quantity;
-            const unit = row.original.unit ?? '';
-            return quantity !== undefined ? `${quantity} ${unit}` : '-';
-        },
+        id: 'supplier_name',
+        accessorKey: 'Supplier',
+        accessorFn: (row) => row.batch?.supplier?.partner?.name ?? '-',
+        header: 'Supplier',
+        meta: { filterVariant: 'select' },
+        cell: ({ row }) => row.original.batch?.supplier?.partner?.name ?? '-',
     },
     {
         accessorKey: 'minimum_qty',
@@ -250,22 +250,39 @@ export const columns: ColumnDef<Stock>[] = [
         },
         // Enable filtering by a date range passed in the column filter value
         filterFn: (row, id, value) => {
-            const date = new Date(row.getValue<string>(id));
-            const from = value?.from ? new Date(value.from) : undefined;
-            const to = value?.to ? new Date(value.to) : undefined;
+            // value is expected to be a DateRange from react-day-picker: { from?: Date; to?: Date }
+            if (!value || (!value.from && !value.to)) {
+                return true;
+            }
+            const rowDate = new Date(row.original.updated_at);
 
-            if (from && to) {
-                const toDate = new Date(to);
-                toDate.setHours(23, 59, 59, 999);
-                return date >= from && date <= toDate;
+            const normalizeStartOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(0, 0, 0, 0);
+                return nd;
+            };
+
+            const normalizeEndOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(23, 59, 59, 999);
+                return nd;
+            };
+
+            const hasFrom = !!value.from;
+            const hasTo = !!value.to;
+
+            if (hasFrom && hasTo) {
+                const start = normalizeStartOfDay(value.from as Date);
+                const end = normalizeEndOfDay(value.to as Date);
+                return rowDate >= start && rowDate <= end;
             }
-            if (from) {
-                return date >= from;
+            if (hasFrom) {
+                const start = normalizeStartOfDay(value.from as Date);
+                return rowDate >= start;
             }
-            if (to) {
-                const toDate = new Date(to);
-                toDate.setHours(23, 59, 59, 999);
-                return date <= toDate;
+            if (hasTo) {
+                const end = normalizeEndOfDay(value.to as Date);
+                return rowDate <= end;
             }
             return true;
         },
