@@ -12,6 +12,7 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -22,10 +23,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowLeft, ArrowUp, Edit2, LogIn, PlusCircle } from 'lucide-react';
+import { ArrowDown, ArrowDownUp, ArrowLeft, ArrowUp, Edit2, LogIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type StockStatus = 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
+type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
 
 export default function Show({ stock, operations }: { stock: any; operations: any[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -73,37 +75,56 @@ export default function Show({ stock, operations }: { stock: any; operations: an
         inbound: {
             id: 'inbound',
             label: 'IN',
-            color: 'bg-green-100 text-green-800',
+            color: 'bg-green-200 text-green-800',
             variant: 'default' as const,
             icon: ArrowDown,
+            prefix: '+',
         },
         outbound: {
             id: 'outbound',
             label: 'OUT',
-            color: 'bg-blue-100 text-blue-800',
+            color: 'bg-red-200 text-red-800',
             variant: 'secondary' as const,
             icon: ArrowUp,
+            prefix: '-',
         },
         initial: {
             id: 'initial',
-            label: 'INITIAL',
-            color: 'bg-purple-100 text-purple-800',
+            label: 'IN',
+            color: 'bg-purple-200 text-purple-800',
             variant: 'secondary' as const,
-            icon: PlusCircle,
+            icon: ArrowDown,
+            prefix: '+',
         },
         adjustment: {
             id: 'adjustment',
-            label: 'Adjustment',
+            label: 'ADJ',
             color: 'bg-yellow-100 text-yellow-800',
             variant: 'outline' as const,
             icon: Edit2,
         },
         transfer: {
             id: 'transfer',
-            label: 'TRANSFER',
+            label: 'Transfer',
             color: 'bg-indigo-100 text-indigo-800',
             variant: 'default' as const,
             icon: LogIn,
+        },
+        transfer_in: {
+            id: 'transfer_in',
+            label: 'TRANSFER IN',
+            color: 'bg-teal-100 text-teal-800',
+            variant: 'default' as const,
+            icon: ArrowDownUp,
+            prefix: '+',
+        },
+        transfer_out: {
+            id: 'transfer_out',
+            label: 'TRANSFER OUT',
+            color: 'bg-indigo-100 text-indigo-800',
+            variant: 'default' as const,
+            icon: ArrowDownUp,
+            prefix: '-',
         },
     };
     const formatRelativeTime = (dateString: string) => {
@@ -119,23 +140,41 @@ export default function Show({ stock, operations }: { stock: any; operations: an
         return `${diffDays}d ago`;
     };
 
+    const handleCreateOperation = (id: number, operation_type: OperationType) => {
+        return function () {
+            router.get(
+                route('operations.create'),
+                {
+                    stock_id: id,
+                    operation_type: operation_type,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                },
+            );
+        };
+    };
+
     const recentOperations = hasLoadedOps ? (operations ?? [])?.slice(0, 5) : [];
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${stock?.batch?.batch_number} - ${stock?.product?.name}`} />
+            <Head title={`${stock?.batch?.batch_number} Stock`} />
             <ContainerLayout>
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild>
+                        <Button variant="link" className="text-muted-foreground hover:text-foreground" asChild>
                             <Link href={route('stocks.index')}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Stocks
+                                Kembali ke Daftar Stok
                             </Link>
                         </Button>
-                        <h1 className="mt-4 text-3xl font-bold">
-                            {stock?.batch?.batch_number} - {stock?.product?.name}
-                        </h1>
-                        <p className="text-muted-foreground mt-2">View stock detail and operation history</p>
+                        <div className="space-y-1.5">
+                            <h1 className="mt-4 text-2xl font-bold">{stock?.product?.name}</h1>
+                            <Separator orientation="vertical" />
+                            <h2 className="text-xl font-normal">{stock?.batch?.batch_number}</h2>
+                            <p className="text-muted-foreground mt-2">View stock detail and operation history</p>
+                        </div>
                     </div>
 
                     <div>
@@ -144,10 +183,23 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                 <Button variant="outline">Actions</Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Stock Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>Action</DropdownMenuLabel>
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>Edit Stock</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>Edit Minimum Qty</DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => setShowAdjustDialog(true)}>Adjust Stock</DropdownMenuItem>
+                                </DropdownMenuGroup>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel>Operasi Stok</DropdownMenuLabel>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem onClick={handleCreateOperation(stock.id, 'inbound')}>Stock In</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleCreateOperation(stock.id, 'outbound')}>Stock Out</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleCreateOperation(stock.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
+                                </DropdownMenuGroup>
+                                <DropdownMenuLabel>Kartu Stock</DropdownMenuLabel>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem asChild>
+                                        <Link href={route('stocks.stock-card', { stock: stock.id })}> View Stock Card </Link>
+                                    </DropdownMenuItem>
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -194,6 +246,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                 <div className="space-y-6">
                     <StockDetailCard
                         batch_number={stock?.batch?.batch_number}
+                        product_id={stock?.product?.id}
                         product_name={stock?.product?.name}
                         warehouse_name={stock?.location?.warehouse?.name}
                         location_name={stock?.location?.name}
@@ -268,11 +321,12 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                                                         <span className="text-accent-foreground text-lg">{operation.unit}</span>
                                                                     </div>
                                                                     <span className="text-muted-foreground text-sm">
-                                                                        Lokasi: {operation.location.name} by: {operation.user.name}
+                                                                        Lokasi: {operation.location.name}
                                                                     </span>
                                                                 </div>
-                                                                <div className="text-muted-foreground text-sm">
-                                                                    {formatRelativeTime(operation.operation_date)}
+                                                                <div className="text-muted-foreground flex shrink-0 flex-col items-end">
+                                                                    <span className="text-sm">{formatRelativeTime(operation.operation_date)}</span>
+                                                                    <span className="text-xs">by: {operation.user?.name || 'N/A'}</span>
                                                                 </div>
                                                             </div>
                                                         </ItemContent>
