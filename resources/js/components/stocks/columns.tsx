@@ -311,6 +311,10 @@ export const columns: ColumnDef<Stock>[] = [
                     <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'inbound')}>Stock In</DropdownMenuItem>
                     <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'outbound')}>Stock Out</DropdownMenuItem>
                     <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
+                    <DropdownMenuLabel>Kartu Stock</DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                        <Link href={route('stocks.stock-card', { stock: row.original.id })}> View Stock Card </Link>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         ),

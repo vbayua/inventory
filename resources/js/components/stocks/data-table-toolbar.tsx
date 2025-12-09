@@ -61,10 +61,10 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     ];
 
     const quickDateTemplate = [
-        { label: 'Today', value: 'today' },
-        { label: 'This Week', value: 'this_week' },
-        { label: 'This Month', value: 'this_month' },
-        { label: 'This Year', value: 'this_year' },
+        { label: 'Hari Ini', value: 'today' },
+        { label: 'Minggu Ini', value: 'this_week' },
+        { label: 'Bulan Ini', value: 'this_month' },
+        { label: 'Tahun Ini', value: 'this_year' },
     ];
 
     const handleReset = () => {
