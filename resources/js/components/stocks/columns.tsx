@@ -5,7 +5,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 type ProductType = {
     id: number;
@@ -303,14 +303,19 @@ export const columns: ColumnDef<Stock>[] = [
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     {/*<DropdownMenuItem onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}>Copy Batch Number</DropdownMenuItem>*/}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link href={route('stocks.show', { stock: row.original.id })}> View Detail </Link>
-                    </DropdownMenuItem>
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem asChild>
+                            <Link href={route('stocks.show', { stock: row.original.id })}> View Detail </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel>Operasi Stok</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'inbound')}>Stock In</DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'outbound')}>Stock Out</DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'inbound')}>Stock In</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'outbound')}>Stock Out</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
                     <DropdownMenuLabel>Kartu Stock</DropdownMenuLabel>
                     <DropdownMenuItem asChild>
                         <Link href={route('stocks.stock-card', { stock: row.original.id })}> View Stock Card </Link>
