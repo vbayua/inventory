@@ -398,6 +398,7 @@ class StockOperationService
             $stock = Stock::where('product_id', $productId)
                 ->where('location_id', $stockData['location_id'])
                 ->where('batch_id', $stockData['batch_id'])
+                ->with('batch:id,batch_number,minimum_quantity')
                 ->lockForUpdate()
                 ->first();
 
@@ -452,7 +453,7 @@ class StockOperationService
             $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
             $stock->updateOrFail([
                 'quantity' => $newQuantity,
-                'status' => $this->setStockStatus($newQuantity, $stock->minimum_quantity),
+                'status' => $this->setStockStatus($newQuantity, $stock->batch->minimum_quantity),
             ]);
 
             return $stock;
@@ -573,6 +574,7 @@ class StockOperationService
             $stock = Stock::where('product_id', $product->id)
                 ->where('location_id', $stockData['location_id'])
                 ->where('batch_id', $stockData['batch_id'] ?? null)
+                ->with('batch:id,batch_number,minimum_quantity')
                 ->lockForUpdate()
                 ->first();
 
@@ -600,7 +602,7 @@ class StockOperationService
             $stock->update([
                 'quantity' => $newQuantity,
                 'status' => $newInBase > 0
-                    ? $this->setStockStatus($newQuantity, $stock->minimum_quantity)
+                    ? $this->setStockStatus($newQuantity, $stock->batch->minimum_quantity)
                     : 'out_of_stock',
             ]);
 
