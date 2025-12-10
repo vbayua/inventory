@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateStockRequest;
 use App\Models\Operation;
 use App\Models\Stock;
 use App\Service\StockOperationService;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class StockController extends Controller
@@ -89,7 +90,7 @@ class StockController extends Controller
                 'product.productType:id,name,type_code',
                 'location:id,name,warehouse_id',
                 'location.warehouse:id,name',
-                'batch:id,batch_number,supplier_id',
+                'batch:id,batch_number,supplier_id,minimum_quantity',
                 'batch.supplier:id,partner_id',
                 'batch.supplier.partner:id,name',
                 'user:id,name'
@@ -103,7 +104,7 @@ class StockController extends Controller
      */
     public function stockCard(Stock $stock)
     {
-        $operationsData = Operation::with([
+        $operations = Operation::with([
             'product:id,name,sku,product_type_id',
             'product.productType:id,name,type_code',
             'location:id,name,warehouse_id',
@@ -117,16 +118,13 @@ class StockController extends Controller
         ->where('batch_id', $stock->batch_id)
         ->latest()
         ->get();
-        $operations = Inertia::lazy(fn() => $operationsData);
+        // $operations = Inertia::lazy(fn() => $operationsData);
 
-        $totalLocations = Stock::where('product_id', $stock->product_id)
-            ->where('batch_id', $stock->batch_id)
-            ->distinct('location_id')
-            ->count();
+        $stockQuery = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id);
 
-        $totalStockQuantityAcrossLocations = Stock::where('product_id', $stock->product_id)
-            ->where('batch_id', $stock->batch_id)
-            ->sum('quantity');
+        $totalLocations = $stockQuery->distinct('location_id')->count();
+        $totalStockQuantityAcrossLocations = $stockQuery->sum('quantity');
 
         return Inertia('Stocks/StockCard', [
             'stock' => $stock->load([
@@ -138,7 +136,7 @@ class StockController extends Controller
                 'batch.supplier:id,partner_id',
                 'batch.supplier.partner:id,name',
                 'user:id,name']),
-            'operations' => $operationsData,
+            'operations' => $operations,
             'total_locations' => $totalLocations,
             'total_stock_quantity_across_locations' => $totalStockQuantityAcrossLocations,
         ]);
@@ -157,17 +155,20 @@ class StockController extends Controller
      */
     public function update(UpdateStockRequest $request, Stock $stock, StockOperationService $stockService)
     {
-        $data = $request->validated();
+        DB::transaction(function () use ($request, $stock, $stockService) {
+            $data = $request->validated();
 
-        // Use incoming values if present; otherwise fall back to current model values
-        $minQty = array_key_exists('minimum_quantity', $data) ? $data['minimum_quantity'] : $stock->minimum_quantity;
-        $qty = array_key_exists('quantity', $data) ? $data['quantity'] : $stock->quantity;
+            $batch = $stock->batch()->lockForUpdate()->first();
+            // Use incoming values if present; otherwise fall back to current model values
+            $minQty = array_key_exists('minimum_quantity', $data) ? $data['minimum_quantity'] : $batch->minimum_quantity;
+            $qty = array_key_exists('quantity', $data) ? $data['quantity'] : $stock->quantity;
 
-        // Compute status based on the effective quantities
-        $data['status'] = $stockService->setStockStatus($qty, $minQty);
+            // Compute status based on the effective quantities
+            $data['status'] = $stockService->setStockStatus($qty, $minQty);
 
-        // Persist all changes in a single update
-        $stock->update($data);
+            // Persist all changes in a single update
+            $batch->update($data);
+        });
 
         return redirect()->route('stocks.show', $stock)->with('success', 'Stock updated successfully.');
     }
