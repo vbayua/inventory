@@ -17,7 +17,7 @@ class BatchController extends Controller
     public function index()
     {
         return Inertia::render('Batches/Index', [
-            'batches' => Batch::with('product:id,name')->orderBy('created_at', 'desc')->get(),
+            'batches' => Batch::with('product:id,name,sku')->orderBy('created_at', 'desc')->get(),
             'count' => Batch::count(),
         ]);
     }
@@ -55,7 +55,7 @@ class BatchController extends Controller
      */
     public function show(Batch $batch)
     {
-        $batch->load(['product:id,name', 'supplier:id,name']);
+        $batch->load(['product:id,name', 'supplier:id,partner_id', 'supplier.partner:id,name']);
 
         return Inertia::render('Batches/Show', ['batch' => $batch]);
     }
@@ -65,7 +65,7 @@ class BatchController extends Controller
      */
     public function edit(Batch $batch)
     {
-        $batch->load('product', 'supplier');
+        $batch->load('product:id,name', 'supplier:id,partner_id', 'supplier.partner:id,name');
 
         return Inertia::render('Batches/Edit', [
             'product' => $batch->product,
