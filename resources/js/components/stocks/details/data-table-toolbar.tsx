@@ -63,6 +63,11 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
 
     const operationTypeFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...operationType];
 
+    const handleReset = () => {
+        table.resetColumnFilters();
+        setDateRange(undefined);
+    };
+
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
@@ -149,7 +154,14 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                     </DropdownMenu>
                 )}
                 {isFiltered && (
-                    <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
+                    <Button
+                        variant="ghost"
+                        onClick={() => {
+                            handleReset();
+                            table.resetGlobalFilter();
+                        }}
+                        className="h-8 px-2 lg:px-3"
+                    >
                         Reset
                         <X />
                     </Button>
