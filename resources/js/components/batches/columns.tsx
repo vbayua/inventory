@@ -1,10 +1,9 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button, buttonVariants } from '../ui/button'
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
-import { Link, router } from '@inertiajs/react'
-import { toast } from 'sonner'
-import { DataTableColumnHeader } from '../data-table-column-header'
+import { Link } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { DataTableColumnHeader } from '../data-table-column-header';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 type BatchIndex = {
     id: number;
@@ -15,72 +14,66 @@ type BatchIndex = {
     };
     created_at: string;
     updated_at: string;
-}
+};
 
 export const columns: ColumnDef<BatchIndex>[] = [
     {
-        accessorKey: "batch_number",
+        accessorKey: 'batch_number',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Batch Number"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="No. Batch" />;
         },
     },
     {
-        id: "product_name",
-        accessorFn: row => row.product?.name,
-        header: "Product Name",
+        accessorKey: 'product_sku',
+        header: ({ column }) => {
+            return <DataTableColumnHeader column={column} title="Kode Item" />;
+        },
+        cell: ({ row }) => {
+            return row.original.product?.sku;
+        },
+    },
+    {
+        id: 'product_name',
+        accessorFn: (row) => row.product?.name,
+        header: 'Nama Product ',
         meta: {
             filterVariant: 'select',
         },
     },
     {
-        accessorKey: "created_at",
+        accessorKey: 'created_at',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Created At"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Tgl Dibuat" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.created_at)
-            return date.toLocaleDateString('en-US', {
+            const date = new Date(row.original.created_at);
+            return date.toLocaleDateString('id-ID', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-            })
-        }
+            });
+        },
     },
     {
-        accessorKey: "updated_at",
+        accessorKey: 'updated_at',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Updated At"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Tgl Diubah" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.updated_at)
-            return date.toLocaleDateString('en-US', {
+            const date = new Date(row.original.updated_at);
+            return date.toLocaleDateString('id-ID', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-            })
-        }
+            });
+        },
     },
     {
-        id: "actions",
+        id: 'actions',
         cell: ({ row }) => {
-            const batch = row.original
-            const viewBatch = route('batch.show', { id: batch.id })
-            const editBatch = route('batch.edit', { id: batch.id })
+            const batch = row.original;
+            const viewBatch = route('batch.show', { id: batch.id });
+            const editBatch = route('batch.edit', { id: batch.id });
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -89,7 +82,7 @@ export const columns: ColumnDef<BatchIndex>[] = [
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
+                    <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewBatch} className={'w-full'}>
@@ -103,7 +96,7 @@ export const columns: ColumnDef<BatchIndex>[] = [
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
-        }
-    }
-]
+            );
+        },
+    },
+];
