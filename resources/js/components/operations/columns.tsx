@@ -90,7 +90,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'batch_number',
         accessorFn: (row) => row.batch?.batch_number,
-        header: 'Batch Number',
+        header: 'No. Batch',
         meta: {
             filterVariant: 'select',
         },
@@ -98,14 +98,14 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'product_name',
         accessorFn: (row) => row.product?.name,
-        header: 'Product Name',
+        header: 'Nama Product',
         meta: {
             filterVariant: 'select',
         },
     },
     {
         accessorKey: 'operation_type',
-        header: 'Operation Type',
+        header: 'Operasi Stok',
         cell: ({ row }) => {
             const operationType = row.original.operation_type;
             const config = operationConfig[operationType as keyof typeof operationConfig] || {
@@ -134,7 +134,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'location_name',
         accessorFn: (row) => row.location?.name,
-        header: 'Location',
+        header: 'Lokasi',
         meta: {
             filterVariant: 'select',
         },
@@ -156,7 +156,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         accessorKey: 'operation_date',
         header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Operation Date" />;
+            return <DataTableColumnHeader column={column} title="Tanggal & Waktu" />;
         },
         cell: ({ row }) => {
             const date = new Date(row.original.operation_date);
@@ -211,7 +211,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'User',
         accessorFn: (row) => row.user?.name || 'System',
-        header: 'Performed By',
+        header: 'By',
         enableHiding: true,
     },
     {
@@ -219,7 +219,6 @@ export const columns: ColumnDef<OperationIndex>[] = [
         cell: ({ row }) => {
             const operation = row.original;
             const viewOperation = route('operations.show', { id: operation.id });
-            const editOperation = route('operations.edit', { id: operation.id });
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -232,12 +231,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewOperation} className={'w-full'}>
-                                View Operation
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                            <Link href={editOperation} className={'w-full'}>
-                                Edit Operation
+                                View Detail
                             </Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
