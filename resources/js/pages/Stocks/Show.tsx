@@ -45,7 +45,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
     const [activeTab, setActiveTab] = useState<'overview' | 'log_history'>('overview');
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showAdjustDialog, setShowAdjustDialog] = useState(false);
-    const [minimumQuantity, setMinimumQuantity] = useState(stock?.minimum_quantity || 0);
+    const [minimumQuantity, setMinimumQuantity] = useState(stock?.batch?.minimum_quantity || 0);
     const [hasLoadedOps, setHasLoadedOps] = useState(false);
     useEffect(() => {
         // Reload operations only once when Operations tab becomes active
@@ -169,20 +169,22 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                 Kembali ke Daftar Stok
                             </Link>
                         </Button>
-                        <div className="space-y-1.5">
+                        {/*<div className="space-y-1.5">
                             <h1 className="mt-4 text-2xl font-bold">{stock?.product?.name}</h1>
                             <Separator orientation="vertical" />
                             <h2 className="text-xl font-normal">{stock?.batch?.batch_number}</h2>
                             <p className="text-muted-foreground mt-2">View stock detail and operation history</p>
-                        </div>
+                        </div>*/}
                     </div>
 
                     <div>
                         <DropdownMenu modal={false}>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions</Button>
+                            <DropdownMenuTrigger asChild className="px-4 py-2 hover:cursor-pointer">
+                                <Button variant="outline" size={'lg'} className="tab-index-0">
+                                    Actions
+                                </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="space-y-2 p-2">
                                 <DropdownMenuLabel>Action</DropdownMenuLabel>
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>Edit Minimum Qty</DropdownMenuItem>
@@ -195,6 +197,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                     <DropdownMenuItem onClick={handleCreateOperation(stock.id, 'outbound')}>Stock Out</DropdownMenuItem>
                                     <DropdownMenuItem onClick={handleCreateOperation(stock.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
                                 </DropdownMenuGroup>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuLabel>Kartu Stock</DropdownMenuLabel>
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem asChild>
@@ -217,7 +220,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                         name="minimum_quantity"
                                         type="number"
                                         className="w-full rounded-md border px-3 py-2"
-                                        defaultValue={stock?.minimum_quantity}
+                                        defaultValue={stock?.batch?.minimum_quantity}
                                         onChange={(e) => setMinimumQuantity(e.target.valueAsNumber)}
                                         min={0}
                                         step={0.1}
@@ -254,7 +257,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                         quantity={stock?.quantity}
                         unit={stock?.unit}
                         status={stockStatus}
-                        minimum_quantity={stock?.minimum_quantity}
+                        minimum_quantity={stock?.batch?.minimum_quantity}
                     />
                     {/* <OperationHistoryTable operations={operations} /> */}
                 </div>
