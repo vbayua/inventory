@@ -120,11 +120,12 @@ class StockController extends Controller
         ->get();
         // $operations = Inertia::lazy(fn() => $operationsData);
 
-        $stockQuery = Stock::where('product_id', $stock->product_id)
-            ->where('batch_id', $stock->batch_id);
+        $totalLocations = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)->distinct('location_id')->count();
+        $totalStockQuantityAcrossLocations = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->sum('quantity');
 
-        $totalLocations = $stockQuery->distinct('location_id')->count();
-        $totalStockQuantityAcrossLocations = $stockQuery->sum('quantity');
 
         return Inertia('Stocks/StockCard', [
             'stock' => $stock->load([

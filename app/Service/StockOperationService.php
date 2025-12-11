@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Models\Batch;
 use App\Models\Location;
 use App\Models\Operation;
 use App\Models\Product;
@@ -178,6 +179,47 @@ class StockOperationService
                 'decrement',
                 $stockData['with_container'] ?? false
             );
+
+            return $operation;
+        });
+    }
+
+    public function createReturnOperation(Product|int $product, Stock|array $stockData, float $returnQuantity, string $unit, string $remarks = 'Return Operation', $operationDate = null)
+    {
+        return DB::transaction(function () use ($product, $stockData, $returnQuantity, $unit, $remarks, $operationDate) {
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+            $stockId = $stockData instanceof Stock ? $stockData->id : ($stockData['id'] ?? null);
+
+            $operation = $this->createOperation(
+                'return',
+                $product,
+                $stockData,
+                $returnQuantity,
+                $unit,
+                $remarks,
+                $operationDate
+            );
+
+            if ($stockId) {
+                $this->setStock(
+                    $product,
+                    $stockData,
+                    $returnQuantity,
+                    $unit,
+                    'increment',
+                    $stockData['with_container'] ?? false
+                );
+            } else {
+                // If stock record doesn't exist, create it
+                $this->setStock(
+                    $product,
+                    $stockData,
+                    $returnQuantity,
+                    $unit,
+                    'set',
+                    $stockData['with_container'] ?? false
+                );
+            }
 
             return $operation;
         });
