@@ -79,7 +79,7 @@ class OperationController extends Controller
         $this->authorize('create', Operation::class);
 
         $validatedData = $request->validate([
-            'operationType' => 'required|in:inbound,outbound,adjustment,transfer',
+            'operationType' => 'required|in:inbound,outbound,adjustment,transfer,return',
             'adjustmentType' => 'required|in:addition,subtraction',
             'product' => 'required|exists:products,id',
             'location' => 'required_unless:operationType,transfer|exists:locations,id',
@@ -188,8 +188,31 @@ class OperationController extends Controller
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
             );
-
-            dd($test);
+        } else if($operationType === 'return') {
+            if(!$stockData)
+            {
+                $stockData = [
+                    'location_id' => $validatedData['location'],
+                    'batch_id' => $validatedData['batch'],
+                    'quantity' => $operationQuantity,
+                    'minimum_quantity' => 0,
+                    'unit' => $validatedData['unit'],
+                    'status' => 'available',
+                    'remarks' => 'Initial stock created from return operation',
+                    'date' => $validatedData['date'],
+                    'with_container' => $validatedData['with_container'] ?? false,
+                    'container_quantity' => $validatedData['container_quantity'] ?? null,
+                    'container_unit' => $validatedData['container_unit'] ?? null,
+                ];
+            }
+            $operationService->createReturnOperation(
+                $stockData->product ?? $validatedData['product'],
+                $stockData,
+                $operationQuantity,
+                $validatedData['unit'],
+                $validatedData['remarks'] ?? '',
+                $validatedData['date'],
+            );
 
         } else {
             return redirect()->back()->withErrors(['operationType' => 'Invalid operation type.']);
