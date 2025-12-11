@@ -35,18 +35,12 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           }))
         : [];
 
-    const batchColumn = table.getColumn('batch_number')
-        ? Array.from(table.getColumn('batch_number')!.getFacetedUniqueValues().keys()).map((value: string) => ({
-              label: value,
-              value: value,
-          }))
-        : [];
-
     const operationType = [
         { label: 'Initial', value: 'initial' },
         { label: 'Inbound', value: 'inbound' },
         { label: 'Oubound', value: 'outbound' },
         { label: 'Transfer', value: 'transfer' },
+        { label: 'Return', value: 'return' },
         { label: 'Adjustment', value: 'adjustment' },
     ];
 
@@ -59,8 +53,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
 
     const productFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...productColumn];
 
-    const batchFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...batchColumn];
-
     const operationTypeFacetedFilter: Options[] = [{ label: 'All', value: '' }, ...operationType];
 
     const handleReset = () => {
@@ -71,9 +63,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                {table.getColumn('batch_number') && (
-                    <DataTableFacetedFilter column={table.getColumn('batch_number')} title="Batch" options={batchFacetedFilter} />
-                )}
                 {table.getColumn('operation_type') && (
                     <DataTableFacetedFilter column={table.getColumn('operation_type')} title="Operation Type" options={operationTypeFacetedFilter} />
                 )}

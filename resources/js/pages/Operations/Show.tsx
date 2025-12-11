@@ -88,6 +88,14 @@ export default function Show({ operation }: { operation: Operation }) {
             icon: ArrowDownUp,
             prefix: '-',
         },
+        return: {
+            id: 'return',
+            label: 'RETURN',
+            color: 'bg-cyan-100 text-cyan-800',
+            variant: 'default' as const,
+            icon: ArrowDown,
+            prefix: '+',
+        },
     };
     const breadcrumbs: BreadcrumbItem[] = [
         {

@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowDown, ArrowDownUp, ArrowUp, Edit2, LogIn, MoreHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowDownUp, Edit2, LogIn, Minus, MoreHorizontal, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -38,7 +38,7 @@ const operationConfig = {
         label: 'IN',
         color: 'bg-green-200 text-green-800',
         variant: 'default' as const,
-        icon: ArrowDown,
+        icon: Plus,
         prefix: '+',
     },
     outbound: {
@@ -46,15 +46,15 @@ const operationConfig = {
         label: 'OUT',
         color: 'bg-red-200 text-red-800',
         variant: 'secondary' as const,
-        icon: ArrowUp,
+        icon: Minus,
         prefix: '-',
     },
     initial: {
         id: 'initial',
-        label: 'IN',
+        label: 'INITIAL',
         color: 'bg-purple-200 text-purple-800',
         variant: 'secondary' as const,
-        icon: ArrowDown,
+        icon: Plus,
         prefix: '+',
     },
     adjustment: {
@@ -87,12 +87,20 @@ const operationConfig = {
         icon: ArrowDownUp,
         prefix: '-',
     },
+    return: {
+        id: 'return',
+        label: 'RETURN',
+        color: 'bg-cyan-100 text-cyan-800',
+        variant: 'default' as const,
+        icon: ArrowDown,
+        prefix: '+',
+    },
 };
 
 export const columns: ColumnDef<OperationIndex>[] = [
     {
         accessorKey: 'operation_date',
-        header: 'Operation Date',
+        header: 'Tanggal Operasi',
         cell: ({ row }) => {
             const date = new Date(row.original.operation_date);
             const localeDateString = date.toLocaleDateString('id-ID', {
@@ -146,7 +154,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'product_name',
         accessorFn: (row) => row.product?.name,
-        header: 'Product Name',
+        header: 'Nama Product',
         meta: {
             filterVariant: 'select',
         },
@@ -154,14 +162,14 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'batch_number',
         accessorFn: (row) => row.batch?.batch_number,
-        header: 'Batch Number',
+        header: 'No. Batch',
         meta: {
             filterVariant: 'select',
         },
     },
     {
         accessorKey: 'operation_type',
-        header: 'Operation Type',
+        header: 'Jenis Operasi',
         cell: ({ row }) => {
             const operationType = row.original.operation_type;
             const config = operationConfig[operationType as keyof typeof operationConfig] || {
@@ -201,7 +209,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'location_name',
         accessorFn: (row) => row.location?.name,
-        header: 'Location',
+        header: 'Lokasi',
         meta: {
             filterVariant: 'select',
         },
@@ -211,7 +219,7 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'User',
         accessorFn: (row) => row.user?.name || 'System',
-        header: 'Performed By',
+        header: 'By',
         enableHiding: true,
     },
     {

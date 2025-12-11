@@ -48,6 +48,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         { label: 'Inbound', value: 'inbound' },
         { label: 'Oubound', value: 'outbound' },
         { label: 'Transfer', value: 'transfer' },
+        { label: 'Return', value: 'return' },
         { label: 'Adjustment', value: 'adjustment' },
     ];
     const operationDateTemplate = [

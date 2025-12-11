@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowDown, ArrowDownUp, ArrowUp, Edit2, LogIn, MoreHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowDownUp, Edit2, LogIn, Minus, MoreHorizontal, Plus } from 'lucide-react';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -35,7 +35,7 @@ const operationConfig = {
         label: 'IN',
         color: 'bg-green-200 text-green-800',
         variant: 'default' as const,
-        icon: ArrowDown,
+        icon: Plus,
         prefix: '+',
     },
     outbound: {
@@ -43,15 +43,15 @@ const operationConfig = {
         label: 'OUT',
         color: 'bg-red-200 text-red-800',
         variant: 'secondary' as const,
-        icon: ArrowUp,
+        icon: Minus,
         prefix: '-',
     },
     initial: {
         id: 'initial',
-        label: 'IN',
+        label: 'INITIAL',
         color: 'bg-purple-200 text-purple-800',
         variant: 'secondary' as const,
-        icon: ArrowDown,
+        icon: Plus,
         prefix: '+',
     },
     adjustment: {
@@ -84,9 +84,72 @@ const operationConfig = {
         icon: ArrowDownUp,
         prefix: '-',
     },
+    return: {
+        id: 'return',
+        label: 'RETURN',
+        color: 'bg-cyan-100 text-cyan-800',
+        variant: 'default' as const,
+        icon: ArrowDown,
+        prefix: '+',
+    },
 };
 
 export const columns: ColumnDef<OperationIndex>[] = [
+    {
+        accessorKey: 'operation_date',
+        header: ({ column }) => {
+            return <DataTableColumnHeader column={column} title="Tanggal Operasi" />;
+        },
+        cell: ({ row }) => {
+            const date = new Date(row.original.operation_date);
+            const localeDateString = date.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+            return <span className="text-muted-foreground text-sm">{localeDateString}</span>;
+        },
+        filterFn: (row, id, value) => {
+            // value is expected to be a DateRange from react-day-picker: { from?: Date; to?: Date }
+            if (!value || (!value.from && !value.to)) {
+                return true;
+            }
+            const rowDate = new Date(row.original.operation_date);
+
+            const normalizeStartOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(0, 0, 0, 0);
+                return nd;
+            };
+
+            const normalizeEndOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(23, 59, 59, 999);
+                return nd;
+            };
+
+            const hasFrom = !!value.from;
+            const hasTo = !!value.to;
+
+            if (hasFrom && hasTo) {
+                const start = normalizeStartOfDay(value.from as Date);
+                const end = normalizeEndOfDay(value.to as Date);
+                return rowDate >= start && rowDate <= end;
+            }
+            if (hasFrom) {
+                const start = normalizeStartOfDay(value.from as Date);
+                return rowDate >= start;
+            }
+            if (hasTo) {
+                const end = normalizeEndOfDay(value.to as Date);
+                return rowDate <= end;
+            }
+            return true;
+        },
+    },
     {
         id: 'batch_number',
         accessorFn: (row) => row.batch?.batch_number,
@@ -151,61 +214,6 @@ export const columns: ColumnDef<OperationIndex>[] = [
                     {row.original.remarks ?? '-'}
                 </div>
             );
-        },
-    },
-    {
-        accessorKey: 'operation_date',
-        header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Tanggal & Waktu" />;
-        },
-        cell: ({ row }) => {
-            const date = new Date(row.original.operation_date);
-            const localeDateString = date.toLocaleDateString('id-ID', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-            });
-            return <span className="text-muted-foreground text-sm">{localeDateString}</span>;
-        },
-        filterFn: (row, id, value) => {
-            // value is expected to be a DateRange from react-day-picker: { from?: Date; to?: Date }
-            if (!value || (!value.from && !value.to)) {
-                return true;
-            }
-            const rowDate = new Date(row.original.operation_date);
-
-            const normalizeStartOfDay = (d: Date) => {
-                const nd = new Date(d);
-                nd.setHours(0, 0, 0, 0);
-                return nd;
-            };
-
-            const normalizeEndOfDay = (d: Date) => {
-                const nd = new Date(d);
-                nd.setHours(23, 59, 59, 999);
-                return nd;
-            };
-
-            const hasFrom = !!value.from;
-            const hasTo = !!value.to;
-
-            if (hasFrom && hasTo) {
-                const start = normalizeStartOfDay(value.from as Date);
-                const end = normalizeEndOfDay(value.to as Date);
-                return rowDate >= start && rowDate <= end;
-            }
-            if (hasFrom) {
-                const start = normalizeStartOfDay(value.from as Date);
-                return rowDate >= start;
-            }
-            if (hasTo) {
-                const end = normalizeEndOfDay(value.to as Date);
-                return rowDate <= end;
-            }
-            return true;
         },
     },
     {

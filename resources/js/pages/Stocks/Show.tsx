@@ -27,7 +27,7 @@ import { ArrowDown, ArrowDownUp, ArrowLeft, ArrowUp, Edit2, LogIn } from 'lucide
 import { useEffect, useState } from 'react';
 
 type StockStatus = 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
-type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
+type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
 
 export default function Show({ stock, operations }: { stock: any; operations: any[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -125,6 +125,14 @@ export default function Show({ stock, operations }: { stock: any; operations: an
             variant: 'default' as const,
             icon: ArrowDownUp,
             prefix: '-',
+        },
+        return: {
+            id: 'return',
+            label: 'RETURN',
+            color: 'bg-cyan-100 text-cyan-800',
+            variant: 'default' as const,
+            icon: ArrowDown,
+            prefix: '+',
         },
     };
     const formatRelativeTime = (dateString: string) => {
