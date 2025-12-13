@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowDownUp, ArrowLeft, ArrowUp, Edit2, LogIn } from 'lucide-react';
+import { ArrowDown, ArrowDownUp, ArrowLeft, ArrowUp, Download, Edit2, LogIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type StockStatus = 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
@@ -186,6 +186,31 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                     </div>
 
                     <div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="secondary" size="sm">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Export
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem asChild>
+                                        <a href={route('stocks.export-pdf', { stock: stock.id, range: 'all' })}>All</a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a href={route('stocks.export-pdf', { stock: stock.id, range: '90d' })}>90 Days</a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a href={route('stocks.export-pdf', { stock: stock.id, range: '180d' })}>180 Days</a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a href={route('stocks.export-pdf', { stock: stock.id, range: '1y' })}>1 Year</a>
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild className="px-4 py-2 hover:cursor-pointer">
                                 <Button variant="outline" size={'lg'} className="tab-index-0">
