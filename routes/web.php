@@ -32,8 +32,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('stocks')->group(function () {
         Route::get('/', [\App\Http\Controllers\StockController::class, 'index'])->name('stocks.index');
         Route::get('/{stock}', [\App\Http\Controllers\StockController::class, 'show'])->name('stocks.show');
+        Route::get('/{stock}/export', [\App\Http\Controllers\StockController::class, 'exportStockCardByLocation'])->name('stocks.export');
+        Route::get('/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportPdf'])->name('stocks.export-pdf');
         Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
         Route::get('/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'stockCard'])->name('stocks.stock-card');
+        Route::get('/stock-card/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportStockCardPdf'])->name('stocks.stock-card.export-pdf');
+        Route::get('/export/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'exportStockCard'])->name('stocks.export.stock-card');
     });
 
     Route::prefix('stock-adjustments')->group(function () {
