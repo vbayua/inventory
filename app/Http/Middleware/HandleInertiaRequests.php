@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        $userIsLoggedIn = $request->user() !== null;
 
         return [
             ...parent::share($request),
@@ -45,8 +46,18 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'viewPermissions' => $userIsLoggedIn ? [
+                    'product' => $request->user()->hasPermission('product.viewAny') ?? false,
+                    'warehouse' => $request->user()->hasPermission('warehouse.viewAny') ?? false,
+                    'location' => $request->user()->hasPermission('location.viewAny') ?? false,
+                    'stock' => $request->user()->hasPermission('stock.viewAny') ?? false,
+                    'operation' => $request->user()->hasPermission('operation.viewAny') ?? false,
+                    'supplier' => $request->user()->hasPermission('supplier.viewAny') ?? false,
+                    'partner' => $request->user()->hasPermission('partner.viewAny') ?? false,
+                ] : [],
             ],
-            'ziggy' => fn(): array => [
+            'uri' => $request->route()?->uri,
+            'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
@@ -55,7 +66,7 @@ class HandleInertiaRequests extends Middleware
                 return [
                     'success' => session('success'),
                 ];
-            }
+            },
         ];
     }
 }

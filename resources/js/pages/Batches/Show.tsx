@@ -1,96 +1,157 @@
-import ContainerLayout from "@/components/container-layout";
-import { buttonVariants } from "@/components/ui/button";
-import AppLayout from "@/layouts/app-layout";
-import { BreadcrumbItem } from "@/types";
-import { Head, Link } from "@inertiajs/react";
-
+import ContainerLayout from '@/components/container-layout';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
+import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft, CalendarCheck, CalendarClock, CalendarX, Hash, Package, Truck } from 'lucide-react';
 
 export default function Show({ batch }: { batch: any }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Batches',
-            href: route('batch.index')
+            title: 'List Batch',
+            href: route('batch.index'),
         },
         {
             title: String(batch.batch_number),
-            href: route('batch.show', batch.id)
-        }
-    ]
+            href: route('batch.show', batch.id),
+        },
+    ];
 
-    const createdDate = new Date(batch.created_at).toLocaleDateString('en-US', {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    })
-    const updatedDate = new Date(batch.updated_at).toLocaleDateString('en-US', {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    })
-    const manufactureDate = batch.manufacture_date ? new Date(batch.manufacture_date).toLocaleDateString('en-US', {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    }) : false;
+    const createdDate = new Date(batch.created_at).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+    });
+    const updatedDate = new Date(batch.updated_at).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+    });
+    const manufactureDate = batch.manufacture_date
+        ? new Date(batch.manufacture_date).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+          })
+        : '-';
 
-    const expiryDate = batch.expiry_date ? new Date(batch.expiry_date).toLocaleDateString('en-US', {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    }) : false;
+    const expiryDate = batch.expiry_date
+        ? new Date(batch.expiry_date).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+          })
+        : '-';
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Batch" />
 
             <ContainerLayout>
-                <div className="flex items-center justify-between mb-6">
-                    <div className="">
-                        <h3 className="text-base/7 font-semibold text-white">Batch Information</h3>
-                        <p className="mt-1 max-w-2xl text-sm/6 text-gray-400">Batch details and information.</p>
-                    </div>
-                    <div className="">
-                        <Link className={buttonVariants({ variant: 'secondary' })} href={route('batch.index')}>Back to index</Link>
-                    </div>
-                </div>
-                <div>
-                    <div className="mt-6 border-t border-white/10">
-                        <dl className="divide-y divide-white/10">
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Batch Number</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-2 sm:mt-0">{batch.batch_number}</dd>
-                            </div>
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Product Name</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-2 sm:mt-0">{batch.product.name}</dd>
-                            </div>
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Supplier</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-2 sm:mt-0">{batch.supplier.name}</dd>
-                            </div>
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Manufactured Date</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-1 sm:mt-0">{manufactureDate ? manufactureDate : "Not Set"}</dd>
-                                <dd className="mt-1 text-sm/6 text-blue-400 hover:text-gray-100 hover:cursor-pointer sm:col-span-1 sm:mt-0">
-                                    <Link href={route('batch.edit', { batch: batch.id, })}>Set Manufacture Date</Link>
-                                </dd>
-                            </div>
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Expiry Date</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-2 sm:mt-0">{expiryDate}</dd>
-                            </div>
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Last updated</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-2 sm:mt-0">{updatedDate}</dd>
-                            </div>
-                            <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                                <dt className="text-sm/6 font-medium text-gray-100">Created at</dt>
-                                <dd className="mt-1 text-sm/6 text-gray-400 hover:text-gray-100 sm:col-span-2 sm:mt-0">{createdDate}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
+                <div className="mb-4 flex items-center justify-between">
+                    <Link className={buttonVariants({ variant: 'link' })} href={route('batch.index')}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Kembali ke List Batch
+                    </Link>
 
+                    <div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="ml-auto">
+                                    Actions
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem>
+                                    <Link href={route('batch.edit', { id: batch.id })} className={'w-full'}>
+                                        Edit Batch
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-start justify-between">
+                            <CardTitle>Detail Batch</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <Hash className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">No. Batch</CardDescription>
+                                    <p className="font-medium">{batch.batch_number}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <Package className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">Nama Product</CardDescription>
+                                    <Button variant="link" className="p-0 font-medium" asChild>
+                                        <Link href={route('products.show', { id: batch.product_id })}>{batch.product?.name}</Link>
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <Truck className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">Supplier</CardDescription>
+                                    <p className="font-medium">{batch.supplier?.partner?.name}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <CalendarCheck className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">Tanggal Manufacture</CardDescription>
+                                    <p className="font-medium">{manufactureDate}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <CalendarX className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">Expiry Date</CardDescription>
+                                    <p className="font-medium">{expiryDate}</p>
+                                </div>
+                            </div>
+                            <Separator className="md:col-span-2" />
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <CalendarClock className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">Created Date</CardDescription>
+                                    <p className="font-medium">{createdDate}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="bg-primary/10 rounded-lg p-2">
+                                    <CalendarClock className="text-primary h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <CardDescription className="text-muted-foreground text-sm">Updated Date</CardDescription>
+                                    <p className="font-medium">{updatedDate}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </ContainerLayout>
         </AppLayout>
-    )
+    );
 }

@@ -22,6 +22,7 @@ class Stock extends Model
         'container_unit',
         'status',
         'remarks',
+        'user_id',
     ];
 
     public function product(): BelongsTo
@@ -37,5 +38,15 @@ class Stock extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

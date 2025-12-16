@@ -1,37 +1,39 @@
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { columns } from '@/components/products/columns';
-import { Head, Link } from '@inertiajs/react';
-import { buttonVariants } from '@/components/ui/button';
-import { DataTable } from '@/components/products/data-table';
-import { PlusIcon } from 'lucide-react';
 import ContainerLayout from '@/components/container-layout';
-
+import { columns } from '@/components/products/columns';
+import { DataTable } from '@/components/products/data-table';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import { SharedData, type BreadcrumbItem } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { PlusIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Products',
+        title: 'Product Master',
         href: '/products',
     },
 ];
 
-type SearchProductForm = {
-    name?: string
-}
 export default function Index({ products }: { products: any }) {
+    const { permissions } = usePage<SharedData>().props;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Products Lists" />
+            <Head title="Products Master" />
             <ContainerLayout>
-                <div className="flex items-center justify-between mb-4">
+                <div className="bg-warning mb-4 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold mb-4">Products</h1>
-                        <p className="text-sm text-muted-foreground mb-6">Manage your products here. You can create, edit, and delete products.</p>
+                        <h1 className="mb-4 text-2xl font-bold">Data Product Master</h1>
+                        <p className="text-muted-foreground mb-6 text-sm">List data product master.</p>
                     </div>
-                    <Link className={buttonVariants({ variant: 'default' })} href={`/products/create`}>
-                        <PlusIcon className='w-4 h-4 mr-2' />
-                        New Product
-                    </Link>
+                    {permissions.create && (
+                        <Button variant={'default'} size={'lg'} asChild>
+                            <Link href={`/products/create`} className="text-primary text-lg font-medium">
+                                <PlusIcon className="mr-2 h-4 w-4" />
+                                Register Product
+                            </Link>
+                        </Button>
+                    )}
                 </div>
                 <DataTable columns={columns} data={products} clientSide={true} />
             </ContainerLayout>

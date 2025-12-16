@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Unit;
 use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\UpdateUnitRequest;
+use App\Models\Unit;
+use App\Rules\Permissions\Product\ProductPermissions;
 use Inertia\Inertia;
 
 class UnitController extends Controller
@@ -12,10 +13,11 @@ class UnitController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(ProductPermissions $permissions)
     {
         return Inertia::render('Units/Index', [
             'units' => Unit::all(),
+            $permissions,
         ]);
     }
 

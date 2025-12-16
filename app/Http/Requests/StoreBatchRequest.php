@@ -27,12 +27,14 @@ class StoreBatchRequest extends FormRequest
             'product_id' => ['required', 'exists:products,id'],
             'manufacture_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:manufacture_date'],
+            'operation_date' => ['nullable', 'date'],
+            'minimum_quantity' => ['nullable', 'integer', 'min:0'],
             'supplier_id' => [
                 'required',
                 'integer',
                 'exists:suppliers,id',
-                new SupplierBelongsToProduct((int) $this->input('product_id'))
-            ]
+                new SupplierBelongsToProduct((int) $this->input('product_id')),
+            ],
         ];
     }
 }

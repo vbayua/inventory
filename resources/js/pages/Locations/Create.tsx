@@ -1,76 +1,74 @@
+import ContainerFormLayout from '@/components/container-form-layout';
+import InputError from '@/components/input-error';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { FormEventHandler, useRef } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import InputError from '@/components/input-error';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ContainerFormLayout from '@/components/container-form-layout';
-
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Locations',
+        title: 'List Lokasi',
         href: '/location',
     },
     {
-        title: 'Create New Location',
+        title: 'Register Lokasi Baru',
         href: '/location/create',
     },
 ];
 type CreateLocationForm = {
-    name?: string,
-    warehouse_id?: string,
-}
+    name?: string;
+    warehouse_id?: string;
+};
 export default function Create({ warehouses }: { warehouses: any[] }) {
-
-    const locationName = useRef<HTMLInputElement>(null)
+    const locationName = useRef<HTMLInputElement>(null);
     const { data, setData, post, reset, processing, errors } = useForm<Required<CreateLocationForm>>({
         name: '',
         warehouse_id: '',
-    })
+    });
 
     const createLocation: FormEventHandler = (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
         post(route('location.store'), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                reset()
+                reset();
             },
             onError: (errors) => {
                 if (errors.name) {
-                    reset('name')
-                    locationName.current?.focus()
+                    reset('name');
+                    locationName.current?.focus();
                 }
-            }
-        })
-    }
+            },
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create New Location" />
             <ContainerFormLayout>
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex items-center justify-between">
                     <div className="">
-                        <h1 className="text-2xl font-bold mb-4">Create New Location</h1>
-                        <p className="text-sm text-muted-foreground mb-6">Create a new location to manage your inventory.</p>
+                        <h1 className="mb-4 text-2xl font-bold">Register Lokasi Baru</h1>
+                        <p className="text-muted-foreground mb-6 text-sm">Tambahkan data lokasi</p>
                     </div>
                     <div className="">
                         <Link className={buttonVariants({ variant: 'secondary' })} href={`/location`}>
-                            Back to Locations
+                            Kembali ke daftar lokasi
                         </Link>
                     </div>
                 </div>
-                <form onSubmit={createLocation} className='space-y-6'>
-                    <div className='grid gap-2'>
-                        <Label htmlFor='warehouse'>Warehouse</Label>
+                <form onSubmit={createLocation} className="space-y-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="warehouse">Gudang</Label>
                         <Select onValueChange={(value) => setData('warehouse_id', value)} value={data.warehouse_id}>
-                            <SelectTrigger className='w-full'>
-                                <SelectValue placeholder='Select a warehouse' />
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Pilih gudang" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
@@ -84,25 +82,27 @@ export default function Create({ warehouses }: { warehouses: any[] }) {
                         </Select>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor='name'>Location Name</Label>
+                        <Label htmlFor="name">Nama Lokasi</Label>
 
                         <Input
-                            id='name'
+                            id="name"
                             ref={locationName}
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            className='mt-1 block w-full'
-                            placeholder='Location Name'
+                            className="mt-1 block w-full"
+                            placeholder="Nama Lokasi"
                         />
 
                         <InputError message={errors.name} />
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <Button disabled={processing}>Create Location</Button>
+                        <Button disabled={processing} variant={'default'} className="hover:cursor-pointer" type="submit">
+                            Save
+                        </Button>
                     </div>
                 </form>
             </ContainerFormLayout>
-        </AppLayout >
+        </AppLayout>
     );
 }

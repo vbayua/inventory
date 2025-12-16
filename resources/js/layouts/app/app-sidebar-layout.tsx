@@ -9,17 +9,17 @@ import { useEffect, type PropsWithChildren } from 'react';
 import { toast } from 'sonner';
 
 export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
-    const { flash } = usePage().props as { flash?: { success?: string; error?: string; } }
-    const success = flash?.success?.trim()
-    const error = flash?.error?.trim()
+    const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
+    const success = flash?.success?.trim();
+    const error = flash?.error?.trim();
 
     useEffect(() => {
         if (success) {
-            toast.success(success, { id: 'flash-success' })
+            toast.success(success, { id: 'flash-success' });
         } else if (error) {
-            toast.error(error, { id: 'flash-error' })
+            toast.error(error, { id: 'flash-error' });
         }
-    }, [success, error])
+    }, [success, error]);
     return (
         <AppShell variant="sidebar">
             <AppSidebar />
@@ -27,7 +27,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
             </AppContent>
-            <Toaster position={'bottom-right'} richColors closeButton />
+            <Toaster position={'top-center'} richColors closeButton />
         </AppShell>
     );
 }

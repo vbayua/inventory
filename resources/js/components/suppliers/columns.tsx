@@ -6,9 +6,15 @@ import { Link, router } from '@inertiajs/react'
 import { toast } from 'sonner'
 import { DataTableColumnHeader } from '../data-table-column-header'
 
+type Partner = {
+    id: number;
+    name: string;
+}
+
 type SupplierIndex = {
     id: number;
     name: string;
+    partner: Partner;
     created_at: string;
     updated_at: string;
 }
@@ -26,7 +32,7 @@ export const columns: ColumnDef<SupplierIndex>[] = [
         },
         cell: ({ row }) => {
             const id = row.original.id;
-            const name = row.original.name;
+            const name = row.original.partner?.name;
             return (
                 <Link href={route('supplier.show', id)}>
                     {name}

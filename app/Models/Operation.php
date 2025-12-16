@@ -11,11 +11,11 @@ class Operation extends Model
     /** @use HasFactory<\Database\Factories\OperationFactory> */
     use HasFactory;
 
-    protected $fillable = ['operation_type', 'product_id', 'batch_id', 'location_id', 'quantity', 'operation_date', 'remarks', 'unit'];
+    protected $fillable = ['operation_type', 'product_id', 'batch_id', 'location_id', 'quantity', 'operation_date', 'remarks', 'unit', 'user_id'];
 
     protected $casts = [
         'operation_type' => 'string',
-        'operation_date' => 'date',
+        'operation_date' => 'datetime',
     ];
 
     public function product(): BelongsTo
@@ -31,5 +31,10 @@ class Operation extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

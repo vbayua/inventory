@@ -12,14 +12,18 @@ class Unit extends Model
     use HasFactory;
 
     protected $primaryKey = 'name';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $fillable = [
         'name',
         'base_unit',
         'unit_type',
         'conversion_to_base',
     ];
+
     protected $casts = [
         'conversion_to_base' => 'float',
     ];
@@ -45,7 +49,7 @@ class Unit extends Model
             Cache::forget("unit:name:{$current}");
 
             // If renamed, forget the old key
-            if (!empty($unit->old_name) && $unit->old_name !== $current) {
+            if (! empty($unit->old_name) && $unit->old_name !== $current) {
                 Cache::forget("unit:name:{$unit->old_name}");
             }
         });

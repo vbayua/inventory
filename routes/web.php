@@ -8,9 +8,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
 
     Route::prefix('operations')->group(function () {
         Route::get('/', [\App\Http\Controllers\OperationController::class, 'index'])->name('operations.index');
@@ -31,11 +29,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{batch}', [\App\Http\Controllers\BatchController::class, 'update'])->name('batch.update');
     });
 
-    Route::resource('stocks', \App\Http\Controllers\StockController::class);
+    Route::prefix('stocks')->group(function () {
+        Route::get('/', [\App\Http\Controllers\StockController::class, 'index'])->name('stocks.index');
+        Route::get('/{stock}', [\App\Http\Controllers\StockController::class, 'show'])->name('stocks.show');
+        Route::get('/{stock}/export', [\App\Http\Controllers\StockController::class, 'exportStockCardByLocation'])->name('stocks.export');
+        Route::get('/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportPdf'])->name('stocks.export-pdf');
+        Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
+        Route::get('/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'stockCard'])->name('stocks.stock-card');
+        Route::get('/stock-card/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportStockCardPdf'])->name('stocks.stock-card.export-pdf');
+        Route::get('/export/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'exportStockCard'])->name('stocks.export.stock-card');
+    });
+
+    Route::prefix('stock-adjustments')->group(function () {
+        Route::get('/', [\App\Http\Controllers\StockAdjustmentController::class, 'index'])->name('stock-adjustments.index');
+        Route::get('/create', [\App\Http\Controllers\StockAdjustmentController::class, 'create'])->name('stock-adjustments.create');
+        Route::post('/', [\App\Http\Controllers\StockAdjustmentController::class, 'store'])->name('stock-adjustments.store');
+        Route::get('/{stockAdjustment}', [\App\Http\Controllers\StockAdjustmentController::class, 'show'])->name('stock-adjustments.show');
+    });
+
+    Route::prefix('partners')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PartnerController::class, 'index'])->name('partners.index');
+        Route::get('/create', [\App\Http\Controllers\PartnerController::class, 'create'])->name('partners.create');
+        Route::post('/', [\App\Http\Controllers\PartnerController::class, 'store'])->name('partners.store');
+        Route::get('/{partner}', [\App\Http\Controllers\PartnerController::class, 'show'])->name('partners.show');
+        Route::get('/{partner}/edit', [\App\Http\Controllers\PartnerController::class, 'edit'])->name('partners.edit');
+        Route::put('/{partner}', [\App\Http\Controllers\PartnerController::class, 'update'])->name('partners.update');
+    });
+
+    Route::prefix('admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.index');
+        Route::get('/users', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.users.index');
+        Route::get('/users/create', [\App\Http\Controllers\AdminController::class, 'create'])->name('admin.users.create');
+        Route::post('/users', [\App\Http\Controllers\AdminController::class, 'store'])->name('admin.users.store');
+        Route::get('/users/{user}', [\App\Http\Controllers\AdminController::class, 'show'])->name('admin.users.show');
+        Route::get('/users/{user}/edit', [\App\Http\Controllers\AdminController::class, 'edit'])->name('admin.users.edit');
+        Route::put('/users/{user}', [\App\Http\Controllers\AdminController::class, 'update'])->name('admin.users.update');
+        Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroy'])->name('admin.users.destroy');
+    });
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
-require __DIR__ . '/products.php';
-require __DIR__ . '/suppliers.php';
-require __DIR__ . '/warehouses.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';
+require __DIR__.'/products.php';
+require __DIR__.'/suppliers.php';
+require __DIR__.'/warehouses.php';

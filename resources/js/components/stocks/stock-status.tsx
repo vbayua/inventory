@@ -1,30 +1,27 @@
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, Clock, Package } from 'lucide-react';
-export default function StockStatus({ stats }: {
+export default function StockStatus({
+    stats,
+}: {
     stats: {
         total_items: number;
         total_locations: number;
         available_stocks: number;
         low_stock_stocks: number;
         out_of_stock_stocks: number;
-    }
+    };
 }) {
     // console.log('stats', stats);
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-md font-medium">Total Items</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-md font-medium">Jumlah Item Stok</CardTitle>
+                    <Package className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-bold">{stats.total_items}</div>
-                    <p className="text-xs text-muted-foreground mt-2">Across {stats.total_locations} locations</p>
+                    <p className="text-muted-foreground mt-2 text-xs"> Dari {stats.total_locations} locations</p>
                 </CardContent>
             </Card>
 
@@ -35,7 +32,7 @@ export default function StockStatus({ stats }: {
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-bold">{stats.available_stocks}</div>
-                    <p className="text-xs text-muted-foreground mt-2">Items available</p>
+                    <p className="text-muted-foreground mt-2 text-xs">Items available</p>
                 </CardContent>
             </Card>
 
@@ -46,7 +43,7 @@ export default function StockStatus({ stats }: {
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-bold">{stats.low_stock_stocks}</div>
-                    <p className="text-xs text-muted-foreground mt-2">Need restocking</p>
+                    <p className="text-muted-foreground mt-2 text-xs">Need restocking</p>
                 </CardContent>
             </Card>
 
@@ -57,9 +54,9 @@ export default function StockStatus({ stats }: {
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-bold">{stats.out_of_stock_stocks}</div>
-                    <p className="text-xs text-muted-foreground mt-2">Urgent attention needed</p>
+                    <p className="text-muted-foreground mt-2 text-xs">Urgent attention needed</p>
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 }
