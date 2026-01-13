@@ -20,6 +20,14 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['product_id', 'batch_number'], 'idx_product_batch');
         });
+
+        Schema::table('stocks', function (Blueprint $table) {
+            $table->foreignId('batch_id')->nullable()->after('product_id')->constrained('batches')->onDelete('set null');
+        });
+
+        Schema::table('stock_adjustments', function (Blueprint $table) {
+            $table->foreignId('batch_id')->nullable()->after('product_id')->constrained('batches')->onDelete('set null');
+        });
     }
 
     /**
