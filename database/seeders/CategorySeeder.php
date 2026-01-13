@@ -12,47 +12,47 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Aromatics',
             'slug' => 'aromatics',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Emollients',
             'slug' => 'emollients',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Surfactants',
             'slug' => 'surfactants',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Preservatives',
             'slug' => 'preservatives',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Humectants',
             'slug' => 'humectants',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Emulsifiers',
             'slug' => 'emulsifiers',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Thickeners',
             'slug' => 'thickeners',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Essential Oils',
             'slug' => 'essential-oils',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Colorants',
             'slug' => 'colorants',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Fragrance Oils',
             'slug' => 'fragrance-oils',
         ]);
-        Category::factory()->create([
+        \App\Models\Category::create([
             'name' => 'Active Ingredients',
             'slug' => 'active-ingredients',
         ]);

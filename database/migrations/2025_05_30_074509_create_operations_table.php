@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->enum('operation_type', ['initial', 'inbound', 'outbound', 'transfer', 'adjustment'])->default('inbound');
             $table->foreignId('product_id')->constrained('products')->onDelete('no action');
-            $table->foreignId('location_id')->constrained('locations')->onDelete('set null');
-            $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('set null');
+            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
+            $table->foreignId('batch_id')->nullable()->constrained('batches')->nullOnDelete();
             $table->decimal('quantity', 10, 2)->default(0);
             $table->string('unit')->default('pcs'); // Assuming 'pcs' as the default unit
             $table->string('remarks')->nullable();
