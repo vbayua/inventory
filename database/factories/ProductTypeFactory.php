@@ -17,9 +17,9 @@ class ProductTypeFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word(),
+            'name' => $this->faker->word(),
             'description' => $this->faker->sentence(),
-            'type_code' => $this->faker->unique()->word(),
+            'type_code' => $this->faker->word(),
         ];
     }
 }
