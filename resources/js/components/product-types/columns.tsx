@@ -1,39 +1,21 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button, buttonVariants } from '../ui/button'
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
-import { Link, router } from '@inertiajs/react'
-import { toast } from 'sonner'
-import { DataTableColumnHeader } from '../data-table-column-header'
-
-type ProductType = {
-    id: number;
-    name: string;
-    description?: string;
-    type_code: string;
-    created_at: string;
-    updated_at: string;
-}
+import { ProductType } from '@/types/resources';
+import { Link } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { DataTableColumnHeader } from '../data-table-column-header';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 export const columns: ColumnDef<ProductType>[] = [
     {
-        accessorKey: "name",
+        accessorKey: 'name',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Product Type Name"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Product Type Name" />;
         },
         cell: ({ row }) => {
-            const productType = row.original
-            return (
-                <Link href={route('product-types.show', { id: productType.id })}>
-                    {productType.name}
-                </Link>
-            )
-        }
+            const productType = row.original;
+            return <Link href={route('product-types.show', { id: productType.id })}>{productType.name}</Link>;
+        },
     },
 
     // {
@@ -48,59 +30,49 @@ export const columns: ColumnDef<ProductType>[] = [
     //     },
     // },
     {
-        accessorKey: "created_at",
+        accessorKey: 'created_at',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Created At"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Created At" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.created_at)
+            const date = new Date(row.original.created_at ?? '');
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-            })
+            });
         },
         enableHiding: true,
         enableSorting: true,
         sortingFn: 'datetime',
     },
     {
-        accessorKey: "updated_at",
+        accessorKey: 'updated_at',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Updated At"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Updated At" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.updated_at)
+            const date = new Date(row.original.updated_at ?? '');
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
-            })
+                minute: '2-digit',
+            });
         },
         enableHiding: true,
         enableSorting: true,
         sortingFn: 'datetime',
     },
     {
-        id: "actions",
+        id: 'actions',
         cell: ({ row }) => {
-            const productType = row.original
-            const viewProductType = route('product-types.show', { id: productType.id })
-            const editProductType = route('product-types.edit', { id: productType.id })
+            const productType = row.original;
+            const viewProductType = route('product-types.show', { id: productType.id });
+            const editProductType = route('product-types.edit', { id: productType.id });
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -109,7 +81,7 @@ export const columns: ColumnDef<ProductType>[] = [
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
+                    <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewProductType} className={'w-full'}>
@@ -123,7 +95,7 @@ export const columns: ColumnDef<ProductType>[] = [
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
-        }
-    }
-]
+            );
+        },
+    },
+];

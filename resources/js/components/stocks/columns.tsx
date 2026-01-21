@@ -2,7 +2,6 @@ import { Link, router } from '@inertiajs/react';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
-import { toast } from 'sonner';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -60,32 +59,6 @@ type Stock = {
 };
 
 type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
-
-const handleCopyBatchNumber = (batchNumber: string) => {
-    return function () {
-        navigator.clipboard
-            .writeText(batchNumber)
-            .then(() => {
-                toast.success('Batch number copied to clipboard');
-            })
-            .catch(() => {
-                toast.error('Failed to copy batch number');
-            });
-    };
-};
-
-const handleViewStock = (id: number, product_name: any) => {
-    return function () {
-        router.get(
-            'stocks.show',
-            { id },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
-    };
-};
 
 const handleCreateOperation = (id: number, operation_type: OperationType) => {
     return function () {
@@ -182,6 +155,7 @@ export const columns: ColumnDef<Stock>[] = [
         cell: ({ row }) => {
             const quantity = row.original.quantity;
             const unit = row.original.unit ?? '';
+            if (unit === 'pcs') return quantity !== undefined ? `${Number(quantity)} ${unit}` : '-';
             return quantity !== undefined ? `${quantity} ${unit}` : '-';
         },
     },
@@ -254,7 +228,8 @@ export const columns: ColumnDef<Stock>[] = [
             if (!value || (!value.from && !value.to)) {
                 return true;
             }
-            const rowDate = new Date(row.original.updated_at);
+
+            const rowDate = new Date(row.original.updated_at ?? '');
 
             const normalizeStartOfDay = (d: Date) => {
                 const nd = new Date(d);

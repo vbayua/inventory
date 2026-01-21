@@ -1,18 +1,12 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Unit } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { BadgeInfo, MoreHorizontal } from 'lucide-react';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-type UnitIndex = {
-    name: string;
-    conversion_to_base: number;
-    base_unit: string;
-    unit_type: string;
-};
-
-export const columns: ColumnDef<UnitIndex>[] = [
+export const columns: ColumnDef<Unit>[] = [
     {
         accessorKey: 'name',
         header: 'Unit Name',
