@@ -1,3 +1,4 @@
+import { Stock } from '@/types/resources';
 import { Link, router } from '@inertiajs/react';
 import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
@@ -6,61 +7,7 @@ import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-type ProductType = {
-    id: number;
-    name?: string;
-    type_code?: string;
-};
-
-type Partner = {
-    id: number;
-    name?: string;
-};
-type Supplier = {
-    id: number;
-    partner?: Partner;
-};
-
-type Product = {
-    id: number;
-    name?: string;
-    sku?: string;
-    product_type?: ProductType;
-};
-
-type Batch = {
-    id: number;
-    batch_number?: string;
-    supplier?: Supplier;
-};
-
-type Warehouse = {
-    id: number;
-    name?: string;
-};
-
-type Location = {
-    id: number;
-    name?: string;
-    warehouse?: Warehouse;
-};
-
-type Stock = {
-    id: number;
-    product?: Product;
-    location?: Location;
-    batch?: Batch;
-    status?: string;
-    quantity?: number;
-    unit?: string;
-    minimum_quantity?: number;
-    created_at?: string;
-    updated_at?: string;
-};
-
-type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
-
-const handleCreateOperation = (id: number, operation_type: OperationType) => {
+const handleCreateOperation = (id: number, operation_type: any) => {
     return function () {
         router.get(
             route('operations.create'),

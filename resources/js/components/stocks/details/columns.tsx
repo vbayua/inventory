@@ -1,103 +1,12 @@
-import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
-import { ArrowDown, ArrowDownUp, Edit2, LogIn, Minus, MoreHorizontal, Plus } from 'lucide-react';
-
+import operationConfig from '@/components/operations/config';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Operation } from '@/types/resources';
+import { Link } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
 
-type OperationIndex = {
-    id: number;
-    operation_type: string;
-    product: {
-        id: number;
-        [key: string]: any; // Adjust this type based on your warehouse structure
-    };
-    location: {
-        id: number;
-        [key: string]: any; // Adjust this type based on your warehouse structure
-    };
-    batch: {
-        id: number;
-        batch_number: string;
-        [key: string]: any; // Adjust this type based on your warehouse structure
-    };
-    user?: {
-        id: number;
-        name: string;
-        [key: string]: any; // Adjust this type based on your user structure
-    };
-    unit: string;
-    quantity: number;
-    created_at: string;
-    operation_date: string;
-};
-
-const operationConfig = {
-    inbound: {
-        id: 'inbound',
-        label: 'IN',
-        color: 'bg-green-200 text-green-800',
-        variant: 'default' as const,
-        icon: Plus,
-        prefix: '+',
-    },
-    outbound: {
-        id: 'outbound',
-        label: 'OUT',
-        color: 'bg-red-200 text-red-800',
-        variant: 'secondary' as const,
-        icon: Minus,
-        prefix: '-',
-    },
-    initial: {
-        id: 'initial',
-        label: 'INITIAL',
-        color: 'bg-purple-200 text-purple-800',
-        variant: 'secondary' as const,
-        icon: Plus,
-        prefix: '+',
-    },
-    adjustment: {
-        id: 'adjustment',
-        label: 'ADJ',
-        color: 'bg-yellow-100 text-yellow-800',
-        variant: 'outline' as const,
-        icon: Edit2,
-    },
-    transfer: {
-        id: 'transfer',
-        label: 'Transfer',
-        color: 'bg-indigo-100 text-indigo-800',
-        variant: 'default' as const,
-        icon: LogIn,
-    },
-    transfer_in: {
-        id: 'transfer_in',
-        label: 'TRANSFER IN',
-        color: 'bg-teal-100 text-teal-800',
-        variant: 'default' as const,
-        icon: ArrowDownUp,
-        prefix: '+',
-    },
-    transfer_out: {
-        id: 'transfer_out',
-        label: 'TRANSFER OUT',
-        color: 'bg-indigo-100 text-indigo-800',
-        variant: 'default' as const,
-        icon: ArrowDownUp,
-        prefix: '-',
-    },
-    return: {
-        id: 'return',
-        label: 'RETURN',
-        color: 'bg-cyan-100 text-cyan-800',
-        variant: 'default' as const,
-        icon: ArrowDown,
-        prefix: '+',
-    },
-};
-
-export const columns: ColumnDef<OperationIndex>[] = [
+export const columns: ColumnDef<Operation>[] = [
     {
         accessorKey: 'operation_date',
         header: 'Tanggal Operasi',

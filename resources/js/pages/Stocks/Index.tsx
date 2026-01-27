@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Stock } from '@/types/resources';
 import { Head, Link } from '@inertiajs/react';
 import { ChevronDown, Database, PlusIcon } from 'lucide-react';
 
@@ -23,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Index({ stocks, stats }: { stocks: any[]; stats: { total_items: number; total_locations: number } }) {
+export default function Index({ stocks, stats }: { stocks: Stock[]; stats: { total_items: number; total_locations: number } }) {
     const availableStocks = stocks.filter((stock) => stock.status === 'available').length;
     const lowStockStocks = stocks.filter((stock) => stock.status === 'low_stock').length;
     const outOfStockStocks = stocks.filter((stock) => stock.status === 'out_of_stock').length;

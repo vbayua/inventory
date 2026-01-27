@@ -22,14 +22,14 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Operation, Stock } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowDown, ArrowDownUp, ArrowLeft, ArrowUp, Download, Edit2, LogIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-type StockStatus = 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
 type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
 
-export default function Show({ stock, operations }: { stock: any; operations: any[] }) {
+export default function Show({ stock, operations }: { stock: Stock; operations: Operation[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Stock Index',
@@ -382,7 +382,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                             <div>
                                                 <p className="text-muted-foreground text-sm">Created At</p>
                                                 <p className="font-medium">
-                                                    {new Date(stock.created_at).toLocaleDateString(undefined, {
+                                                    {new Date(stock.created_at ?? '').toLocaleDateString(undefined, {
                                                         year: 'numeric',
                                                         month: 'long',
                                                         day: 'numeric',
@@ -399,7 +399,7 @@ export default function Show({ stock, operations }: { stock: any; operations: an
                                             <div>
                                                 <p className="text-muted-foreground text-sm">Last Updated At</p>
                                                 <p className="font-medium">
-                                                    {new Date(stock.updated_at).toLocaleDateString(undefined, {
+                                                    {new Date(stock.updated_at ?? '').toLocaleDateString(undefined, {
                                                         year: 'numeric',
                                                         month: 'long',
                                                         day: 'numeric',
