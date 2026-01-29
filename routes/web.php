@@ -36,7 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportPdf'])->name('stocks.export-pdf');
         Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
         Route::get('/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'stockCard'])->name('stocks.stock-card');
-        Route::get('/stock-card/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportStockCardPdf'])->name('stocks.stock-card.export-pdf');
+        Route::get('/stock-card/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'export'])->name('stocks.stock-card.export-pdf');
         Route::get('/export/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'exportStockCard'])->name('stocks.export.stock-card');
     });
 
@@ -66,10 +66,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/users/{user}', [\App\Http\Controllers\AdminController::class, 'update'])->name('admin.users.update');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroy'])->name('admin.users.destroy');
     });
-});
+
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/products.php';
 require __DIR__.'/suppliers.php';
 require __DIR__.'/warehouses.php';
+require __DIR__.'/purchase-orders.php';
