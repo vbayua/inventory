@@ -37,17 +37,12 @@ class OperationController extends Controller
         // Caches
         $this->authorize('create', Operation::class);
 
-        $stock = \App\Models\Stock::with(['product.unit'])
-            ->select([
-                'id',
-                'product_id',
-                'batch_id',
-                'location_id',
-                'quantity',
-                'unit',
-                'sku',
-            ])
-            ->get();
+        $stock = Stock::with([
+            'product:id,name,sku,unit',
+            'product.unit:name,base_unit',
+            'batch:id,product_id,batch_number,expiry_date',
+            'location:id,name'
+        ])->get();
         $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
         // // // Ensure products are unique by ID only the products
         // $stock = $stock->unique('batch_id')->values();
