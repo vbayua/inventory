@@ -70,14 +70,16 @@ class Product extends Model
     }
 
     public function getUnitTypeAttribute()
-    {
-        return $this->unit ? $this->unit->unit_type : null;
-    }
+        {
+            $unit = $this->getRelationValue('unit'); // explicitly fetch relation
+            return $unit ? $unit->unit_type : null;
+        }
 
-    public function getBaseUnitAttribute()
-    {
-        return $this->unit ? $this->unit->base_unit : null;
-    }
+        public function getBaseUnitAttribute()
+        {
+            $unit = $this->getRelationValue('unit'); // explicitly fetch relation
+            return $unit ? $unit->base_unit : null;
+        }
 
     public function getAllStockQty()
     {
