@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
+import { Batch, Product, Stock, Unit } from '@/types/resources';
 import { Head, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
@@ -43,16 +44,6 @@ type OperationForm = {
     destination_location?: string;
 };
 
-type Batch = {
-    id: number;
-    batch_number: string;
-};
-
-type Location = {
-    id: number;
-    name: string;
-};
-
 type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
 export default function Create({
     stocks,
@@ -63,11 +54,11 @@ export default function Create({
     stockQuery,
     operationType,
 }: {
-    stocks: any[];
-    products: any[];
+    stocks: Stock[];
+    products: Product[];
     locations: Location[];
-    batches: any[];
-    units: any[];
+    batches: Batch[];
+    units: Unit[];
     stockQuery?: any;
     operationType?: OperationType;
 }) {
@@ -80,6 +71,17 @@ export default function Create({
         }
         return acc;
     }, []);
+
+    const formatQuantity = (value: string, base_unit: string): string => {
+        const numberValue = parseFloat(value);
+        if (isNaN(numberValue)) return '0';
+
+        if (base_unit.toLowerCase() === 'item') {
+            return numberValue.toFixed(0);
+        }
+        return numberValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    };
+
     const quantityRef = useRef<HTMLInputElement>(null);
     const stockData = stockQuery;
     const locationId = operationType === 'inbound' ? '' : stockData?.location_id ? String(stockData.location_id) : '';
@@ -109,10 +111,8 @@ export default function Create({
     const currentStock = stocks.find(
         (stock) => stock.product_id && selectedProduct?.id && stock.batch_id === selectedBatch?.id && stock.location_id === parseInt(data.location),
     );
-
     const stockQuantity = currentStock?.quantity ?? 0;
-    const stockUnit = currentStock?.unit ?? 'units';
-
+    const stockUnit = currentStock?.unit;
     // Filter unit have the same base_unit as the selected product
     const productUnit = selectedProduct?.unit;
     const filteredUnits = productUnit ? units.filter((unit) => unit.base_unit === productUnit?.base_unit) : units;
@@ -455,7 +455,7 @@ export default function Create({
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-muted-foreground mt-1 text-sm">
-                                            {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
+                                            {currentStock && `In stock: ${Number(stockQuantity)} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
@@ -538,7 +538,7 @@ export default function Create({
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-muted-foreground mt-1 text-sm">
-                                            {currentStock && `In stock: ${stockQuantity} ${stockUnit}`}
+                                            {currentStock && `In stock: ${Number(stockQuantity)} ${stockUnit}`}
                                         </p>
                                     )}
                                 </div>
@@ -609,7 +609,7 @@ export default function Create({
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-muted-foreground mt-1 text-sm">
-                                            {currentStock && `In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`}
+                                            {currentStock && `In stock: ${Number(stockQuantity)} ${stockUnit || 'unit'}`}
                                         </p>
                                     )}
                                 </div>
@@ -678,7 +678,7 @@ export default function Create({
                                     </div>
                                     {selectedBatch && (
                                         <p className="text-muted-foreground mt-1 text-sm">
-                                            {currentStock && `In Stock: ${stockQuantity} ${productUnit?.name || 'units'}`}
+                                            {currentStock && `In Stock: ${Number(stockQuantity)} ${productUnit?.name || 'units'}`}
                                         </p>
                                     )}
                                 </div>

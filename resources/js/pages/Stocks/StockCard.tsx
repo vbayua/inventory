@@ -2,7 +2,7 @@ import ContainerLayout from '@/components/container-layout';
 import { columns } from '@/components/stocks/stock-card/columns';
 import { DataTable } from '@/components/stocks/stock-card/data-table';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -84,7 +84,7 @@ export default function StockCard({
                 <div className="mb-6 grid gap-1 md:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-xl">Nama Product</CardTitle>
+                            <CardTitle className="text-muted-foreground text-sm">Nama Product</CardTitle>
                         </CardHeader>
                         <CardContent className="text-lg font-bold">
                             {stock.product?.name}
@@ -97,19 +97,19 @@ export default function StockCard({
                     </Card>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-xl">No. Batch</CardTitle>
+                            <CardTitle className="text-muted-foreground text-sm">No. Batch</CardTitle>
                         </CardHeader>
                         <CardContent className="text-lg font-bold">{stock.batch?.batch_number}</CardContent>
                     </Card>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-xl">Lokasi</CardTitle>
+                            <CardTitle className="text-muted-foreground text-sm">Jumlah Lokasi</CardTitle>
                         </CardHeader>
                         <CardContent className="text-lg font-bold">{total_locations} Locations</CardContent>
                     </Card>
                     <Card>
                         <CardHeader>
-                            <CardTitle>Supplier</CardTitle>
+                            <CardTitle className="text-muted-foreground text-sm">Supplier</CardTitle>
                         </CardHeader>
                         <CardContent className="text-lg font-bold">
                             {stock.batch?.supplier?.partner?.name}
@@ -121,24 +121,17 @@ export default function StockCard({
                         </CardContent>
                     </Card>
                     <Card className="md:col-span-2">
-                        <CardHeader>
-                            <div>
-                                <CardTitle className="text-end text-lg">Total Quantity</CardTitle>
+                        <CardHeader></CardHeader>
+                        <CardContent className="grid gap-4 md:grid-cols-2">
+                            <div className="">
+                                <h2 className="text-muted-foreground">Qty Awal</h2>
+                                <p className="text-primary text-2xl font-medium">{`${opening_balance} ${stock.unit}`}</p>
                             </div>
-                        </CardHeader>
-                        <CardContent className="flex items-center md:justify-end">
-                            <div className="flex items-center justify-between">
+                            <div className="">
+                                <h2 className="text-muted-foreground">Total Qty</h2>
                                 <p className="text-primary text-2xl font-medium">{`${total_stock_quantity_across_locations} ${stock.unit}`}</p>
                             </div>
                         </CardContent>
-                        <CardFooter className="border-border border-t pt-4">
-                            <div className="w-full">
-                                <div className="flex items-center justify-between">
-                                    <CardDescription className="text-muted-foreground text-sm">Opening Balance</CardDescription>
-                                    <p className="text-muted-foreground text-sm">{`${opening_balance} ${stock.unit}`}</p>
-                                </div>
-                            </div>
-                        </CardFooter>
                     </Card>
                 </div>
                 <div>
