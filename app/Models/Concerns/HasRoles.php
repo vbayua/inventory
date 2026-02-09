@@ -13,18 +13,32 @@ trait HasRoles
         return $this->belongsToMany(Role::class)->withTimestamps();
     }
 
-    public function hasRole(string $role): bool
+    public function hasRole(string|Role $role): bool
     {
-        return $this->roles()->where('name', $role)->exists();
+        $name = $role instanceof Role ? $role->name : $role;
+        return $this->roles->contains(fn ($r) => $r->name === $name);
+    }
+
+    public function assignRole(string $role): static
+    {
+        $roleModel = $role instanceof Role ? $role : Role::where('name', $role)->firstOrFail();
+        $this->roles()->syncWithoutDetaching($roleModel);
+        return $this;
+    }
+
+    public function removeRole(string|Role $role): static
+    {
+        $roleModel = $role instanceof Role ? $role : Role::where('name', $role)->firstOrFail();
+        $this->roles()->detach($roleModel);
+        return $this;
     }
 
     public function permissions()
     {
-        $roleIds = $this->roles()->pluck('roles.id');
-
-        return Permission::whereHas('roles', function ($query) use ($roleIds) {
-            $query->whereIn('roles.id', $roleIds);
-        })->get();
+        // Assuming Role has a permissions() belongsToMany relationship
+        return $this->roles()->with('permissions')->get()
+            ->flatMap(fn ($role) => $role->permissions)
+            ->unique('id');
     }
 
     public function hasPermission(string $permission): bool
