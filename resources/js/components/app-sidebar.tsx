@@ -105,6 +105,21 @@ const supplierNavItem: NavItem[] = [
     },
 ];
 
+const purchaseOrderNavItems: NavItem[] = [
+    {
+        title: 'Purchase Orders',
+        href: '/purchase-orders',
+        icon: Box,
+        uri: 'purchase_orders',
+    },
+    {
+        title: 'Receive Item',
+        href: '/receive-orders',
+        icon: Box,
+        uri: 'receive_orders',
+    },
+];
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -140,6 +155,13 @@ const mainNavItems: NavItem[] = [
         items: supplierNavItem,
         uri: 'supplier',
     },
+    {
+        title: 'Purchasing',
+        href: '/purchase-orders',
+        icon: Box,
+        items: purchaseOrderNavItems,
+        uri: 'purchase-orders',
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -160,7 +182,6 @@ export function AppSidebar() {
     const { state } = useSidebar();
     const { viewPermissions } = page.props.auth;
     const permissions = Object.keys(viewPermissions).filter((key) => viewPermissions[key] === true);
-
     // const cleanUrl = page.url.startsWith('/') ? page.url.slice(1) : page.url;
 
     const filteredNavItems = mainNavItems.filter((item) => item.items?.some((subItem) => permissions.includes(subItem.uri)));

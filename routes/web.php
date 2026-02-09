@@ -36,7 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportPdf'])->name('stocks.export-pdf');
         Route::put('/{stock}', [\App\Http\Controllers\StockController::class, 'update'])->name('stocks.update');
         Route::get('/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'stockCard'])->name('stocks.stock-card');
-        Route::get('/stock-card/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'export'])->name('stocks.stock-card.export-pdf');
+        Route::get('/stock-card/{stock}/export/pdf', [\App\Http\Controllers\StockController::class, 'exportStockCardPdf'])->name('stocks.stock-card.export-pdf');
         Route::get('/export/stock-card/{stock}', [\App\Http\Controllers\StockController::class, 'exportStockCard'])->name('stocks.export.stock-card');
     });
 
@@ -67,10 +67,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroy'])->name('admin.users.destroy');
     });
 
+    Route::prefix('purchase-orders')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/create', [\App\Http\Controllers\PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('/', [\App\Http\Controllers\PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('/{purchase_order}', [\App\Http\Controllers\PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::get('/{purchase_order}/edit', [\App\Http\Controllers\PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+        Route::put('/{purchase_order}', [\App\Http\Controllers\PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
+    });
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/products.php';
 require __DIR__.'/suppliers.php';
 require __DIR__.'/warehouses.php';
-require __DIR__.'/purchase-orders.php';

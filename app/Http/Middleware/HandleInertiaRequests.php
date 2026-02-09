@@ -54,6 +54,7 @@ class HandleInertiaRequests extends Middleware
                     'operation' => $request->user()->hasPermission('operation.viewAny') ?? false,
                     'supplier' => $request->user()->hasPermission('supplier.viewAny') ?? false,
                     'partner' => $request->user()->hasPermission('partner.viewAny') ?? false,
+                    'purchase_orders' => $request->user()->hasPermission('purchase_order.viewAny') ?? false,
                 ] : [],
             ],
             'uri' => $request->route()?->uri,

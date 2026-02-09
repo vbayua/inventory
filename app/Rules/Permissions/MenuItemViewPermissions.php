@@ -38,6 +38,10 @@ class MenuItemViewPermissions implements ProvidesInertiaProperties
                     'viewAny' => $this->user?->hasPermission('operation.viewAny') ?? false,
                     'view' => $this->user?->hasPermission('operation.view') ?? false,
                 ],
+                'purchase_order' => [
+                    'viewAny' => $this->user?->hasPermission('purchase_order.viewAny') ?? false,
+                    'view' => $this->user?->hasPermission('purchase_order.view') ?? false,
+                ],
                 // Add other resource permissions here as needed
             ],
         ];
