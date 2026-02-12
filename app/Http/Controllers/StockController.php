@@ -249,7 +249,52 @@ class StockController extends Controller
             ->where('batch_id', $stock->batch_id)
             ->where('location_id', $stock->location_id)
             ->first();
-        return \Excel::download(new \App\Exports\StockCardExport($operation), $fileName);
+        return Excel::download(new \App\Exports\StockCardExport($operation), $fileName);
+    }
+
+    public function export(Stock $stock)
+    {
+        $exportTime = now()->format('Ymd_His');
+        $fileName = $stock->product->sku . '_' . $stock->batch->batch_number . '_' . $stock->location->name . '_' . $exportTime;
+        $range = request()->query('range', 'all');
+        $exportRange = $range ?? 'all';
+
+        if ($exportRange === '30d') {
+            $cutoffDate = now()->subDays(30);
+        } elseif ($exportRange === '90d') {
+            $cutoffDate = now()->subDays(90);
+        } elseif ($exportRange === '180d') {
+            $cutoffDate = now()->subDays(180);
+        } elseif($exportRange === '1y') {
+            $cutoffDate = now()->subYear();
+        } elseif ($exportRange === 'this_month') {
+            $cutoffDate = now()->startOfMonth();
+        } elseif ($exportRange === 'this_year') {
+            $cutoffDate = now()->startOfYear();
+        } else {
+            $cutoffDate = null; // 'all' range
+        }
+
+        $stock->load([
+            'product:id,name,sku,product_type_id',
+            'product.productType:id,name,type_code',
+            'location:id,name,warehouse_id',
+            'location.warehouse:id,name',
+            'batch:id,batch_number,supplier_id,expiry_date,manufacture_date',
+            'batch.supplier:id,partner_id',
+            'batch.supplier.partner:id,name',
+            'user:id,name']);
+        $totalLocations = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)->distinct('location_id')->count();
+        $totalStockQuantityAcrossLocations = Stock::where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->sum('quantity');
+
+        $stock->total_locations = $totalLocations;
+        $stock->total_quantity = $totalStockQuantityAcrossLocations;
+
+        return Excel::download(new \App\Exports\StockExport($stock, $cutoffDate), $fileName . '.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+
     }
 
     public function exportStockCardPdf(Stock $stock)
@@ -472,7 +517,7 @@ class StockController extends Controller
             return $op;
         });
 
-        return \Excel::download(new \App\Exports\StockCardLocationExport($operationsWithBalance, $stock, $totalStockInLocation), $fileName);
+        return Excel::download(new \App\Exports\StockCardLocationExport($operationsWithBalance, $stock, $totalStockInLocation), $fileName);
     }
 
     public function exportPdf(Stock $stock)
