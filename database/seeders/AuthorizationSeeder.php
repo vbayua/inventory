@@ -12,7 +12,7 @@ class AuthorizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $resources = ['product', 'partner', 'stock', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment', 'purchase_order'];
+        $resources = ['product', 'partner', 'stock', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment', 'purchase_order', 'user'];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
         $permissions = collect($resources)->flatMap(
@@ -52,15 +52,31 @@ class AuthorizationSeeder extends Seeder
             ])->pluck('id')->all()
         );
 
-        User::factory()->admin()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-        ]);
+        $adminUser = User::where('email', 'admin@example.com')->first();
+        $operatorUser = User::where('email', 'operator@example.com')->first();
+        if ($adminUser) {
+            $this->command->info('Admin user exists');
+        } else {
+            $adminUser = User::factory()->admin()->create([
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+            ]);
+            $this->command->info('Created admin user');
+        }
 
-        User::factory()->operator()->create([
-            'name' => 'Operator User',
-            'email' => 'operator@example.com',
-        ]);
+        if ($operatorUser) {
+            $this->command->info('Operator user exists');
+        } else {
+            $operatorUser = User::factory()->operator()->create([
+                'name' => 'Operator User',
+                'email' => 'operator@example.com',
+            ]);
+            $this->command->info('Created operator user');
+        }
+
+        $adminUser->assignRole('admin');
+        $operatorUser->assignRole('operator');
+
 
         $this->command->info('Authorization seeding completed successfully.');
     }
