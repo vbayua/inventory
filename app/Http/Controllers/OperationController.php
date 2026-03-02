@@ -22,8 +22,6 @@ class OperationController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', Operation::class);
-
         return Inertia('Operations/Index', [
             'operations' => Operation::with(['product', 'batch', 'location', 'user:id,name'])->latest()->get(),
         ]);
@@ -34,9 +32,6 @@ class OperationController extends Controller
      */
     public function create(Request $request)
     {
-        // Caches
-        $this->authorize('create', Operation::class);
-
         $stock = Stock::with([
             'product:id,name,sku,unit',
             'product.unit:name,base_unit',
@@ -71,7 +66,6 @@ class OperationController extends Controller
      */
     public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
-        $this->authorize('create', Operation::class);
 
         $validatedData = $request->validate([
             'operationType' => 'required|in:inbound,outbound,adjustment,transfer,return',
