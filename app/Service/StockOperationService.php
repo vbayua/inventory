@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class StockOperationService
@@ -22,15 +23,15 @@ class StockOperationService
 
     protected $batchService;
 
-    protected const INITIAL = 'initial';
+    protected const string INITIAL = 'initial';
 
-    protected const INBOUND = 'inbound';
+    protected const string INBOUND = 'inbound';
 
-    protected const OUTBOUND = 'outbound';
+    protected const string OUTBOUND = 'outbound';
 
-    protected const TRANSFER = 'transfer';
+    protected const string TRANSFER = 'transfer';
 
-    protected const ADJUSTMENT = 'adjustment';
+    protected const string ADJUSTMENT = 'adjustment';
 
     public function __construct(UnitConverter $unitConverter, BatchAssignmentService $batchService)
     {
@@ -38,29 +39,34 @@ class StockOperationService
         $this->batchService = $batchService;
     }
 
+    // Creating initial stock
+    // 1. Accept product & stock data
+    // 2. Supplier=
+
     public function createInitialStock(Product|int $product, array $stockData)
     {
-        // dd($product->id, $product, $stockData);
         return DB::transaction(function () use ($product, $stockData) {
             $supplierId = $stockData['supplier_id'] ?? null;
+            $batchId = $stockData['batch_id'] ?? null;
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
-            $batchId = isset($stockData['batch_id'])
-                ? $this->batchService->determineBatch(
-                    $product,
-                    $stockData['batch_id'],
-                    operationType: self::INBOUND,
-                    supplierId: $supplierId
-                )
-                : $this->batchService->determineBatch(
-                    $product,
-                    operationType: self::INBOUND,
-                    supplierId: $supplierId
-                );
+            $batch = $batchId ? $this->batchService->determineBatch(
+                $product,
+                (int) $batchId,
+                self::INITIAL,
+                $stockData['date'] ?? null,
+                $supplierId,
+                $stockData['quantity']
+            ) : $this->batchService->determineBatch(
+                product: $product,
+                operationType: self::INITIAL,
+                operationDate: $stockData['date'] ?? null,
+                supplierId: $supplierId,
+                minQty:$stockData['minimum_quantity']
+            );
 
-            if ($batchId) {
-                $stockData['batch_id'] = $batchId;
-            }
+            $stockData['batch_id'] = (int) $batch;
+
             $operation = $this->createOperation(
                 self::INITIAL,
                 $product,
@@ -70,7 +76,7 @@ class StockOperationService
                 $stockData['remarks'] ?? 'Initial stock',
                 $stockData['date'] ?? now()
             );
-            $this->setStock(
+            $stock = $this->setStock(
                 $product,
                 $stockData,
                 $stockData['quantity'],
@@ -79,7 +85,7 @@ class StockOperationService
                 $stockData['with_container'] ?? false
             );
 
-            return $operation;
+            return $stock;
         });
     }
 
@@ -146,7 +152,7 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            $this->setStock(
+            $stock = $this->setStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
@@ -155,7 +161,7 @@ class StockOperationService
                 $stockData['with_container'] ?? false
             );
 
-            return $operation;
+            return $stock;
         });
     }
 
@@ -171,7 +177,7 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            $this->setStock(
+            $stock = $this->setStock(
                 $product,
                 $stockData,
                 $usageQuantity,
@@ -180,7 +186,7 @@ class StockOperationService
                 $stockData['with_container'] ?? false
             );
 
-            return $operation;
+            return $stock;
         });
     }
 
@@ -243,6 +249,12 @@ class StockOperationService
                 ->where('batch_id', $batchId)
                 ->lockForUpdate()
                 ->first();
+
+            if ($quantity > $sourceStock->quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => "Transfer quantity {$quantity} exceeds available stock of {$sourceStock->quantity} at source location.",
+                ]);
+            }
 
             if (! $destinationStock) {
                 $destinationStock = Stock::create([
@@ -420,7 +432,7 @@ class StockOperationService
         });
     }
 
-    public function setStockStatus(float $quantity, float $minimum_quantity)
+    public function setStockStatus(float $quantity, float $minimum_quantity = 0)
     {
         if ($quantity <= 0) {
             return 'out_of_stock';
@@ -484,7 +496,9 @@ class StockOperationService
                 case 'decrement':
                     if ($currentStockQtyInBase < $qtyInBase) {
                         $name = $product instanceof Product ? $product->name : (string) $productId;
-                        throw new \Exception("Insufficient stock for product: '{$name}'.");
+                        throw ValidationException::withMessages([
+                            'quantity' => "Insufficient stock for product: {$name}",
+                        ]);
                     }
                     $newInBase = $currentStockQtyInBase - $qtyInBase;
                     break;
