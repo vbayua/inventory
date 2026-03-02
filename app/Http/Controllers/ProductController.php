@@ -69,8 +69,6 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
-        // $this->authorize('create', Product::class);
-
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
             'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
@@ -106,13 +104,6 @@ class ProductController extends Controller
                     'container_unit',
                 ]
             );
-
-            // // If with_begin_stock is true and stock is created then attach the product to the supplier.
-            // $newProduct->suppliers()->attach($request->supplier_id, [
-            //     'price' => $request->price,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ]);
 
             $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
             if (! $stock) {
