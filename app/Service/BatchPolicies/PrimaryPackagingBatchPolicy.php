@@ -6,7 +6,7 @@ use App\Models\Batch;
 use App\Models\Product;
 use Illuminate\Support\Str;
 
-class RawMaterialBatchPolicy implements BatchPolicyInterface
+class PrimaryPackagingBatchPolicy implements BatchPolicyInterface
 {
     public function determineBatch(Product $product, ?int $requestedBatchId = null): ?int
     {
