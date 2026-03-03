@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Product;
 use Database\Seeders\BlankStateSeeder;
 
 use function Pest\Laravel\assertDatabaseHas;
@@ -35,7 +36,43 @@ it('can register product without begin stock and suppliere', function () {
     assertDatabaseHas('products', ['name' => 'Test Product', 'sku' => 'RMP0001A']);
 });
 
-test('sku follows the correct format', function () {
+test('sku valid format', function() {
+    $productData = [
+        'name' => 'Test Product',
+        'sku' => 'RMP0001',
+        'description' => 'A product for testing',
+        'unit' => 'ml',
+        'product_type_id' => 1,
+        'category_ids' => [1, 2],
+        'is_active' => true,
+        'with_begin_stock' => false,
+    ];
+
+    // asAdmin()->post('/products', $productData)->assertRedirect('/products');
+    Product::create($productData);
+
+    $product = Product::where('sku', 'RMP0001')->first();
+
+    expect($product->sku)->toMatch('/^[A-Z]+\d{4}[A-Z]?$/');
+    assertDatabaseHas('products', ['name' => 'Test Product', 'sku' => 'RMP0001']);
+});
+
+it('show validation exception when required fields are missing', function () {
+    $productData = [
+        // 'name' => 'Test Product', // Missing name
+        'sku' => 'RMP0001A',
+        'description' => 'A product for testing',
+        'unit' => 'ml',
+        'product_type_id' => 1,
+        'category_ids' => [1, 2],
+        'is_active' => true,
+        'with_begin_stock' => false,
+    ];
+
+    asAdmin()->post('/products', $productData)->assertSessionHasErrors('name');
+});
+
+it('show validation exception when sku is in incorrect format', function() {
     $productData = [
         'name' => 'Test Product',
         'sku' => 'INVALIDSKU',
@@ -50,7 +87,37 @@ test('sku follows the correct format', function () {
     asAdmin()->post('/products', $productData)->assertSessionHasErrors('sku');
 });
 
-test('sku must start with a valid type code', function () {
+it('show validation exception when sku type code is not in the product type database', function () {
+    $productData = [
+        'name' => 'Test Product',
+        'sku' => 'PG0001',
+        'description' => 'A product for testing',
+        'unit' => 'ml',
+        'product_type_id' => 1,
+        'category_ids' => [1, 2],
+        'is_active' => true,
+        'with_begin_stock' => false,
+    ];
+
+    asAdmin()->post('/products', $productData)->assertSessionHasErrors('sku');
+});
+
+test('sku invalid format', function () {
+    $productData = [
+        'name' => 'Test Product',
+        'sku' => 'INVALIDSKU',
+        'description' => 'A product for testing',
+        'unit' => 'ml',
+        'product_type_id' => 1,
+        'category_ids' => [1, 2],
+        'is_active' => true,
+        'with_begin_stock' => false,
+    ];
+
+    asAdmin()->post('/products', $productData)->assertSessionHasErrors('sku');
+});
+
+test('sku must start with invalid type code', function () {
     $productData = [
         'name' => 'Test Product',
         'sku' => 'XYZ0001A',

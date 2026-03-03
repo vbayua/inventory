@@ -81,6 +81,14 @@ class ProductController extends Controller
             'minimum_quantity',
         ]);
 
+        // Check if product type is the same as the sku prefix
+        $productType = \App\Models\ProductType::find($request->product_type_id);
+        if ($productType && !str_starts_with($request->sku, $productType->type_code)) {
+            throw ValidationException::withMessages([
+                'sku' => "Item code must start with the product type code: $productType->type_code",
+            ]);
+        }
+
         DB::beginTransaction();
         //  Create a default batch for the product
         $newProduct = new Product($product);

@@ -24,7 +24,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string',],
-            'sku' => ['required', 'regex:/^[A-Z0-9A-Z_-]+$/',
+            'sku' => ['required', 'regex:/^[A-Z]+\d{4}[A-Z]?$/',
             function (string $attribute, mixed $value, \Closure $fail) {
                 if (!is_string($value) || $value === '') {
                     return;
