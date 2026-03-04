@@ -67,16 +67,8 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
     const isOpen = usePage<SharedData>().props.sidebarOpen;
 
     if (variant === 'header') {
-        return (
-            <ErrorBoundary>
-                <div className="flex min-h-screen w-full flex-col">{children}</div>
-            </ErrorBoundary>
-        );
+        return <div className="flex min-h-screen w-full flex-col">{children}</div>;
     }
 
-    return (
-        <ErrorBoundary>
-            <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>
-        </ErrorBoundary>
-    );
+    return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
 }
