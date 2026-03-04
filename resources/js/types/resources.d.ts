@@ -33,6 +33,7 @@ export interface Product {
     created_at?: string;
     updated_at?: string;
     pivot?: SupplierProductsPivot;
+    suppliers?: Supplier[];
 }
 
 export interface Partner {
@@ -55,6 +56,7 @@ export interface Supplier {
     address?: string;
     partner?: Partner;
     pivot?: SupplierProductsPivot;
+    products?: Product[];
 }
 
 export interface SupplierProductsPivot extends Supplier {
