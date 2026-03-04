@@ -10,13 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { Product, SupplierProductsPivot } from '@/types/resources';
+import { Product, Supplier } from '@/types/resources';
 import { Head, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import { SubmitEventHandler, useEffect, useState } from 'react';
 
-export default function Create({ suppliers }: { suppliers: SupplierProductsPivot[] }) {
+export default function Create({ suppliers }: { suppliers: Supplier[] }) {
     const { data, setData, post, processing, errors } = useForm({
         po_number: '',
         supplier_id: '',
@@ -34,7 +34,7 @@ export default function Create({ suppliers }: { suppliers: SupplierProductsPivot
     const selectedSupplier = suppliers.find((supplier) => supplier.id === Number(data.supplier_id));
     const productList = selectedSupplier?.products || [];
     const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-    const filteredProducts = productList.filter((product: Product[]) => !selectedProducts.find((p) => p.id === product.id));
+    const filteredProducts = productList.filter((product) => !selectedProducts.find((p) => p.id === product.id));
 
     const totalPrice = data.items.reduce((total, item) => {
         const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
@@ -204,14 +204,14 @@ export default function Create({ suppliers }: { suppliers: SupplierProductsPivot
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="items">Items</Label>
+                        <Label htmlFor="items">Product Items</Label>
                         <div className="overflow-y-auto rounded-md">
                             {selectedProducts.length === 0 ? (
                                 <div className="border-muted bg-muted flex h-32 items-center justify-center rounded-md border p-4">
                                     <p className="text-muted-foreground text-center">No items added. Please add items to the purchase order.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="mt-6 max-h-96 space-y-2 overflow-y-auto rounded-md border md:mt-4">
                                     <Table className="w-full">
                                         <TableHeader>
                                             <TableRow>
@@ -279,13 +279,15 @@ export default function Create({ suppliers }: { suppliers: SupplierProductsPivot
                         </div>
                         {selectedProducts.length < productList.length && (
                             <Popover open={itemsOpen} onOpenChange={setItemsOpen} defaultOpen={false}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="secondary" size={'sm'} className="w-full">
-                                        <PlusIcon className="mr-2 h-4 w-4" />
-                                        Add Item
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" align="start">
+                                <div className="mt-6 flex w-full items-center justify-end md:mt-8">
+                                    <PopoverTrigger asChild>
+                                        <Button size={'sm'} className="">
+                                            <PlusIcon className="mr-2 h-4 w-4" />
+                                            Add Item
+                                        </Button>
+                                    </PopoverTrigger>
+                                </div>
+                                <PopoverContent className="w-full p-0" align="end">
                                     <Command>
                                         <CommandInput placeholder="Search products..." />
                                         <CommandEmpty>No products found.</CommandEmpty>
