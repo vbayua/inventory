@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\Location;
@@ -20,7 +21,7 @@ class PurchaseOrderController extends Controller
 
     public function index(PurchaseOrderPermissions $permissions)
     {
-        $purchaseOrders = PurchaseOrder::with('supplier', 'location', 'location.warehouse:id,name')->latest();
+        $purchaseOrders = PurchaseOrder::with('supplier:id,partner_id', 'supplier.partner:id,name')->latest()->get();
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
         ])->with($permissions);
@@ -28,35 +29,20 @@ class PurchaseOrderController extends Controller
 
     public function create()
     {
-        $this->authorize('create', PurchaseOrder::class);
         $suppliers = Supplier::with('partner:id,name', 'products:id,name,sku')->get();
-        $locations = Location::with('warehouse')->get();
         return Inertia::render('PurchaseOrders/Create', [
             'suppliers' => $suppliers,
-            'locations' => $locations,
             'products' => Product::all(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StorePurchaseOrderRequest $request)
     {
-        $this->authorize('create', PurchaseOrder::class);
-        $request->validate([
-            'po_number' => 'required|unique:purchase_orders',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'location_id' => 'required|exists:locations,id',
-            'order_date' => 'required|date',
-            'expected_delivery_date' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|numeric|min:0',
-        ]);
-
+        // dd($request->all());
         $purchaseOrder = PurchaseOrder::create($request->except('items'));
 
         foreach ($request->items as $item) {
+            $item['purchase_order_id'] = $purchaseOrder->id;
             $purchaseOrder->items()->create($item);
         }
 
@@ -65,8 +51,7 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-        $this->authorize('view', $purchaseOrder);
-        $purchaseOrder->load('items.product', 'supplier', 'location');
+        $purchaseOrder->load('items', 'supplier:id,partner_id', 'supplier.partner:id,name');
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
@@ -86,7 +71,7 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'items' => 'required|array|min:1',
-            'items.*.purchase_order_item_id' => 'required|exists:purchase_order_items,id',
+            'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity_received' => 'required|integer|min:0',
         ]);
 

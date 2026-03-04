@@ -17,7 +17,7 @@ import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import { SubmitEventHandler, useEffect, useState } from 'react';
 
 export default function Create({ suppliers }: { suppliers: Supplier[] }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, reset, processing, errors } = useForm({
         po_number: '',
         supplier_id: '',
         order_date: '',
@@ -68,6 +68,15 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
         e.preventDefault();
         // Handle form submission logic here
         console.info('Form submitted with data:', data);
+
+        post(route('purchase-orders.store'), {
+            onSuccess: () => {
+                reset();
+            },
+            onError: (error) => {
+                // console.error('Failed to create purchase order:', error);
+            },
+        });
     };
 
     return (
@@ -82,7 +91,13 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="po_number">Nomor PO</Label>
-                            <Input id="po_number" name="po_number" type="text" placeholder="No. PO" />
+                            <Input
+                                id="po_number"
+                                name="po_number"
+                                type="text"
+                                placeholder="No. PO"
+                                onChange={(e) => setData('po_number', String(e.target.value))}
+                            />
                             <InputError message={errors.po_number} className="mt-1" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
@@ -259,11 +274,10 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
                                                         />
                                                     </TableCell>
                                                     <TableCell>
-                                                        Rp.{' '}
                                                         {(
                                                             Number(data.items.find((item) => item.product_id === product.id)?.price || 0) *
                                                             Number(data.items.find((item) => item.product_id === product.id)?.quantity || 1)
-                                                        ).toLocaleString('id-ID')}
+                                                        ).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button variant="destructive" size="icon" onClick={() => removeItem(product)}>

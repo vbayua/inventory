@@ -13,7 +13,7 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
             return <DataTableColumnHeader column={column} title="PO Number" />;
         },
         cell: ({ cell }) => {
-            return <Link href={route('purchase-orders.show', { purchaseOrder: cell.row.original.id })}>{cell.getValue() as string}</Link>;
+            return <Link href={route('purchase-orders.show', { id: cell.row.original.id })}>{cell.getValue() as string}</Link>;
         },
     },
     {
@@ -21,13 +21,6 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
         accessorFn: (row) => row.supplier?.partner?.name,
         header: ({ column }) => {
             return <DataTableColumnHeader column={column} title="Supplier" />;
-        },
-    },
-    {
-        id: 'warehouse',
-        accessorFn: (row) => row.location?.warehouse?.name,
-        header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Warehouse" />;
         },
     },
     {
@@ -50,7 +43,7 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
         id: 'actions',
         cell: ({ row }) => {
             const purchaseOrder = row.original;
-            const viewPurchaseOrder = route('purchase-orders.show', { purchaseOrder: purchaseOrder.id });
+            const viewPurchaseOrder = route('purchase-orders.show', { id: purchaseOrder.id });
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

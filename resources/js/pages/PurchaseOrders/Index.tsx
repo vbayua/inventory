@@ -18,6 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function Index({ purchaseOrders }: { purchaseOrders: PurchaseOrder[] }) {
     const { permissions } = usePage<SharedData>().props;
+    console.log(purchaseOrders);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Purchase Orders" />
