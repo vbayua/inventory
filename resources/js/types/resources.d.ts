@@ -115,6 +115,13 @@ export enum Status {
     low_stock = 'low_stock',
 }
 
+export enum OrderStatus {
+    pending = 'pending',
+    partially_received = 'partially_received',
+    completed = 'completed',
+    cancelled = 'cancelled',
+}
+
 export interface Stock {
     id: number;
     product_id: number;
@@ -182,11 +189,11 @@ export interface PurchaseOrder {
     status: string;
     expected_delivery_date?: string;
     notes?: string;
+    user_id?: number;
     supplier?: Supplier;
-    location?: Location;
     items?: PurchaseOrderItem[];
-    created_at?: string;
-    updated_at?: string;
+    created_at?: Date | string;
+    updated_at?: Date | string;
 }
 
 export interface ReceiveOrder {
