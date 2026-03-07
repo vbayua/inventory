@@ -51,7 +51,7 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->load('items', 'supplier:id,partner_id', 'supplier.partner:id,name');
+        $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'receive_orders', 'supplier:id,partner_id', 'supplier.partner:id,name');
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
