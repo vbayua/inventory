@@ -24,18 +24,18 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Supplier::class);
     }
 
-    public function location()
-    {
-        return $this->belongsTo(Location::class);
-    }
-
     public function items()
     {
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
-    public function receiveOrders()
+    public function receive_orders()
     {
         return $this->hasMany(ReceiveOrder::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
