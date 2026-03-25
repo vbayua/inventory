@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\StockData;
 use App\Models\Batch;
 use App\Models\Location;
 use App\Models\Operation;
@@ -43,7 +44,7 @@ class StockOperationService
     // 1. Accept product & stock data
     // 2. Supplier=
 
-    public function createInitialStock(Product|int $product, array $stockData)
+    public function createInitialStock(Product|int $product, StockData $stockData)
     {
         return DB::transaction(function () use ($product, $stockData) {
             $supplierId = $stockData['supplier_id'] ?? null;
@@ -65,7 +66,7 @@ class StockOperationService
                 minQty:$stockData['minimum_quantity']
             );
 
-            $stockData['batch_id'] = (int) $batch;
+            $stockData = $stockData->with(['batch_id' => (int) $batch]);
 
             $operation = $this->createOperation(
                 self::INITIAL,
@@ -140,7 +141,7 @@ class StockOperationService
         });
     }
 
-    public function createInboundOperation(Product|int $product, Stock|array $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
+    public function createInboundOperation(Product|int $product, Stock|StockData $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $receiveQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -165,7 +166,7 @@ class StockOperationService
         });
     }
 
-    public function createOutboundOperation(Product|int $product, Stock|array $stockData, float $usageQuantity, string $unit, string $remarks = 'Outbound Operation', $operationDate = null)
+    public function createOutboundOperation(Product|int $product, Stock|StockData $stockData, float $usageQuantity, string $unit, string $remarks = 'Outbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -190,7 +191,7 @@ class StockOperationService
         });
     }
 
-    public function createReturnOperation(Product|int $product, Stock|array $stockData, float $returnQuantity, string $unit, string $remarks = 'Return Operation', $operationDate = null)
+    public function createReturnOperation(Product|int $product, Stock|StockData $stockData, float $returnQuantity, string $unit, string $remarks = 'Return Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $returnQuantity, $unit, $remarks, $operationDate) {
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
@@ -331,7 +332,7 @@ class StockOperationService
         });
     }
 
-    public function createTransferOutOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
+    public function createTransferOutOperation(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -355,7 +356,7 @@ class StockOperationService
         });
     }
 
-    public function createTransferInOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
+    public function createTransferInOperation(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -392,7 +393,7 @@ class StockOperationService
      *
      * @param  string  $type  The type/category of the operation (e.g., 'ISSUE', 'ADJUSTMENT', 'RECEIPT').
      * @param  Product|int  $product  Product model instance or its primary key.
-     * @param  Stock|array  $stockData  Stock instance or associative array containing at least 'location_id' and optionally 'batch_id'.
+     * @param  Stock|StockData  $stockData  Stock model instance or StockData DTO containing at least 'location_id' and optionally 'batch_id'.
      * @param  float  $usageQuantity  The quantity involved in the operation (stored as given; no unit conversion performed here).
      * @param  Unit|string  $unit  Unit model instance or its name string used for the operation record.
      * @param  string  $remarks  Free-form remarks or notes (empty string if null/omitted).
@@ -401,7 +402,7 @@ class StockOperationService
      *
      * @throws \Throwable If the database transaction fails.
      */
-    private function createOperation(string $type, Product|int $product, Stock|array $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null): Operation
+    private function createOperation(string $type, Product|int $product, Stock|StockData $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null): Operation
     {
         return DB::transaction(function () use ($type, $product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $productId = $product instanceof Product ? $product->id : $product;
@@ -443,7 +444,7 @@ class StockOperationService
         }
     }
 
-    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
+    private function setStock(Product|int $product, Stock|StockData $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode, $withContainer) {
             $productId = $product instanceof Product ? $product->id : $product;
@@ -558,7 +559,7 @@ class StockOperationService
         return Unit::findOrFail($unit);
     }
 
-    private function lockAndLoadStock(Product|int $product, array $stockData): Stock
+    private function lockAndLoadStock(Product|int $product, StockData $stockData): Stock
     {
         $productId = $product instanceof Product ? $product->id : $product;
 
@@ -569,7 +570,7 @@ class StockOperationService
             ->firstOrFail();
     }
 
-    private function incrementStock(Product|int $product, Stock|array $stockData, float $quantity = 0, ?string $unit = null)
+    private function incrementStock(Product|int $product, Stock|StockData $stockData, float $quantity = 0, ?string $unit = null)
     {
 
         // Use unit conversion service to convert quantity to base unit
@@ -616,7 +617,7 @@ class StockOperationService
         });
     }
 
-    private function decrementStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit)
+    private function decrementStock(Product|int $product, Stock|StockData $stockData, float $quantity, ?string $unit)
     {
         if ($quantity <= 0) {
             throw new \InvalidArgumentException('Quantity must be a positive number.');
