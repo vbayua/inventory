@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
+use App\Models\Batch;
+use App\Models\Location;
 use App\Models\Stock;
+use App\Models\Supplier;
 use ArrayAccess;
 
 /**
@@ -19,7 +22,6 @@ use ArrayAccess;
 readonly class StockData implements ArrayAccess
 {
     public function __construct(
-        /** The location this stock record belongs to. Always required. */
         public int $location_id,
 
         /** Primary key of an existing Stock row, when the record already exists. */
@@ -32,13 +34,13 @@ readonly class StockData implements ArrayAccess
         public ?int $supplier_id = null,
 
         /** Unit name for the quantity being operated on (e.g. 'kg', 'pcs'). */
-        public ?string $unit = null,
+        public string $unit,
 
         /** Quantity involved in the operation. */
-        public float $quantity = 0.0,
+        public float $quantity,
 
         /** Threshold below which the stock is considered low. */
-        public float $minimum_quantity = 0.0,
+        public ?float $minimum_quantity = 0,
 
         /**
          * Date string (Y-m-d or any Carbon-parseable value) of the operation.
@@ -79,11 +81,23 @@ readonly class StockData implements ArrayAccess
             throw new \InvalidArgumentException('StockData requires a location_id.');
         }
 
+        if (! isset($data['quantity'])) {
+            throw new \InvalidArgumentException('StockData requires a quantity.');
+        }
+
+        if (! isset($data['unit'])) {
+            throw new \InvalidArgumentException('StockData requires a unit.');
+        }
+
+        $batch = isset($data['batch_id']) ? ($data['batch_id'] instanceof Batch ? $data['batch_id']->id : $data['batch_id']) : null;
+        $location = isset($data['location_id']) ? ($data['location_id'] instanceof Location ? $data['location_id']->id : $data['location_id']) : null;
+        $supplier = isset($data['supplier_id']) ? ($data['supplier_id'] instanceof Supplier ? $data['supplier_id']->id : $data['supplier_id']) : null;
+
         return new self(
-            location_id: (int) $data['location_id'],
+            location_id: (int) $location,
             id: isset($data['id']) ? (int) $data['id'] : null,
-            batch_id: isset($data['batch_id']) ? (int) $data['batch_id'] : null,
-            supplier_id: isset($data['supplier_id']) ? (int) $data['supplier_id'] : null,
+            batch_id: (int) $batch,
+            supplier_id: (int) $supplier,
             unit: isset($data['unit']) ? (string) $data['unit'] : null,
             quantity: isset($data['quantity']) ? (float) $data['quantity'] : 0.0,
             minimum_quantity: isset($data['minimum_quantity']) ? (float) $data['minimum_quantity'] : 0.0,
@@ -102,6 +116,17 @@ readonly class StockData implements ArrayAccess
      */
     public static function fromStock(Stock $stock): self
     {
+        if (! isset($stock->location_id)) {
+            throw new \InvalidArgumentException('StockData requires a location_id.');
+        }
+
+        if (! isset($stock->quantity)) {
+            throw new \InvalidArgumentException('StockData requires a quantity.');
+        }
+
+        if (! isset($stock->unit)) {
+            throw new \InvalidArgumentException('StockData requires a unit.');
+        }
         return new self(
             location_id: (int) $stock->location_id,
             id: (int) $stock->id,
