@@ -1,5 +1,6 @@
 <?php
 
+use App\DTO\StockData;
 use App\Models\Batch;
 use App\Models\Location;
 use App\Models\Operation;
@@ -44,15 +45,16 @@ describe('Initial stock operations', function () {
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => null,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -88,15 +90,16 @@ describe('inbound operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -140,15 +143,16 @@ describe('Outbound operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -190,15 +194,16 @@ describe('Outbound operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -231,15 +236,16 @@ describe('Return operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -290,15 +296,16 @@ describe('Stock adjustment operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -337,15 +344,16 @@ describe('Stock adjustment operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -388,15 +396,16 @@ describe('Transfer operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -444,15 +453,16 @@ describe('Transfer operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
@@ -499,15 +509,16 @@ describe('Transfer operations', function () {
             supplierId: $supplier->id
         );
 
-        $stockData = [
+        $stockData = StockData::fromArray([
             'product_id' => $product->id,
             'location_id' => $location->id,
             'warehouse_id' => $location->warehouse_id,
             'quantity' => 100,
+            'unit' => $product->unit,
             'supplier_id' => $supplier->id,
             'batch_id' => $batchId,
             'minimum_quantity' => 10,
-        ];
+        ]);
 
         $this->service->createInitialStock($product, $stockData);
 
