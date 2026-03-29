@@ -60,7 +60,20 @@ class PurchaseOrderController extends Controller
 
     public function receive(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->load('items.product', 'supplier', 'location');
+        $purchaseOrder->load(
+            'items:id,purchase_order_id,price,quantity,product_id',
+            'items.product:id,name,sku,unit',
+            'supplier',
+            'items.receiveOrderItems'
+        );
+
+        $purchaseOrder->items->each(function ($item) {
+            $item->quantity_received = $item->receiveOrderItems->sum('quantity_received');
+        });
+
+        // Filter batches based on the product IDs in the purchase order items
+        $productIds = $purchaseOrder->items->pluck('product_id')->unique();
+        $batches = Batch::whereIn('product_id', $productIds)->get(['id', 'product_id', 'batch_number', 'expiry_date']);
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
@@ -69,23 +82,48 @@ class PurchaseOrderController extends Controller
 
     public function receiveStore(Request $request, PurchaseOrder $purchaseOrder, StockOperationService $stockOperationService)
     {
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_received' => 'required|integer|min:0',
-        ]);
+        $receiveOrder = $request->validated();
 
-        foreach ($request->items as $itemData) {
-            $poItem = $purchaseOrder->items()->findOrFail($itemData['purchase_order_item_id']);
+        DB::transaction(function () use ($purchaseOrder, $receiveOrder, $stockOperationService) {
+            $newReceiveOrder = $purchaseOrder->receive_orders()->create([
+                'receive_number' => $receiveOrder['receive_order_number'],
+                'reference_number' => $receiveOrder['reference_number'] ?? null,
+                'receive_date' => Carbon::parse($receiveOrder['receive_date']),
+                'notes' => $receiveOrder['notes'] ?? null,
+            ]);
 
-            if ($itemData['quantity_received'] > 0) {
-                $stockData = [
-                    'location_id' => $purchaseOrder->location->first()->id,
-                    'batch_id' => null, // Let the service handle batch creation
-                ];
+            foreach ($receiveOrder['items'] as $item) {
+                $purchaseOrderItem = $purchaseOrder->items()->where('product_id', $item['product_id'])->first();
 
-                $stockOperationService->createInboundOperation(
-                    $poItem->product,
+                if (!$purchaseOrderItem) {
+                    continue; // Skip if the product is not part of the purchase order
+                }
+
+                $quantityToReceive = $item['quantity_received'];
+
+                if ($quantityToReceive <= 0) {
+                    continue; // Skip if there's nothing to receive
+                }
+
+                $newReceiveOrderItem = $purchaseOrderItem->receiveOrderItems()->create([
+                    'receive_order_id' => $newReceiveOrder->id,
+                    'quantity_received' => $quantityToReceive,
+                    'location_id' => $item['location_id'],
+                    'notes' => $item['notes'] ?? null,
+                ]);
+
+                // Update stock levels
+                $stockData = StockData::fromArray([
+                    'quantity' => $newReceiveOrderItem->quantity_received,
+                    'unit' => $purchaseOrderItem->product->unit,
+                    'location_id' => $item['location_id'],
+                    'supplier_id' => $purchaseOrder->supplier_id,
+                    'remarks' => 'Received via Purchase Order #' . $purchaseOrder->id,
+                ]);
+
+                $stockOperationService->createStockOperation(
+                    'inbound',
+                    $purchaseOrderItem->product,
                     $stockData,
                     $itemData['quantity_received'],
                     $poItem->product->unit->name,
