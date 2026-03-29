@@ -11,6 +11,7 @@ class ReceiveOrder extends Model
         'receive_number',
         'waybill_number',
         'receive_date',
+        'location_id',
         'notes',
     ];
 
