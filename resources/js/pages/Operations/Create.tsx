@@ -16,7 +16,7 @@ import { Batch, Product, Stock, Unit } from '@/types/resources';
 import { Head, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
-import { FormEventHandler, useEffect, useRef } from 'react';
+import { SubmitEventHandler, useEffect, useRef } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -136,7 +136,7 @@ export default function Create({
               )
             : [];
 
-    const createOperation: FormEventHandler = (e) => {
+    const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();
         console.log('Creating operation with data:', data);
         post('/operations', {
@@ -291,7 +291,12 @@ export default function Create({
                                             <>
                                                 <span>Tidak ada batch untuk product yang dipilih</span>
                                                 <br />
-                                                <Button variant={'link'} onClick={() => {}}>
+                                                <Button
+                                                    variant={'link'}
+                                                    onClick={() => {
+                                                        window.open(route('batch.create', { product: selectedProduct?.id }), '_blank');
+                                                    }}
+                                                >
                                                     Register Batch Baru?
                                                 </Button>
                                             </>
