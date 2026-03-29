@@ -78,7 +78,7 @@ class PurchaseOrderController extends Controller
 
         // Filter batches based on the product IDs in the purchase order items
         $productIds = $purchaseOrder->items->pluck('product_id')->unique();
-        $batches = Batch::whereIn('product_id', $productIds)->get(['id', 'product_id', 'batch_number', 'expiry_date']);
+        $batches = Batch::whereIn('product_id', $productIds)->with('product')->get(['id', 'product_id', 'batch_number', 'expiry_date']);
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
@@ -136,7 +136,25 @@ class PurchaseOrderController extends Controller
                     $stockData['unit'],
                     $stockData['remarks']
                 );
+
+                if ($purchaseOrderItem->quantity_received >= $purchaseOrderItem->quantity) {
+                    $purchaseOrderItem->update(['status' => 'received']);
+                } else {
+                    $purchaseOrderItem->update(['status' => 'partially_received']);
+                }
             }
+
+            // Update the purchase order status based on all items' statuses
+            $allItems = $purchaseOrder->items()->get(['status']);
+            $allReceived = $allItems->every(fn($item) => $item->status === 'received');
+            $anyReceived = $allItems->contains(fn($item) => in_array($item->status, ['received', 'partially_received']));
+
+            if ($allReceived) {
+                $purchaseOrder->update(['status' => 'received']);
+            } elseif ($anyReceived) {
+                $purchaseOrder->update(['status' => 'partially_received']);
+            }
+
         });
 
 
