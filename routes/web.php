@@ -75,7 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{purchase_order}/edit', [\App\Http\Controllers\PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
         Route::put('/{purchase_order}', [\App\Http\Controllers\PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
         Route::get('/{purchase_order}/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
-        Route::post('/purchase_order/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receiveStore'])->name('purchase-orders.process-receive');
+        Route::post('/{purchase_order}/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receiveStore'])->name('purchase-orders.process-receive');
     });
 });
 
