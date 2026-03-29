@@ -55,9 +55,8 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
             })) || [],
         notes: '',
     });
-    // console.log(purchaseOrder);
-    console.log(batches);
-    // const filteredBatches = purchaseOrder.items?.
+
+    // const filteredBatches = batches.filter((batch) => batch.product_id === purchaseOrder.items?.[0].product_id); // Assuming all items are the same product, adjust as needed
     const receiveItemsHandler: SubmitEventHandler = (e) => {
         e.preventDefault();
         console.log(data);
@@ -73,6 +72,8 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
     };
 
     const [popoverLocationOpen, setPopoverLocationOpen] = useState(false);
+    const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Receive Items for PO - ${purchaseOrder.po_number}`} />
@@ -186,7 +187,7 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                                 <PenBoxIcon className="h-4 w-4" />
                                                             </Button>
                                                         </DialogTrigger>
-                                                        <DialogContent className="sm:max-w-sm">
+                                                        <DialogContent className="sm:w-125 sm:max-w-lg">
                                                             <DialogHeader>
                                                                 <DialogTitle>{item.product?.name}</DialogTitle>
                                                                 <DialogDescription>
@@ -195,7 +196,107 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                             </DialogHeader>
                                                             <FieldGroup>
                                                                 <Field>
-                                                                    <Label htmlFor="quantity_received">Quantity Received</Label>
+                                                                    <Label htmlFor="product_name">Product</Label>
+                                                                    <Input
+                                                                        id="product_name"
+                                                                        className="text-muted-foreground"
+                                                                        value={item.product?.name}
+                                                                        readOnly
+                                                                    />
+                                                                </Field>
+                                                                <Field>
+                                                                    <Label htmlFor="quantity_ordered">Quantity Ordered</Label>
+                                                                    <Input
+                                                                        id="quantity_ordered"
+                                                                        className="text-muted-foreground"
+                                                                        value={item.quantity}
+                                                                        readOnly
+                                                                    />
+                                                                </Field>
+                                                                <Field>
+                                                                    <Label htmlFor="quantity_already_received">Quantity Already Received</Label>
+                                                                    <Input
+                                                                        id="quantity_already_received"
+                                                                        value={`${item.quantity_received} / ${item.quantity}`}
+                                                                        className="text-muted-foreground"
+                                                                        readOnly
+                                                                    />
+                                                                </Field>
+                                                                <Field>
+                                                                    <Label htmlFor="batch_id">Batch</Label>
+                                                                    <Popover
+                                                                        open={batchPopoverOpen}
+                                                                        onOpenChange={setBatchPopoverOpen}
+                                                                        defaultOpen={false}
+                                                                    >
+                                                                        <PopoverTrigger asChild>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                className="w-full justify-between text-left"
+                                                                            >
+                                                                                {data.items[index]?.batch_id
+                                                                                    ? batches.find((b) => b.id === data.items[index].batch_id)
+                                                                                          ?.batch_number || 'Create New Batch'
+                                                                                    : 'Create New Batch'}
+                                                                            </Button>
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent align="start" className="w-auto p-0">
+                                                                            <Command>
+                                                                                <CommandInput placeholder="Search batches..." />
+                                                                                <CommandEmpty>
+                                                                                    {!batches && (
+                                                                                        <div className="text-muted-foreground p-2 text-sm">
+                                                                                            Loading...
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {batches && <div>No batches found.</div>}
+                                                                                </CommandEmpty>
+                                                                                <CommandList>
+                                                                                    <CommandItem
+                                                                                        onSelect={() => {
+                                                                                            setData((prevData) => {
+                                                                                                const newItems = [...prevData.items];
+                                                                                                newItems[index].batch_id = ''; // Use a special value to indicate a new batch
+                                                                                                return {
+                                                                                                    ...prevData,
+                                                                                                    items: newItems,
+                                                                                                };
+                                                                                            });
+                                                                                            setBatchPopoverOpen(false); // Close the popover after selection
+                                                                                        }}
+                                                                                    >
+                                                                                        Create New Batch
+                                                                                    </CommandItem>
+                                                                                    {batches &&
+                                                                                        batches.map(
+                                                                                            (batch) =>
+                                                                                                batch.product_id === item.product_id && (
+                                                                                                    <CommandItem
+                                                                                                        key={batch.id}
+                                                                                                        onSelect={() => {
+                                                                                                            setData((prevData) => {
+                                                                                                                const newItems = [...prevData.items];
+                                                                                                                newItems[index].batch_id = batch.id;
+                                                                                                                return {
+                                                                                                                    ...prevData,
+                                                                                                                    items: newItems,
+                                                                                                                };
+                                                                                                            });
+                                                                                                            setBatchPopoverOpen(false); // Close the popover after selection
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        {batch.batch_number} {batch.product?.name}
+                                                                                                    </CommandItem>
+                                                                                                ),
+                                                                                        )}
+                                                                                </CommandList>
+                                                                            </Command>
+                                                                        </PopoverContent>
+                                                                    </Popover>
+                                                                </Field>
+                                                                <Field>
+                                                                    <Label htmlFor="quantity_received">Receive Quantity</Label>
                                                                     <Input
                                                                         type="text"
                                                                         min={0}
@@ -211,6 +312,7 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
 
                                                                     <InputError message={errors[`items.${index}.quantity_received`]} />
                                                                 </Field>
+
                                                                 <Field>
                                                                     <Label htmlFor="location_id">Receive Location</Label>
                                                                     <Popover
