@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\StockData;
+use App\Http\Requests\ReceiveOrderStoreRequest;
 use App\Http\Requests\StorePurchaseOrderRequest;
+use App\Models\Batch;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\Location;
@@ -10,6 +13,8 @@ use App\Models\Product;
 use App\Rules\Permissions\PurchaseOrderPermissions;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PurchaseOrderController extends Controller
@@ -77,10 +82,12 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
+            'locations' => Location::all(),
+            'batches' => $batches,
         ]);
     }
 
-    public function receiveStore(Request $request, PurchaseOrder $purchaseOrder, StockOperationService $stockOperationService)
+    public function receiveStore(ReceiveOrderStoreRequest $request, PurchaseOrder $purchaseOrder, StockOperationService $stockOperationService)
     {
         $receiveOrder = $request->validated();
 
@@ -125,23 +132,13 @@ class PurchaseOrderController extends Controller
                     'inbound',
                     $purchaseOrderItem->product,
                     $stockData,
-                    $itemData['quantity_received'],
-                    $poItem->product->unit->name,
-                    "Received from PO #{$purchaseOrder->po_number}"
+                    $newReceiveOrderItem->quantity_received,
+                    $stockData['unit'],
+                    $stockData['remarks']
                 );
-
-                $poItem->increment('quantity_received', $itemData['quantity_received']);
             }
-        }
+        });
 
-        $totalOrdered = $purchaseOrder->items->sum('quantity');
-        $totalReceived = $purchaseOrder->items->sum('quantity_received');
-
-        if ($totalReceived >= $totalOrdered) {
-            $purchaseOrder->update(['status' => 'received']);
-        } elseif ($totalReceived > 0) {
-            $purchaseOrder->update(['status' => 'partially_received']);
-        }
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)->with('success', 'Items received successfully.');
     }

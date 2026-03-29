@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\StockData;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
 use App\Models\Operation;
@@ -67,22 +68,7 @@ class OperationController extends Controller
     public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
 
-        $validatedData = $request->validate([
-            'operationType' => 'required|in:inbound,outbound,adjustment,transfer,return',
-            'adjustmentType' => 'required|in:addition,subtraction',
-            'product' => 'required|exists:products,id',
-            'location' => 'required_unless:operationType,transfer|exists:locations,id',
-            'batch' => 'required|exists:batches,id',
-            'quantity' => 'required|numeric|min:0',
-            'unit' => 'required|exists:units,name',
-            'date' => 'required|date',
-            'remarks' => 'nullable|string|max:255',
-            'source_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
-            'destination_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
-            'with_container' => 'nullable|boolean',
-            'container_quantity' => 'nullable|numeric|min:0',
-            'container_unit' => 'nullable|exists:units,name',
-        ]);
+        $validatedData = $request->validated();
 
         $validatedData['batch'] = $batchAssignmentService->determineBatch(
             $validatedData['product'],
@@ -107,7 +93,7 @@ class OperationController extends Controller
 
         if ($operationType === 'inbound') {
             if (! $stockData) {
-                $stockData = [
+                $stockData = StockData::fromArray([
                     'location_id' => $validatedData['location'],
                     'batch_id' => $validatedData['batch'],
                     'quantity' => $operationQuantity,
@@ -119,7 +105,7 @@ class OperationController extends Controller
                     'with_container' => $validatedData['with_container'] ?? false,
                     'container_quantity' => $validatedData['container_quantity'] ?? null,
                     'container_unit' => $validatedData['container_unit'] ?? null,
-                ];
+                ]);
                 $operationService->createInitialStock(
                     $validatedData['product'],
                     $stockData
