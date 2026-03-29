@@ -205,6 +205,7 @@ export interface ReceiveOrder {
     purchase_order?: PurchaseOrder;
     created_at?: string;
     updated_at?: string;
+    received_items?: ReceiveOrderItem[];
 }
 
 export interface ReceiveOrderItem {
