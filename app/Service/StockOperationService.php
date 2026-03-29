@@ -40,9 +40,19 @@ class StockOperationService
         $this->batchService = $batchService;
     }
 
-    // Creating initial stock
-    // 1. Accept product & stock data
-    // 2. Supplier=
+    public function createStockOperation(string $operationType, Product|int $product, Stock|StockData $stockData, float $quantity, Unit|string $unit, string $remarks = '', $operationDate = null, ?bool $withContainer = false)
+    {
+        switch ($operationType) {
+            case self::INBOUND:
+                return $this->createInboundOperation($product, $stockData, $quantity, $unit, $remarks, $operationDate);
+            case self::OUTBOUND:
+                return $this->createOutboundOperation($product, $stockData, $quantity, $unit, $remarks, $operationDate);
+            case self::ADJUSTMENT:
+                return $this->adjustStockOperation($stockData, $quantity, $unit, 'adjustment', $remarks, $operationDate, $withContainer);
+            default:
+                throw new \InvalidArgumentException("Unknown operation type: {$operationType}");
+        }
+    }
 
     public function createInitialStock(Product|int $product, StockData $stockData)
     {
@@ -144,8 +154,64 @@ class StockOperationService
     public function createInboundOperation(Product|int $product, Stock|StockData $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $receiveQuantity, $unit, $remarks, $operationDate) {
-            $operation = $this->createOperation(
-                'inbound',
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+
+            // A Stock model instance always refers to an existing record.
+            // A StockData DTO requires a DB look-up to decide which path to take.
+            $stockExists = $stockData instanceof Stock
+                ? true
+                : Stock::where('product_id', $product->id)
+                    ->where('location_id', $stockData['location_id'])
+                    ->where('batch_id', $stockData['batch_id'])
+                    ->exists();
+
+            if ($stockExists) {
+                // ── Inbound into an existing batch ────────────────────────────
+                $this->createOperation(
+                    self::INBOUND,
+                    $product,
+                    $stockData,
+                    $receiveQuantity,
+                    $unit,
+                    $remarks,
+                    $operationDate
+                );
+
+                return $this->setStock(
+                    $product,
+                    $stockData,
+                    $receiveQuantity,
+                    $unit,
+                    'increment',
+                    $stockData['with_container'] ?? false
+                );
+            }
+
+            // ── Initial stock: no existing stock record for this batch ────────
+            // Determine (or create) the appropriate batch before recording stock.
+            $batchId    = $stockData['batch_id'] ?? null;
+            $supplierId = $stockData['supplier_id'] ?? null;
+
+            $resolvedBatchId = $batchId
+                ? $this->batchService->determineBatch(
+                    $product,
+                    (int) $batchId,
+                    self::INBOUND,
+                    $stockData['date'] ?? null,
+                    $supplierId,
+                )
+                : $this->batchService->determineBatch(
+                    product: $product,
+                    operationType: self::INBOUND,
+                    operationDate: $stockData['date'] ?? null,
+                    supplierId: $supplierId,
+                    minQty: (int) ($stockData['minimum_quantity'] ?? 0),
+                );
+
+            $stockData = $stockData->with(['batch_id' => (int) $resolvedBatchId]);
+
+            $this->createOperation(
+                self::INITIAL,
                 $product,
                 $stockData,
                 $receiveQuantity,
@@ -153,16 +219,15 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            $stock = $this->setStock(
+
+            return $this->setStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
                 $unit,
-                'increment',
+                'set',
                 $stockData['with_container'] ?? false
             );
-
-            return $stock;
         });
     }
 
