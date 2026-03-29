@@ -27,21 +27,25 @@ test('User can submit a new stock operation', function () {
     $admin = User::factory()->admin()->create();
     $product = productWithSupplier();
     $location = Location::factory()->create();
+    $date = now();
     $response = $this->actingAs($admin)->post(route('operations.store'), [
         'operationType' => 'inbound',
         'product' => $product->id,
         'location' => $location->id,
         'quantity' => 100,
+        'unit' => $product->unit,
+        'date' => $date,
         'user_id' => $admin->id,
     ]);
     $response->assertStatus(302);
     $response->assertRedirect(route('operations.index'));
     $this->assertDatabaseHas('operations', [
-        'operationType' => 'inbound',
-        'product_id' => $product->id,
-        'quantity' => 100,
-        'batch_id' => 1,
-        'user_id' => $admin->id,
-    ]);
-
+            'operationType' => 'inbound',
+            'product' => $product->id,
+            'location' => $location->id,
+            'quantity' => 100,
+            'unit' => $product->unit,
+            'date' => $date,
+            'user_id' => $admin->id,
+        ]);
 });

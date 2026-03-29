@@ -545,29 +545,26 @@ describe('Receiving Purchase Orders', function () {
     // (Note: route must be registered; tests are marked ->todo() if route is missing)
     // -----------------------------------------------------------------------
     describe('receiveStore endpoint', function () {
-        // TODO: Register the receive routes in web.php, e.g.:
-        //   Route::get('/{purchase_order}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
-        //   Route::post('/{purchase_order}/receive', [PurchaseOrderController::class, 'receiveStore'])->name('purchase-orders.receiveStore');
-
-        test('full receive updates PO status to received', function () {
+       test('full receive updates PO status to received', function () {
             $data = createPersistedPO(itemCount: 2, qty: 50);
             $po = $data['po'];
 
             $receivePayload = [
                 'items' => $po->items->map(fn ($item) => [
+                    'product_id' => $item->product_id,
                     'purchase_order_item_id' => $item->id,
                     'quantity_received' => $item->quantity, // receive everything
                 ])->toArray(),
             ];
 
             asAdmin()
-                ->post(route('purchase-orders.receiveStore', $po), $receivePayload)
+                ->post(route('purchase-orders.process-receive', $po), $receivePayload)
                 ->assertRedirect(route('purchase-orders.show', $po))
                 ->assertSessionHas('success');
 
             $po->refresh();
             expect($po->status)->toBe('received');
-        })->todo();
+        });
 
         test('partial receive updates PO status to partially_received', function () {
             $data = createPersistedPO(itemCount: 1, qty: 100);
