@@ -70,16 +70,16 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Receive Items for PO - ${purchaseOrder.po_number}`} />
-            <div className="space-y-6">
-                <div className="mb-4">
-                    <Button variant={'link'} asChild>
-                        <Link href={route('purchase-orders.show', purchaseOrder.id)}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Purchase Order {purchaseOrder.po_number}
-                        </Link>
-                    </Button>
-                </div>
-                <ContainerLayout>
+            <ContainerLayout>
+                <div className="space-y-6">
+                    <div className="mb-4">
+                        <Button variant={'link'} asChild>
+                            <Link href={route('purchase-orders.show', purchaseOrder.id)}>
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Purchase Order {purchaseOrder.po_number}
+                            </Link>
+                        </Button>
+                    </div>
                     <form onSubmit={receiveItemsHandler}>
                         <Card className="border-none">
                             <CardHeader>
@@ -374,8 +374,8 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                             <Button disabled={processing}>Receive Items</Button>
                         </div>
                     </form>
-                </ContainerLayout>
-            </div>
+                </div>
+            </ContainerLayout>
         </AppLayout>
     );
 }

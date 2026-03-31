@@ -12,7 +12,7 @@ class AuthorizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $resources = ['product', 'partner', 'stock', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment', 'purchase_order', 'user'];
+        $resources = ['product', 'partner', 'stock', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment', 'purchase_order', 'receive_order', 'user'];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
         $permissions = collect($resources)->flatMap(

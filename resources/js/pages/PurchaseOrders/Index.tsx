@@ -28,14 +28,12 @@ export default function Index({ purchaseOrders }: { purchaseOrders: PurchaseOrde
                         <h1 className="mb-4 text-2xl font-bold">Purchase Orders</h1>
                         <p className="text-muted-foreground mb-6 text-sm">List of purchase orders.</p>
                     </div>
-                    {permissions.create && (
-                        <Button variant={'default'} size={'lg'} asChild>
-                            <Link href={`/purchase-orders/create`} className="text-primary text-lg font-medium">
-                                <PlusIcon className="mr-2 h-4 w-4" />
-                                Create PO
-                            </Link>
-                        </Button>
-                    )}
+                    <Button variant={'default'} size={'lg'} asChild>
+                        <Link href={`/purchase-orders/create`} className="text-primary text-lg font-medium">
+                            <PlusIcon className="mr-2 h-4 w-4" />
+                            Create PO
+                        </Link>
+                    </Button>
                 </div>
                 <DataTable columns={columns} data={purchaseOrders} clientSide={true} />
             </ContainerLayout>

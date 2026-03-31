@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                     'supplier' => $request->user()->hasPermission('supplier.viewAny') ?? false,
                     'partner' => $request->user()->hasPermission('partner.viewAny') ?? false,
                     'purchase_orders' => $request->user()->hasPermission('purchase_order.viewAny') ?? false,
+                    'receive_orders' => $request->user()->hasPermission('receive_order.viewAny') ?? false,
                     'user-roles' => $request->user()->hasPermission('user.viewAny') ?? false,
                 ] : [],
             ],

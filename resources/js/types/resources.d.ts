@@ -198,9 +198,10 @@ export interface PurchaseOrder {
 
 export interface ReceiveOrder {
     id: number;
-    receive_order_number: string;
+    receive_number: string;
+    reference_number?: string;
     purchase_order_id: number;
-    received_date: string;
+    receive_date: string;
     notes?: string;
     purchase_order?: PurchaseOrder;
     created_at?: string;

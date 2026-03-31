@@ -12,7 +12,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { PurchaseOrder } from '@/types/resources';
+import { PurchaseOrder, ReceiveOrder } from '@/types/resources';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, File, Mail, MapPin, PencilIcon, PhoneCall, User } from 'lucide-react';
 
@@ -27,10 +27,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Show({ purchaseOrder }: { purchaseOrder: PurchaseOrder }) {
+export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: PurchaseOrder; receiveOrders: ReceiveOrder[] }) {
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}`;
 
     console.log(purchaseOrder);
+    console.log(receiveOrders);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`PO - ${purchaseOrder.po_number}`} />

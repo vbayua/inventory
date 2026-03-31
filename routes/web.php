@@ -77,6 +77,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{purchase_order}/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
         Route::post('/{purchase_order}/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receiveStore'])->name('purchase-orders.process-receive');
     });
+
+    Route::prefix('receive-orders')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReceiveOrderController::class, 'index'])->name('receive-orders.index');
+        Route::get('/create', [\App\Http\Controllers\ReceiveOrderController::class, 'create'])->name('receive-orders.create');
+        Route::post('/', [\App\Http\Controllers\ReceiveOrderController::class, 'store'])->name('receive-orders.store');
+        Route::get('/{receive_order}', [\App\Http\Controllers\ReceiveOrderController::class, 'show'])->name('receive-orders.show');
+        Route::get('/{receive_order}/edit', [\App\Http\Controllers\ReceiveOrderController::class, 'edit'])->name('receive-orders.edit');
+        Route::put('/{receive_order}', [\App\Http\Controllers\ReceiveOrderController::class, 'update'])->name('receive-orders.update');
+        Route::get('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receive'])->name('receive-orders.receive');
+        Route::post('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receiveStore'])->name('receive-orders.process-receive');
+    });
 });
 
 require __DIR__.'/settings.php';
