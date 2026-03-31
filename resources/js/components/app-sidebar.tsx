@@ -113,7 +113,7 @@ const purchaseOrderNavItems: NavItem[] = [
         uri: 'purchase_orders',
     },
     {
-        title: 'Receive Item',
+        title: 'Receive Orders',
         href: '/receive-orders',
         icon: Box,
         uri: 'receive_orders',
