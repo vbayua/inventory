@@ -10,6 +10,7 @@ class ReceiveOrderItem extends Model
         'receive_order_id',
         'purchase_order_item_id',
         'quantity_received',
+        'location_id'
     ];
 
     public function receiveOrder()
@@ -20,5 +21,10 @@ class ReceiveOrderItem extends Model
     public function purchaseOrderItem()
     {
         return $this->belongsTo(PurchaseOrderItem::class);
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
     }
 }
