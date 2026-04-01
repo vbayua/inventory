@@ -32,7 +32,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
             <div className="flex flex-1 items-center space-x-2">
                 <span className="text-muted-foreground text-sm">Cari: </span>
                 <Input
-                    placeholder="Nama Produk atau Kode Item"
+                    placeholder="Search PO or RO number"
                     value={(table.getState().globalFilter as string) ?? ''}
                     onChange={(event) => table.setGlobalFilter(event.target.value)}
                     className="focus:border-primary h-12 w-full max-w-sm focus:ring-0"
