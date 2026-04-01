@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/create', [\App\Http\Controllers\ReceiveOrderController::class, 'create'])->name('receive-orders.create');
         Route::post('/', [\App\Http\Controllers\ReceiveOrderController::class, 'store'])->name('receive-orders.store');
         Route::get('/{receive_order}', [\App\Http\Controllers\ReceiveOrderController::class, 'show'])->name('receive-orders.show');
+        Route::get('/{receive_order}/item/{item}', [\App\Http\Controllers\ReceiveOrderController::class, 'showItem'])->name('receive-orders.item');
         Route::get('/{receive_order}/edit', [\App\Http\Controllers\ReceiveOrderController::class, 'edit'])->name('receive-orders.edit');
         Route::put('/{receive_order}', [\App\Http\Controllers\ReceiveOrderController::class, 'update'])->name('receive-orders.update');
         Route::get('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receive'])->name('receive-orders.receive');
