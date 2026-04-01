@@ -99,6 +99,7 @@ class PurchaseOrderController extends Controller
                 'receive_number' => $receiveOrder['receive_order_number'],
                 'reference_number' => $receiveOrder['reference_number'] ?? null,
                 'receive_date' => Carbon::parse($receiveOrder['receive_date']),
+                'location_id' => $receiveOrder['location_id'],
                 'notes' => $receiveOrder['notes'] ?? null,
             ]);
 
