@@ -17,22 +17,23 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
         },
     },
     {
-        accessorKey: 'reference_number',
-        header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Reference Number" />;
-        },
-        cell: ({ cell }) => {
-            return <>{(cell.getValue() as string) ?? '-'}</>;
-        },
-    },
-    {
         id: 'purchase_order',
         accessorFn: (row) => row.purchase_order?.po_number,
         header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Purchase Order" />;
+            return <DataTableColumnHeader column={column} title="PO Number" />;
         },
         cell: ({ cell }) => {
             return <Link href={route('purchase-orders.show', { id: cell.row.original.purchase_order_id })}>{cell.getValue() as string}</Link>;
+        },
+    },
+    {
+        id: 'supplier',
+        accessorFn: (row) => row.purchase_order?.supplier?.partner?.name,
+        header: ({ column }) => {
+            return <DataTableColumnHeader column={column} title="Supplier" />;
+        },
+        cell: ({ cell }) => {
+            return <>{cell.getValue() as string}</>;
         },
     },
     {
@@ -48,6 +49,16 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
                 month: '2-digit',
                 day: '2-digit',
             });
+        },
+    },
+    {
+        id: 'notes',
+        accessorKey: 'notes',
+        header: ({ column }) => {
+            return <DataTableColumnHeader column={column} title="Notes" />;
+        },
+        cell: ({ cell }) => {
+            return <>{(cell.getValue() as string) ?? '-'}</>;
         },
     },
     {
