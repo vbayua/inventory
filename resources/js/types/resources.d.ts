@@ -173,8 +173,10 @@ export interface PurchaseOrderItem {
     id: number;
     purchase_order_id: number;
     product_id: number;
+    location_id: number;
     quantity: number;
     price: number;
+    location?: Location;
     product?: Product;
     created_at?: string;
     updated_at?: string;
@@ -184,7 +186,6 @@ export interface PurchaseOrder {
     id: number;
     po_number: string;
     supplier_id: number;
-    location_id: number;
     order_date: string;
     status: string;
     expected_delivery_date?: string;
@@ -206,7 +207,7 @@ export interface ReceiveOrder {
     purchase_order?: PurchaseOrder;
     created_at?: string;
     updated_at?: string;
-    received_items?: ReceiveOrderItem[];
+    receive_order_items?: ReceiveOrderItem[];
 }
 
 export interface ReceiveOrderItem {
@@ -217,4 +218,6 @@ export interface ReceiveOrderItem {
     product?: Product;
     created_at?: string;
     updated_at?: string;
+    purchase_order_item?: PurchaseOrderItem;
+    location?: Location;
 }
