@@ -62,6 +62,8 @@ readonly class StockData implements ArrayAccess
 
         /** Unit name for the container (e.g. 'drum', 'pallet'). */
         public ?string $container_unit = null,
+
+        public ?int $user_id = null,
     ) {}
 
     // -------------------------------------------------------------------------
@@ -106,6 +108,7 @@ readonly class StockData implements ArrayAccess
             with_container: (bool) ($data['with_container'] ?? false),
             container_capacity: isset($data['container_capacity']) ? (float) $data['container_capacity'] : null,
             container_unit: isset($data['container_unit']) ? (string) $data['container_unit'] : null,
+            user_id: isset($data['user_id']) ? (int) $data['user_id'] : null,
         );
     }
 
@@ -140,6 +143,7 @@ readonly class StockData implements ArrayAccess
             with_container: false,
             container_capacity: $stock->container_capacity !== null ? (float) $stock->container_capacity : null,
             container_unit: $stock->container_unit !== null ? (string) $stock->container_unit : null,
+            user_id: $stock->user_id !== null ? (int) $stock->user_id : null,
         );
     }
 
@@ -273,6 +277,7 @@ readonly class StockData implements ArrayAccess
             'with_container'     => $this->with_container,
             'container_capacity' => $this->container_capacity,
             'container_unit'     => $this->container_unit,
+            'user_id'            => $this->user_id,
         ];
     }
 }

@@ -491,7 +491,7 @@ class StockOperationService
                 'quantity' => $usageQuantity,
                 'operation_date' => $operationDateWithAddedTime,
                 'remarks' => $remarks ?? '',
-                'user_id' => Auth::id(),
+                'user_id' => $stockData['user_id'] ?? Auth::id(),
             ]);
 
             return $operation;
@@ -533,7 +533,7 @@ class StockOperationService
                 $stock->container_capacity = $stockData['container_capacity'] ?? null;
                 $stock->container_unit = $stockData['container_unit'] ?? null;
                 $stock->status = 'out_of_stock';
-                $stock->user_id = Auth::id();
+                $stock->user_id = $stockData['user_id'] ?? Auth::id();
                 $stock->save();
                 // Relock newly reted row to be safe in high contention
                 $stock = Stock::where('id', $stock->id)->lockForUpdate()->firstOrFail();
