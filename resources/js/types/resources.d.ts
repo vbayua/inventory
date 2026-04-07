@@ -195,6 +195,7 @@ export interface PurchaseOrder {
     items?: PurchaseOrderItem[];
     created_at?: Date | string;
     updated_at?: Date | string;
+    user?: User;
 }
 
 export interface ReceiveOrder {
@@ -208,6 +209,8 @@ export interface ReceiveOrder {
     created_at?: string;
     updated_at?: string;
     receive_order_items?: ReceiveOrderItem[];
+    user_id?: number;
+    user?: User;
 }
 
 export interface ReceiveOrderItem {

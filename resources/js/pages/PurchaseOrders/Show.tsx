@@ -12,11 +12,12 @@ import {
 import { Item, ItemContent } from '@/components/ui/item';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { PurchaseOrder, ReceiveOrder } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, File, Mail, MapPin, PencilIcon, PhoneCall, User } from 'lucide-react';
+import { ArrowLeft, File, Mail, MapPin, PencilIcon, PenIcon, PhoneCall, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -49,7 +50,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}`;
 
     // console.log(purchaseOrder);
-    console.log(receiveOrders);
+    console.log(receiveOrders.length);
 
     const [activeTab, setActiveTab] = useState<'overview' | 'log_history'>('overview');
     const [hasLoadedReceiveOps, setHasLoadedReceiveOps] = useState(false);
@@ -74,6 +75,30 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
     };
 
     const recentReceiveOrders = hasLoadedReceiveOps ? (receiveOrders ?? [])?.slice(0, 5) : [];
+
+    const [purchaseOrderNotes, setPurchaseOrderNotes] = useState(purchaseOrder.notes ?? '');
+
+    const [editNoteOpen, setEditNoteOpen] = useState(false);
+
+    const handleSetPurchaseOrderNote = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setPurchaseOrderNotes(e.target.value);
+    };
+
+    const handleSavePurchaseOrderNote = () => {
+        setEditNoteOpen(false);
+        if (purchaseOrderNotes !== purchaseOrder.notes) {
+            router.put(
+                route('purchase-orders.update', { id: purchaseOrder.id }),
+                { notes: purchaseOrderNotes },
+                {
+                    onSuccess: () => {
+                        setEditNoteOpen(false);
+                        router.reload({ only: ['purchase-orders'] });
+                    },
+                },
+            );
+        }
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`PO - ${purchaseOrder.po_number}`} />
@@ -127,9 +152,11 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                             {/* Add more actions here if needed */}
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuItem variant={'destructive'}>Cancel Order</DropdownMenuItem>
-                                        </DropdownMenuGroup>
+                                        {!receiveOrders && receiveOrders?.length !== 0 && (
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem variant={'destructive'}>Cancel Order</DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                        )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -270,14 +297,35 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                         <div className="col-span-2 space-y-6">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Notes</CardTitle>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle>Notes</CardTitle>
+                                        <Button variant="ghost" size="sm" onClick={() => setEditNoteOpen(!editNoteOpen)}>
+                                            <PenIcon className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    {purchaseOrder.notes ? (
-                                        <p className="text-lg font-medium">{purchaseOrder.notes}</p>
-                                    ) : (
-                                        <p className="text-muted-foreground text-sm">No additional notes.</p>
-                                    )}
+                                    <p className="mb-4" hidden={editNoteOpen}>
+                                        {purchaseOrder.notes ?? '-'}
+                                    </p>
+                                    <div className="">
+                                        <Textarea
+                                            className="w-full"
+                                            placeholder="Enter notes here..."
+                                            value={purchaseOrderNotes}
+                                            onChange={handleSetPurchaseOrderNote}
+                                            disabled={!editNoteOpen}
+                                            hidden={!editNoteOpen}
+                                        />
+                                        <Button
+                                            onClick={handleSavePurchaseOrderNote}
+                                            className="mt-4"
+                                            disabled={!editNoteOpen}
+                                            hidden={!editNoteOpen}
+                                        >
+                                            Save
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
@@ -290,15 +338,15 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                     <div className="space-y-2">
                                         <div>
                                             <p className="text-muted-foreground text-sm">Created By</p>
-                                            <p className="text-lg font-medium">{purchaseOrder.created_by?.name || '-'}</p>
+                                            <p className="text-lg font-medium">{purchaseOrder.user?.name || '-'}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground text-sm">Last Updated</p>
-                                            <p className="text-lg font-medium">{new Date(purchaseOrder.updated_at).toLocaleString('id-ID')}</p>
+                                            <p className="text-lg font-medium">{new Date(purchaseOrder.updated_at ?? '').toLocaleString('id-ID')}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground text-sm">Created At</p>
-                                            <p className="text-lg font-medium">{new Date(purchaseOrder.created_at).toLocaleString('id-ID')}</p>
+                                            <p className="text-lg font-medium">{new Date(purchaseOrder.created_at ?? '').toLocaleString('id-ID')}</p>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -338,7 +386,12 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                                         <ItemContent>
                                                                             <div className="flex items-center justify-between">
                                                                                 <p>{order.receive_number}</p>
-                                                                                <p>{formatRelativeTime(order.receive_date)}</p>
+                                                                                <div>
+                                                                                    <p>
+                                                                                        {order.user ? `Received by ${order.user?.name} ` : ''}
+                                                                                        {formatRelativeTime(order.receive_date)}
+                                                                                    </p>
+                                                                                </div>
                                                                             </div>
                                                                         </ItemContent>
                                                                     </Item>
@@ -358,6 +411,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                     <TableHead>Reference</TableHead>
                                                     <TableHead>Date</TableHead>
                                                     <TableHead>Notes</TableHead>
+                                                    <TableHead>Received By</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -367,6 +421,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                         <TableCell>{receiveOrder.reference_number ?? '-'}</TableCell>
                                                         <TableCell>{receiveOrder.receive_date}</TableCell>
                                                         <TableCell>{receiveOrder.notes ?? '-'}</TableCell>
+                                                        <TableCell>{receiveOrder.user?.name ?? '-'}</TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>

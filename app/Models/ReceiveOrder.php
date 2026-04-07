@@ -12,6 +12,7 @@ class ReceiveOrder extends Model
         'waybill_number',
         'receive_date',
         'notes',
+        'user_id',
     ];
 
     public function purchaseOrder()
@@ -22,5 +23,10 @@ class ReceiveOrder extends Model
     public function receiveOrderItems()
     {
         return $this->hasMany(ReceiveOrderItem::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

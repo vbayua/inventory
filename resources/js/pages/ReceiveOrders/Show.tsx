@@ -267,15 +267,15 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                                     <div className="space-y-2">
                                         <div>
                                             <p className="text-muted-foreground text-sm">Created By</p>
-                                            <p className="text-lg font-medium">{receiveOrder.created_by?.name || '-'}</p>
+                                            <p className="text-lg font-medium">{receiveOrder.user?.name || '-'}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground text-sm">Last Updated</p>
-                                            <p className="text-lg font-medium">{new Date(receiveOrder.updated_at).toLocaleString('id-ID')}</p>
+                                            <p className="text-lg font-medium">{new Date(receiveOrder.updated_at ?? '').toLocaleString('id-ID')}</p>
                                         </div>
                                         <div>
                                             <p className="text-muted-foreground text-sm">Created At</p>
-                                            <p className="text-lg font-medium">{new Date(receiveOrder.created_at).toLocaleString('id-ID')}</p>
+                                            <p className="text-lg font-medium">{new Date(receiveOrder.created_at ?? '').toLocaleString('id-ID')}</p>
                                         </div>
                                     </div>
                                 </CardContent>

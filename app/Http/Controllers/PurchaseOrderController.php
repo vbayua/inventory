@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\DTO\StockData;
 use App\Http\Requests\ReceiveOrderStoreRequest;
 use App\Http\Requests\StorePurchaseOrderRequest;
+use App\Http\Requests\UpdatePurchaseOrderRequest;
 use App\Models\Batch;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
@@ -14,6 +15,7 @@ use App\Rules\Permissions\PurchaseOrderPermissions;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -56,13 +58,21 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'supplier:id,partner_id', 'supplier.partner:id,name');
+        $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'supplier:id,partner_id', 'supplier.partner:id,name', 'user:id,name');
 
-        $receiveOrders = $purchaseOrder->receive_orders;
+        $receiveOrders = $purchaseOrder->receive_orders()->latest()->get();
+        $receiveOrders->load('user:id,name');
+
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
             'receiveOrders' => $receiveOrders,
         ]);
+    }
+
+    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
+    {
+        $purchaseOrder->update($request->validated());
+        return redirect()->back()->with('success', 'Purchase order updated successfully.');
     }
 
     public function receive(PurchaseOrder $purchaseOrder)
@@ -91,15 +101,16 @@ class PurchaseOrderController extends Controller
 
     public function receiveStore(ReceiveOrderStoreRequest $request, PurchaseOrder $purchaseOrder, StockOperationService $stockOperationService)
     {
-        $receiveOrder = $request->validated();
+        $receiveOrder = array_merge($request->validated(), ['user_id' => Auth::id()]);
+
 
         DB::transaction(function () use ($purchaseOrder, $receiveOrder, $stockOperationService) {
             $newReceiveOrder = $purchaseOrder->receive_orders()->create([
                 'receive_number' => $receiveOrder['receive_order_number'],
                 'reference_number' => $receiveOrder['reference_number'] ?? null,
                 'receive_date' => Carbon::parse($receiveOrder['receive_date']),
-                'location_id' => $receiveOrder['location_id'],
                 'notes' => $receiveOrder['notes'] ?? null,
+                'user_id' => $receiveOrder['user_id'] ?? null,
             ]);
 
             foreach ($receiveOrder['items'] as $item) {
@@ -128,6 +139,7 @@ class PurchaseOrderController extends Controller
                     'unit' => $purchaseOrderItem->product->unit,
                     'location_id' => $item['location_id'],
                     'supplier_id' => $purchaseOrder->supplier_id,
+                    'user_id' => $newReceiveOrder->user_id,
                     'remarks' => 'Received via Purchase Order #' . $purchaseOrder->id,
                 ]);
 

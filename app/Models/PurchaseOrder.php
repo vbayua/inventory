@@ -17,6 +17,7 @@ class PurchaseOrder extends Model
         'expected_delivery_date',
         'status',
         'notes',
+        'user_id'
     ];
 
     public function supplier()
