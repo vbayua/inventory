@@ -9,12 +9,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Item, ItemContent } from '@/components/ui/item';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { PurchaseOrder, ReceiveOrder } from '@/types/resources';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, File, Mail, MapPin, PencilIcon, PhoneCall, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,11 +30,50 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const statusConfig = (status: string) => {
+    switch (status) {
+        case 'pending':
+            return { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' };
+        case 'partially_received':
+            return { color: 'bg-green-100 text-green-800', label: 'Partially Received' };
+        case 'received':
+            return { color: 'bg-blue-100 text-blue-800', label: 'Received' };
+        case 'cancelled':
+            return { color: 'bg-red-100 text-red-800', label: 'Cancelled' };
+        default:
+            return { color: 'gray', label: 'Unknown' };
+    }
+};
+
 export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: PurchaseOrder; receiveOrders: ReceiveOrder[] }) {
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}`;
 
-    console.log(purchaseOrder);
+    // console.log(purchaseOrder);
     console.log(receiveOrders);
+
+    const [activeTab, setActiveTab] = useState<'overview' | 'log_history'>('overview');
+    const [hasLoadedReceiveOps, setHasLoadedReceiveOps] = useState(false);
+
+    useEffect(() => {
+        if ((activeTab === 'overview' || activeTab === 'log_history') && !hasLoadedReceiveOps) {
+            router.reload({ only: ['receive-orders'] });
+            setHasLoadedReceiveOps(true);
+        }
+    }, [activeTab, hasLoadedReceiveOps]);
+    const formatRelativeTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffHours < 1) return 'Just now';
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return `${diffDays}d ago`;
+    };
+
+    const recentReceiveOrders = hasLoadedReceiveOps ? (receiveOrders ?? [])?.slice(0, 5) : [];
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`PO - ${purchaseOrder.po_number}`} />
@@ -118,7 +160,9 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground text-sm">Status</p>
-                                    <p className={`text-lg font-medium capitalize`}>{purchaseOrder.status}</p>
+                                    <p className={`rounded px-2 py-1 ${statusConfig(purchaseOrder.status).color}`}>
+                                        {statusConfig(purchaseOrder.status).label}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -223,7 +267,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                         </Card>
                     </div>
                     <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="col-span-2">
+                        <div className="col-span-2 space-y-6">
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Notes</CardTitle>
@@ -260,6 +304,77 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 </CardContent>
                             </Card>
                         </div>
+                    </div>
+                    <div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Receive Orders</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Tabs onValueChange={(value) => setActiveTab(value as 'overview' | 'log_history')} value={activeTab}>
+                                    <TabsList>
+                                        <TabsTrigger value="overview">Overview</TabsTrigger>
+                                        <TabsTrigger value="log_history">History</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="overview">
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <Card className="md:col-span-3">
+                                                <CardHeader>
+                                                    <CardTitle>Recently Received</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    {hasLoadedReceiveOps === false || recentReceiveOrders?.length === 0 ? (
+                                                        <p className="text-muted-foreground">No received orders yet.</p>
+                                                    ) : (
+                                                        <div>
+                                                            {recentReceiveOrders?.map((order) => (
+                                                                <Link href={route('receive-orders.show', order.id)}>
+                                                                    <Item
+                                                                        key={order.id}
+                                                                        variant={'outline'}
+                                                                        size="sm"
+                                                                        className="hover:bg-accent/50 mb-4 last:mb-0"
+                                                                    >
+                                                                        <ItemContent>
+                                                                            <div className="flex items-center justify-between">
+                                                                                <p>{order.receive_number}</p>
+                                                                                <p>{formatRelativeTime(order.receive_date)}</p>
+                                                                            </div>
+                                                                        </ItemContent>
+                                                                    </Item>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                    </TabsContent>
+                                    <TabsContent value="log_history">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Receive Number</TableHead>
+                                                    <TableHead>Reference</TableHead>
+                                                    <TableHead>Date</TableHead>
+                                                    <TableHead>Notes</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {receiveOrders.map((receiveOrder) => (
+                                                    <TableRow key={receiveOrder.id}>
+                                                        <TableCell>{receiveOrder.receive_number}</TableCell>
+                                                        <TableCell>{receiveOrder.reference_number ?? '-'}</TableCell>
+                                                        <TableCell>{receiveOrder.receive_date}</TableCell>
+                                                        <TableCell>{receiveOrder.notes ?? '-'}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TabsContent>
+                                </Tabs>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </ContainerLayout>

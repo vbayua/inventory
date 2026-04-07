@@ -6,6 +6,21 @@ import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 
+const statusConfig = (status: string) => {
+    switch (status) {
+        case 'pending':
+            return { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' };
+        case 'partially_received':
+            return { color: 'bg-green-100 text-green-800', label: 'Partially Received' };
+        case 'received':
+            return { color: 'bg-blue-100 text-blue-800', label: 'Received' };
+        case 'cancelled':
+            return { color: 'bg-red-100 text-red-800', label: 'Cancelled' };
+        default:
+            return { color: 'gray', label: 'Unknown' };
+    }
+};
+
 export const columns: ColumnDef<PurchaseOrder>[] = [
     {
         accessorKey: 'po_number',
@@ -34,10 +49,38 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
                 day: '2-digit',
             });
         },
+        filterFn: (row, id, value) => {
+            if (!value || (!value.from && !value.to)) return true;
+
+            const rowDate = new Date(row.getValue<string>(id) ?? '');
+
+            const normalizeStartOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(0, 0, 0, 0);
+                return nd;
+            };
+            const normalizeEndOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(23, 59, 59, 999);
+                return nd;
+            };
+
+            if (value.from && value.to) {
+                return rowDate >= normalizeStartOfDay(value.from as Date) && rowDate <= normalizeEndOfDay(value.to as Date);
+            }
+            if (value.from) return rowDate >= normalizeStartOfDay(value.from as Date);
+            if (value.to) return rowDate <= normalizeEndOfDay(value.to as Date);
+            return true;
+        },
     },
     {
         accessorKey: 'status',
         header: 'Status',
+        cell: ({ cell }) => {
+            const status = cell.getValue() as string;
+            const config = statusConfig(status);
+            return <span className={`inline-block rounded px-2 py-1 ${config.color}`}>{config.label}</span>;
+        },
     },
     {
         id: 'actions',

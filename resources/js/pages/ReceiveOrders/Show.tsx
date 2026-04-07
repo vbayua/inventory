@@ -15,7 +15,8 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { ReceiveOrder } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, File, Mail, MapPin, PenIcon, PhoneCall, User } from 'lucide-react';
+import { format } from 'date-fns';
+import { ArrowLeft, File, Link2Icon, Mail, MapPin, PenIcon, PhoneCall, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -116,7 +117,36 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                             <CardTitle>Basic Details</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"></div>
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex-1">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <span className="text-sm font-medium">Receive Number</span>
+                                            <p className="mt-1 text-sm">{receiveOrder.receive_number}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm font-medium">Supplier</span>
+                                            <p className="mt-1 text-sm">{receiveOrder.purchase_order?.supplier?.partner?.name}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm font-medium">Receive Date</span>
+                                            <p className="mt-1 text-sm">{format(receiveOrder.receive_date, 'LLL dd, y')}</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm font-medium">Purchase Order</span>
+                                            <div className="mt-1 space-x-1 text-sm">
+                                                <Link
+                                                    href={route('purchase-orders.show', { purchase_order: receiveOrder.purchase_order_id })}
+                                                    className="flex items-center hover:cursor-pointer hover:underline"
+                                                >
+                                                    <span className="mx-1">{receiveOrder.purchase_order?.po_number}</span>
+                                                    <Link2Icon className="inline-block h-4 w-4" />
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 

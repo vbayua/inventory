@@ -59,6 +59,10 @@ class ReceiveOrderController extends Controller
 
     public function showItem(ReceiveOrder $receive_order, ReceiveOrderItem $item)
     {
+        $item->load(
+            'purchaseOrderItem.product:id,name',
+            'location:id,name'
+        );
         return Inertia::render('ReceiveOrders/Item', [
             'receive_order' => $receive_order,
             'item' => $item,

@@ -220,4 +220,5 @@ export interface ReceiveOrderItem {
     updated_at?: string;
     purchase_order_item?: PurchaseOrderItem;
     location?: Location;
+    notes?: string;
 }

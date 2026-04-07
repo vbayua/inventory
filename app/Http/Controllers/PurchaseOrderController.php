@@ -59,7 +59,6 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'supplier:id,partner_id', 'supplier.partner:id,name');
 
         $receiveOrders = $purchaseOrder->receive_orders;
-        $receiveOrders->load('receiveOrderItems');
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
             'receiveOrders' => $receiveOrders,

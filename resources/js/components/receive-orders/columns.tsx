@@ -50,6 +50,29 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
                 day: '2-digit',
             });
         },
+        filterFn: (row, id, value) => {
+            if (!value || (!value.from && !value.to)) return true;
+
+            const rowDate = new Date(row.getValue<string>(id) ?? '');
+
+            const normalizeStartOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(0, 0, 0, 0);
+                return nd;
+            };
+            const normalizeEndOfDay = (d: Date) => {
+                const nd = new Date(d);
+                nd.setHours(23, 59, 59, 999);
+                return nd;
+            };
+
+            if (value.from && value.to) {
+                return rowDate >= normalizeStartOfDay(value.from as Date) && rowDate <= normalizeEndOfDay(value.to as Date);
+            }
+            if (value.from) return rowDate >= normalizeStartOfDay(value.from as Date);
+            if (value.to) return rowDate <= normalizeEndOfDay(value.to as Date);
+            return true;
+        },
     },
     {
         id: 'notes',
