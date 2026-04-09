@@ -28,12 +28,12 @@ class ReceiveOrderStoreRequest extends FormRequest
             'reference_number' => 'nullable|string',
             'receive_date' => 'required|date',
             'notes' => 'nullable|string',
-            'batch_id' => 'nullable|exists:batches,id',
             'user_id' => 'nullable|exists:users,id',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity_received' => 'required|integer|min:0',
             'items.*.location_id' => 'required|exists:locations,id',
+            'items.*.batch_id' => 'nullable|exists:batches,id',
             'items.*.notes' => 'nullable|string',
         ];
     }

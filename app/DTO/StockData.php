@@ -98,8 +98,8 @@ readonly class StockData implements ArrayAccess
         return new self(
             location_id: (int) $location,
             id: isset($data['id']) ? (int) $data['id'] : null,
-            batch_id: (int) $batch,
-            supplier_id: (int) $supplier,
+            batch_id: $batch !== null ? (int) $batch : null,
+            supplier_id: $supplier !== null ? (int) $supplier : null,
             unit: isset($data['unit']) ? (string) $data['unit'] : null,
             quantity: isset($data['quantity']) ? (float) $data['quantity'] : 0.0,
             minimum_quantity: isset($data['minimum_quantity']) ? (float) $data['minimum_quantity'] : 0.0,

@@ -138,6 +138,7 @@ class PurchaseOrderController extends Controller
                     'quantity' => $newReceiveOrderItem->quantity_received,
                     'unit' => $purchaseOrderItem->product->unit,
                     'location_id' => $item['location_id'],
+                    'batch_id' => !empty($item['batch_id']) ? (int) $item['batch_id'] : null,
                     'supplier_id' => $purchaseOrder->supplier_id,
                     'user_id' => $newReceiveOrder->user_id,
                     'remarks' => 'Received via Purchase Order #' . $purchaseOrder->id,
