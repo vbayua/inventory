@@ -89,6 +89,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receive'])->name('receive-orders.receive');
         Route::post('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receiveStore'])->name('receive-orders.process-receive');
     });
+
+    // QC Checklists
+    Route::prefix('qc/checklists')->name('qc.checklists.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\QcChecklistController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\QcChecklistController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\QcChecklistController::class, 'store'])->name('store');
+        Route::get('/{checklist}', [\App\Http\Controllers\QcChecklistController::class, 'show'])->name('show');
+        Route::get('/{checklist}/edit', [\App\Http\Controllers\QcChecklistController::class, 'edit'])->name('edit');
+        Route::put('/{checklist}', [\App\Http\Controllers\QcChecklistController::class, 'update'])->name('update');
+        Route::delete('/{checklist}', [\App\Http\Controllers\QcChecklistController::class, 'destroy'])->name('destroy');
+    });
+
+    // QC Inspections
+    Route::prefix('qc/inspections')->name('qc.inspections.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\QcInspectionController::class, 'index'])->name('index');
+        Route::get('/{inspection}', [\App\Http\Controllers\QcInspectionController::class, 'show'])->name('show');
+        Route::post('/{inspection}/start', [\App\Http\Controllers\QcInspectionController::class, 'start'])->name('start');
+        Route::post('/{inspection}/submit', [\App\Http\Controllers\QcInspectionController::class, 'submit'])->name('submit');
+    });
 });
 
 require __DIR__.'/settings.php';

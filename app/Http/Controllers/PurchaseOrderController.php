@@ -8,16 +8,19 @@ use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Http\Requests\UpdatePurchaseOrderRequest;
 use App\Models\Batch;
 use App\Models\PurchaseOrder;
+use App\Models\QcInspection;
 use App\Models\Supplier;
 use App\Models\Location;
 use App\Models\Product;
 use App\Rules\Permissions\PurchaseOrderPermissions;
 use App\Service\StockOperationService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class PurchaseOrderController extends Controller
 {
@@ -75,7 +78,7 @@ class PurchaseOrderController extends Controller
         return redirect()->back()->with('success', 'Purchase order updated successfully.');
     }
 
-    public function receive(PurchaseOrder $purchaseOrder)
+    public function receive(PurchaseOrder $purchaseOrder): Response
     {
         $purchaseOrder->load(
             'items:id,purchase_order_id,price,quantity,product_id',
@@ -99,7 +102,7 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
-    public function receiveStore(ReceiveOrderStoreRequest $request, PurchaseOrder $purchaseOrder, StockOperationService $stockOperationService)
+    public function receiveStore(ReceiveOrderStoreRequest $request, PurchaseOrder $purchaseOrder, StockOperationService $stockOperationService): RedirectResponse
     {
         $receiveOrder = array_merge($request->validated(), ['user_id' => Auth::id()]);
 
@@ -144,7 +147,7 @@ class PurchaseOrderController extends Controller
                     'remarks' => 'Received via Purchase Order #' . $purchaseOrder->id,
                 ]);
 
-                $stockOperationService->createStockOperation(
+                $stock = $stockOperationService->createStockOperation(
                     'inbound',
                     $purchaseOrderItem->product,
                     $stockData,
@@ -152,6 +155,18 @@ class PurchaseOrderController extends Controller
                     $stockData['unit'],
                     $stockData['remarks']
                 );
+
+                // Newly created stock starts in 'pending' (awaiting QC)
+                if ($stock && $stock->wasRecentlyCreated) {
+                    $stock->update(['status' => 'pending']);
+                }
+
+                // Create a QC inspection record for this receive order item
+                QcInspection::create([
+                    'receive_order_id'      => $newReceiveOrder->id,
+                    'receive_order_item_id' => $newReceiveOrderItem->id,
+                    'status'                => 'pending',
+                ]);
 
                 if ($purchaseOrderItem->quantity_received >= $purchaseOrderItem->quantity) {
                     $purchaseOrderItem->update(['status' => 'received']);

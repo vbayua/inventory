@@ -39,6 +39,8 @@ const statusConfig = (status: string) => {
             return { color: 'bg-green-100 text-green-800', label: 'Partially Received' };
         case 'received':
             return { color: 'bg-blue-100 text-blue-800', label: 'Received' };
+        case 'completed':
+            return { color: 'bg-blue-100 text-blue-800', label: 'Completed' };
         case 'cancelled':
             return { color: 'bg-red-100 text-red-800', label: 'Cancelled' };
         default:
@@ -152,7 +154,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                             {/* Add more actions here if needed */}
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
-                                        {!receiveOrders && receiveOrders?.length !== 0 && (
+                                        {receiveOrders && receiveOrders.length === 0 && (
                                             <DropdownMenuGroup>
                                                 <DropdownMenuItem variant={'destructive'}>Cancel Order</DropdownMenuItem>
                                             </DropdownMenuGroup>

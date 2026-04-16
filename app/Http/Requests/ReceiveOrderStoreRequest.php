@@ -31,10 +31,19 @@ class ReceiveOrderStoreRequest extends FormRequest
             'user_id' => 'nullable|exists:users,id',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_received' => 'required|integer|min:0',
+            'items.*.quantity_received' => 'required|integer|min:1',
             'items.*.location_id' => 'required|exists:locations,id',
             'items.*.batch_id' => 'nullable|exists:batches,id',
             'items.*.notes' => 'nullable|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'items.*.quantity_received.min' => 'The quantity received must be at least 1.',
+            'items.*.product_id.exists' => 'The selected product does not exist.',
+            'items.*.location_id.exists' => 'The selected location does not exist.',
         ];
     }
 }

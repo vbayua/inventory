@@ -8,6 +8,7 @@ use App\Rules\Permissions\ReceiveOrderPermissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ReceiveOrderController extends Controller
 {
@@ -39,7 +40,7 @@ class ReceiveOrderController extends Controller
         //
     }
 
-    public function show(ReceiveOrder $receive_order)
+    public function show(ReceiveOrder $receive_order): Response
     {
         $receive_order->load(
             'receiveOrderItems',

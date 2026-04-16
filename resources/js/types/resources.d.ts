@@ -27,6 +27,7 @@ export interface Product {
     unit: string;
     price?: number;
     category_id?: number;
+    product_type_id?: number;
     supplier_id?: number;
     categories?: Category;
     product_type?: ProductType;
@@ -108,16 +109,17 @@ export interface Batch {
     updated_at?: string;
 }
 export enum Status {
-    available = 'available',
+    pending = 'pending',
+    checking = 'checking',
+    pass = 'pass',
+    reject = 'reject',
     reserved = 'reserved',
-    expired = 'expired',
-    out_of_stock = 'out_of_stock',
-    low_stock = 'low_stock',
 }
 
 export enum OrderStatus {
     pending = 'pending',
     partially_received = 'partially_received',
+    received = 'received',
     completed = 'completed',
     cancelled = 'cancelled',
 }
@@ -224,4 +226,64 @@ export interface ReceiveOrderItem {
     purchase_order_item?: PurchaseOrderItem;
     location?: Location;
     notes?: string;
+    qc_inspection?: QcInspection;
+}
+
+export interface QcChecklistItem {
+    id: number;
+    qc_checklist_id: number;
+    item_name: string;
+    description?: string;
+    is_required: boolean;
+    sort_order: number;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface QcChecklist {
+    id: number;
+    name: string;
+    description?: string;
+    product_type_id?: number;
+    is_active: boolean;
+    user_id?: number;
+    product_type?: ProductType;
+    items?: QcChecklistItem[];
+    items_count?: number;
+    user?: User;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface QcInspectionResult {
+    id: number;
+    qc_inspection_id: number;
+    qc_checklist_item_id?: number;
+    item_name: string;
+    result: 'pass' | 'fail' | 'na';
+    notes?: string;
+    checklist_item?: QcChecklistItem;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface QcInspection {
+    id: number;
+    receive_order_id: number;
+    receive_order_item_id: number;
+    qc_checklist_id?: number;
+    inspector_user_id?: number;
+    status: 'pending' | 'checking' | 'pass' | 'reject' | 'partial_pass';
+    inspection_date?: string;
+    notes?: string;
+    rejection_reason?: string;
+    quantity_passed?: number | null;
+    quantity_rejected?: number | null;
+    receive_order?: ReceiveOrder;
+    receive_order_item?: ReceiveOrderItem;
+    checklist?: QcChecklist;
+    results?: QcInspectionResult[];
+    inspector?: User;
+    created_at?: string;
+    updated_at?: string;
 }
