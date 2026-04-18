@@ -26,6 +26,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     checking: { label: 'Checking', className: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
     pass: { label: 'Pass', className: 'bg-green-100 text-green-800 hover:bg-green-100' },
     reject: { label: 'Reject', className: 'bg-red-100 text-red-800 hover:bg-red-100' },
+    partial_pass: { label: 'Partial Pass', className: 'bg-orange-100 text-orange-800 hover:bg-orange-100' },
 };
 
 const resultConfig: Record<string, { label: string; className: string }> = {
@@ -120,14 +121,36 @@ export default function Show({ inspection, availableChecklists }: Props) {
 
     const isChecklist = !!(inspection.checklist?.items && inspection.checklist.items.length > 0);
 
+    const productType = inspection.receive_order_item?.purchase_order_item?.product?.product_type;
+    const isNonRawMaterial = !!(productType && productType.type_code !== 'RMP');
+    const totalReceived = inspection.receive_order_item?.quantity_received ?? 0;
+
+    const [quantityPassed, setQuantityPassed] = useState<number>(totalReceived);
+    const [quantityRejected, setQuantityRejected] = useState<number>(0);
+
     const handleSubmit = () => {
-        if (!overallResult) {
-            toast.error('Select an overall result (Pass or Reject).');
-            return;
-        }
-        if (overallResult === 'reject' && !rejectionReason.trim()) {
-            toast.error('Rejection reason is required.');
-            return;
+        if (isNonRawMaterial) {
+            if (quantityPassed + quantityRejected !== totalReceived) {
+                toast.error(`Quantities must sum to total received (${totalReceived}).`);
+                return;
+            }
+            if (quantityPassed + quantityRejected === 0) {
+                toast.error('Enter quantities for passed and/or rejected units.');
+                return;
+            }
+            if (quantityRejected > 0 && !rejectionReason.trim()) {
+                toast.error('Rejection reason is required when items are rejected.');
+                return;
+            }
+        } else {
+            if (!overallResult) {
+                toast.error('Select an overall result (Pass or Reject).');
+                return;
+            }
+            if (overallResult === 'reject' && !rejectionReason.trim()) {
+                toast.error('Rejection reason is required.');
+                return;
+            }
         }
         const unfinished = items.filter((i) => i.result === '' && i.item_name.trim() !== '');
         if (unfinished.length > 0) {
@@ -139,8 +162,15 @@ export default function Show({ inspection, availableChecklists }: Props) {
         router.post(
             route('qc.inspections.submit', inspection.id),
             {
-                overall_result: overallResult,
-                rejection_reason: overallResult === 'reject' ? rejectionReason : null,
+                ...(isNonRawMaterial
+                    ? {
+                          quantity_passed: quantityPassed,
+                          quantity_rejected: quantityRejected,
+                      }
+                    : {
+                          overall_result: overallResult,
+                      }),
+                rejection_reason: quantityRejected > 0 || overallResult === 'reject' ? rejectionReason : null,
                 notes: submitNotes || null,
                 results: items
                     .filter((i) => i.item_name.trim() !== '')
@@ -421,39 +451,113 @@ export default function Show({ inspection, availableChecklists }: Props) {
                                     <CardDescription>Final determination for this inspection.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    {/* Pass / Reject */}
-                                    <div className="space-y-2">
-                                        <Label>Overall Result *</Label>
-                                        <div className="flex gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setOverallResult('pass')}
-                                                className={`flex items-center gap-2 rounded-lg border px-5 py-3 text-sm font-medium transition-colors ${
-                                                    overallResult === 'pass'
-                                                        ? 'border-green-500 bg-green-50 text-green-800'
-                                                        : 'border-border text-muted-foreground hover:bg-muted'
-                                                }`}
-                                            >
-                                                <CheckCircle2 className="h-4 w-4" />
-                                                Pass
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setOverallResult('reject')}
-                                                className={`flex items-center gap-2 rounded-lg border px-5 py-3 text-sm font-medium transition-colors ${
-                                                    overallResult === 'reject'
-                                                        ? 'border-red-500 bg-red-50 text-red-800'
-                                                        : 'border-border text-muted-foreground hover:bg-muted'
-                                                }`}
-                                            >
-                                                <XCircle className="h-4 w-4" />
-                                                Reject
-                                            </button>
+                                    {/* Pass / Reject or Quantity Distribution */}
+                                    {isNonRawMaterial ? (
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label>Quantity Distribution *</Label>
+                                                <p className="text-muted-foreground text-sm">
+                                                    Total received: <strong>{totalReceived}</strong> units. Allocate all units between passed and
+                                                    rejected.
+                                                </p>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="qty_passed" className="text-green-700">
+                                                            Qty Passed
+                                                        </Label>
+                                                        <input
+                                                            id="qty_passed"
+                                                            type="number"
+                                                            min={0}
+                                                            max={totalReceived}
+                                                            value={quantityPassed}
+                                                            onChange={(e) => {
+                                                                const val = Math.max(0, Math.min(totalReceived, parseInt(e.target.value) || 0));
+                                                                setQuantityPassed(val);
+                                                                setQuantityRejected(totalReceived - val);
+                                                            }}
+                                                            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:ring-1 focus:ring-green-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="qty_rejected" className="text-red-700">
+                                                            Qty Rejected
+                                                        </Label>
+                                                        <input
+                                                            id="qty_rejected"
+                                                            type="number"
+                                                            min={0}
+                                                            max={totalReceived}
+                                                            value={quantityRejected}
+                                                            onChange={(e) => {
+                                                                const val = Math.max(0, Math.min(totalReceived, parseInt(e.target.value) || 0));
+                                                                setQuantityRejected(val);
+                                                                setQuantityPassed(totalReceived - val);
+                                                            }}
+                                                            className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:ring-1 focus:ring-red-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                {/* Auto-derived result indicator */}
+                                                <div className="flex items-center gap-2 pt-1">
+                                                    <span className="text-muted-foreground text-sm">Derived result:</span>
+                                                    {quantityPassed + quantityRejected === totalReceived && totalReceived > 0 ? (
+                                                        <span
+                                                            className={`inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium ${
+                                                                quantityRejected === 0
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : quantityPassed === 0
+                                                                      ? 'bg-red-100 text-red-800'
+                                                                      : 'bg-orange-100 text-orange-800'
+                                                            }`}
+                                                        >
+                                                            {quantityRejected === 0 ? 'Pass' : quantityPassed === 0 ? 'Reject' : 'Partial Pass'}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs italic">
+                                                            {quantityPassed + quantityRejected < totalReceived
+                                                                ? `${totalReceived - quantityPassed - quantityRejected} unit(s) unaccounted`
+                                                                : 'Total exceeds received'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        /* Existing Pass/Reject toggle for RM products */
+                                        <div className="space-y-2">
+                                            <Label>Overall Result *</Label>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOverallResult('pass')}
+                                                    className={`flex items-center gap-2 rounded-lg border px-5 py-3 text-sm font-medium transition-colors ${
+                                                        overallResult === 'pass'
+                                                            ? 'border-green-500 bg-green-50 text-green-800'
+                                                            : 'border-border text-muted-foreground hover:bg-muted'
+                                                    }`}
+                                                >
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                    Pass
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOverallResult('reject')}
+                                                    className={`flex items-center gap-2 rounded-lg border px-5 py-3 text-sm font-medium transition-colors ${
+                                                        overallResult === 'reject'
+                                                            ? 'border-red-500 bg-red-50 text-red-800'
+                                                            : 'border-border text-muted-foreground hover:bg-muted'
+                                                    }`}
+                                                >
+                                                    <XCircle className="h-4 w-4" />
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Rejection Reason */}
-                                    {overallResult === 'reject' && (
+                                    {(isNonRawMaterial ? quantityRejected > 0 : overallResult === 'reject') && (
                                         <div className="space-y-1">
                                             <Label htmlFor="rejection_reason">
                                                 Rejection Reason <span className="text-red-500">*</span>
@@ -483,16 +587,27 @@ export default function Show({ inspection, availableChecklists }: Props) {
                                     <div className="flex justify-end pt-2">
                                         <Button
                                             onClick={handleSubmit}
-                                            disabled={submitProcessing || !overallResult}
-                                            className={overallResult === 'reject' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                            disabled={submitProcessing || (!isNonRawMaterial && !overallResult)}
+                                            className={
+                                                (!isNonRawMaterial && overallResult === 'reject') ||
+                                                (isNonRawMaterial && quantityRejected > 0 && quantityPassed === 0)
+                                                    ? 'bg-red-600 hover:bg-red-700'
+                                                    : ''
+                                            }
                                         >
                                             {submitProcessing
                                                 ? 'Submitting...'
-                                                : overallResult === 'reject'
-                                                  ? 'Submit — Reject'
-                                                  : overallResult === 'pass'
-                                                    ? 'Submit — Pass'
-                                                    : 'Submit Inspection'}
+                                                : isNonRawMaterial
+                                                  ? quantityRejected === 0
+                                                      ? 'Submit — Pass All'
+                                                      : quantityPassed === 0
+                                                        ? 'Submit — Reject All'
+                                                        : 'Submit — Partial Pass'
+                                                  : overallResult === 'reject'
+                                                    ? 'Submit — Reject'
+                                                    : overallResult === 'pass'
+                                                      ? 'Submit — Pass'
+                                                      : 'Submit Inspection'}
                                         </Button>
                                     </div>
                                 </CardContent>
@@ -500,8 +615,8 @@ export default function Show({ inspection, availableChecklists }: Props) {
                         </div>
                     )}
 
-                    {/* ── PASS / REJECT: Read-only Results ── */}
-                    {(inspection.status === 'pass' || inspection.status === 'reject') && (
+                    {/* ── PASS / REJECT / PARTIAL PASS: Read-only Results ── */}
+                    {(['pass', 'reject', 'partial_pass'] as const).includes(inspection.status as 'pass' | 'reject' | 'partial_pass') && (
                         <div className="space-y-6">
                             {/* Summary card */}
                             <Card>
@@ -538,7 +653,20 @@ export default function Show({ inspection, availableChecklists }: Props) {
                                             </div>
                                         )}
 
-                                        {inspection.status === 'reject' && inspection.rejection_reason && (
+                                        {(inspection.quantity_passed != null || inspection.quantity_rejected != null) && (
+                                            <>
+                                                <div>
+                                                    <p className="text-muted-foreground text-sm font-medium">Qty Passed</p>
+                                                    <p className="mt-1 text-sm font-medium text-green-700">{inspection.quantity_passed ?? '-'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted-foreground text-sm font-medium">Qty Rejected</p>
+                                                    <p className="mt-1 text-sm font-medium text-red-700">{inspection.quantity_rejected ?? '-'}</p>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {(inspection.status === 'reject' || inspection.status === 'partial_pass') && inspection.rejection_reason && (
                                             <div className="sm:col-span-3">
                                                 <p className="text-sm font-medium text-red-600">Rejection Reason</p>
                                                 <p className="mt-1 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
