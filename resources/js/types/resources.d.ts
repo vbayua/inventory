@@ -14,6 +14,8 @@ export interface ProductType {
     type_code: string;
     description?: string;
     batch_interval_days?: number;
+    default_location_id?: number;
+    default_location?: Location;
     created_at?: string;
     updated_at?: string;
 }

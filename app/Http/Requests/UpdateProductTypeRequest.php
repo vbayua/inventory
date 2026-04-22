@@ -22,9 +22,11 @@ class UpdateProductTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'unique:product_types,name', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'type_code' => ['required', 'unique:product_types,type_code', 'string'],
+            'type_code' => ['required', 'exists:product_types,type_code', 'string'],
+            'batch_interval_days' => ['nullable', 'integer', 'min:0'],
+            'default_location_id' => ['nullable', 'integer', 'exists:locations,id'],
         ];
     }
 }
