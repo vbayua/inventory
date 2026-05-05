@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class QcInspection extends Model
 {
@@ -12,9 +13,10 @@ class QcInspection extends Model
         'receive_order_id', 'receive_order_item_id', 'qc_checklist_id',
         'inspector_user_id', 'status', 'inspection_date', 'notes', 'rejection_reason',
         'quantity_passed', 'quantity_rejected',
+        'approved_by', 'approved_at'
     ];
 
-    protected $casts = ['inspection_date' => 'datetime'];
+    protected $casts = ['inspection_date' => 'datetime', 'approved_at' => 'datetime'];
 
     public function receiveOrder(): BelongsTo
     {
@@ -39,5 +41,15 @@ class QcInspection extends Model
     public function results(): HasMany
     {
         return $this->hasMany(QcInspectionResult::class);
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function approval(): HasOne
+    {
+        return $this->hasOne(QcApproval::class);
     }
 }

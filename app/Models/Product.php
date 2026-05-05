@@ -69,6 +69,11 @@ class Product extends Model
         return $this->belongsTo(ProductType::class, 'product_type_id', 'id');
     }
 
+    public function getProductTypeDefaultLocationAttribute()
+    {
+        return $this->productType()->defaultLocation();
+    }
+
     public function getUnitTypeAttribute()
         {
             $unit = $this->getRelationValue('unit'); // explicitly fetch relation

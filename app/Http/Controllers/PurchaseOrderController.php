@@ -82,7 +82,9 @@ class PurchaseOrderController extends Controller
     {
         $purchaseOrder->load(
             'items:id,purchase_order_id,price,quantity,product_id',
-            'items.product:id,name,sku,unit',
+            'items.product:id,name,sku,unit,product_type_id',
+            'items.product.productType:id,default_location_id',
+            'items.product.productType.defaultLocation:id,name',
             'supplier',
             'items.receiveOrderItems'
         );
@@ -97,7 +99,7 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('PurchaseOrders/Receive', [
             'purchaseOrder' => $purchaseOrder,
-            'locations' => Location::all(),
+            'locations' => Location::with('warehouse:id,name')->get(),
             'batches' => $batches,
         ]);
     }
@@ -123,6 +125,7 @@ class PurchaseOrderController extends Controller
                     continue; // Skip if the product is not part of the purchase order
                 }
 
+
                 $quantityToReceive = $item['quantity_received'];
 
                 if ($quantityToReceive <= 0) {
@@ -135,31 +138,6 @@ class PurchaseOrderController extends Controller
                     'location_id' => $item['location_id'],
                     'notes' => $item['notes'] ?? null,
                 ]);
-
-                // Update stock levels
-                $stockData = StockData::fromArray([
-                    'quantity' => $newReceiveOrderItem->quantity_received,
-                    'unit' => $purchaseOrderItem->product->unit,
-                    'location_id' => $item['location_id'],
-                    'batch_id' => !empty($item['batch_id']) ? (int) $item['batch_id'] : null,
-                    'supplier_id' => $purchaseOrder->supplier_id,
-                    'user_id' => $newReceiveOrder->user_id,
-                    'remarks' => 'Received via Purchase Order #' . $purchaseOrder->id,
-                ]);
-
-                $stock = $stockOperationService->createStockOperation(
-                    'inbound',
-                    $purchaseOrderItem->product,
-                    $stockData,
-                    $newReceiveOrderItem->quantity_received,
-                    $stockData['unit'],
-                    $stockData['remarks']
-                );
-
-                // Newly created stock starts in 'pending' (awaiting QC)
-                if ($stock && $stock->wasRecentlyCreated) {
-                    $stock->update(['status' => 'pending']);
-                }
 
                 // Create a QC inspection record for this receive order item
                 QcInspection::create([

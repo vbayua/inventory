@@ -498,7 +498,8 @@ class StockOperationService
         });
     }
 
-    public function setStockStatus(float $quantity, float $minimum_quantity = 0)
+
+    public function setStockStatus(float $quantity, float $minimum_quantity = 0, string $status = ''): string
     {
         if ($quantity <= 0) {
             return 'out_of_stock';
@@ -509,12 +510,23 @@ class StockOperationService
         }
     }
 
+    private function resolveBucketColumn(?string $qualityStatus):string
+    {
+        return match($qualityStatus) {
+            'pending', 'checking', 'on_hold' => 'quantity_on_hold',
+            'reserved' => 'quantity_reserved',
+            'rejected' => 'quantity_rejected',
+            default => 'quantity',
+        };
+    }
+
     private function setStock(Product|int $product, Stock|StockData $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode, $withContainer) {
             $productId = $product instanceof Product ? $product->id : $product;
-
             $quantityUnit = $this->getUnitRecord($unit);
+            $qualityStatus = $stockData['quality_status'] ?? 'not_required';
+            $bucket = $this->resolveBucketColumn($qualityStatus);
             $stock = Stock::where('product_id', $productId)
                 ->where('location_id', $stockData['location_id'])
                 ->where('batch_id', $stockData['batch_id'])
@@ -522,13 +534,16 @@ class StockOperationService
                 ->lockForUpdate()
                 ->first();
 
-            if (! $stock && $mode === 'set') {
+            if (! $stock || $mode === 'set') {
                 $stock = new Stock;
                 $stock->product_id = $productId;
                 $stock->location_id = $stockData['location_id'];
                 $stock->batch_id = $stockData['batch_id'] ?? null;
                 $stock->unit = $quantityUnit->name;
                 $stock->quantity = 0;
+                $stock->quantity_on_hold = 0;
+                $stock->quantity_reserved = 0;
+                $stock->quantity_rejected = 0;
                 $stock->minimum_quantity = $stockData['minimum_quantity'];
                 $stock->container_capacity = $stockData['container_capacity'] ?? null;
                 $stock->container_unit = $stockData['container_unit'] ?? null;
@@ -548,7 +563,9 @@ class StockOperationService
             $qtyInBase = $withContainer
                 ? $this->unitConverter->containerToBaseUnit($quantity, $stock)
                 : $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
-            $currentStockQtyInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
+
+            //  Read from TARGET bucket.
+            $currentBucketQtyInBase = $this->unitConverter->toBaseUnit($stock->{$bucket} ?? 0, $stockUnit);
 
             $newInBase = (float) 0;
 
@@ -557,16 +574,16 @@ class StockOperationService
                     $newInBase = $qtyInBase;
                     break;
                 case 'increment':
-                    $newInBase = $currentStockQtyInBase + $qtyInBase;
+                    $newInBase = $currentBucketQtyInBase + $qtyInBase;
                     break;
                 case 'decrement':
-                    if ($currentStockQtyInBase < $qtyInBase) {
+                    if ($currentBucketQtyInBase < $qtyInBase) {
                         $name = $product instanceof Product ? $product->name : (string) $productId;
                         throw ValidationException::withMessages([
                             'quantity' => "Insufficient stock for product: {$name}",
                         ]);
                     }
-                    $newInBase = $currentStockQtyInBase - $qtyInBase;
+                    $newInBase = $currentBucketQtyInBase - $qtyInBase;
                     break;
                 default:
                     throw new InvalidArgumentException("Unknown stock change mode: {$mode}");
@@ -574,7 +591,8 @@ class StockOperationService
 
             $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
             $stock->updateOrFail([
-                'quantity' => $newQuantity,
+                $bucket => $newQuantity,
+                'quality_status' => $qualityStatus,
                 'status' => $this->setStockStatus($newQuantity, $stock->batch->minimum_quantity),
             ]);
 
@@ -582,6 +600,21 @@ class StockOperationService
         });
     }
 
+    public function transitionStockBucket(Stock $stock, float $quantity, string $fromBucket, string $toBucket, string $qualityStatus): Stock
+    {
+        return DB::transaction(function () use ($stock, $quantity, $fromBucket, $toBucket, $qualityStatus) {
+            $stock = Stock::where('id', $stock->id)->lockForUpdate()->firstOrFail();
+
+            $stock->updateOrFail([
+                $fromBucket => max(0, ($stock->{$fromBucket} ?? 0) - $quantity),
+                $toBucket => ($stock->{$toBucket} ?? 0) + $quantity,
+                'quality_status' => $qualityStatus,
+                'status' => $this->setStockStatus($stock->{$toBucket} + $quantity, $stock->batch->minimum_quantity),
+            ]);
+
+            return $stock->fresh();
+        });
+    }
     private function transferStock(Product|int $product, int $sourceStockLocation, int $destinationStockLocation, int $batchId, float $quantity, ?string $unit)
     {
         return DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {

@@ -3,18 +3,18 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import SelectCommand from '@/components/ui/select-command';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Batch, Location, PurchaseOrder } from '@/types/resources';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDownIcon } from 'lucide-react';
 import { SubmitEventHandler, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -39,7 +39,7 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
             purchaseOrder.items?.map((item) => ({
                 purchase_order_item_id: item.id,
                 product_id: item.product_id,
-                location_id: 1,
+                location_id: item.product?.product_type?.default_location?.id ?? 1,
                 quantity_received: 0,
                 batch_id: '',
                 notes: '',
@@ -63,8 +63,16 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
         });
     };
 
-    const [popoverLocationOpen, setPopoverLocationOpen] = useState(false);
+    // console.log(`Default location `, purchaseOrder.items?.[0].product?.product_type?.default_location?.id);
+
+    // console.log(
+    //     `PURCHASE ORDER ITEMS LOCATIONS `,
+    //     purchaseOrder.items?.map((item) => item.location_id),
+    // );
+
+    const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
     const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
+    const [receiveDatePopoverOpen, setReceiveDatePopoverOpen] = useState(false);
     const [openDialogIndex, setOpenDialogIndex] = useState<number | null>(null);
 
     return (
@@ -117,7 +125,7 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                 </div>
                                 <div className="mb-4 space-y-2">
                                     <Label htmlFor="receive_date">Receive Date</Label>
-                                    <Popover>
+                                    <Popover open={receiveDatePopoverOpen} onOpenChange={setReceiveDatePopoverOpen} defaultOpen={false}>
                                         <PopoverTrigger asChild>
                                             <Button variant="outline" className="w-full justify-between">
                                                 {data.receive_date ? new Date(data.receive_date).toLocaleDateString() : 'Select receive date'}
@@ -129,6 +137,7 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                 selected={data.receive_date ? new Date(data.receive_date) : undefined}
                                                 onSelect={(date) => {
                                                     setData('receive_date', date?.toISOString() || '');
+                                                    setReceiveDatePopoverOpen(false);
                                                 }}
                                                 disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                                 autoFocus
@@ -145,18 +154,21 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                             <TableHead>Product</TableHead>
                                             <TableHead>Order Quantity</TableHead>
                                             <TableHead>Quantity Received</TableHead>
-                                            <TableHead>Receive Locations</TableHead>
+                                            <TableHead>Receive Location</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody className="divide-y">
                                         {purchaseOrder.items?.map((item, index) => (
                                             <TableRow
                                                 key={item.id}
-                                                className={`cursor-pointer ${item.quantity_received >= item.quantity ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
+                                                className={`cursor-pointer ${item.quantity_received && item.quantity_received >= item.quantity ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
                                                 onClick={() => setOpenDialogIndex(index)}
                                             >
                                                 <TableCell>
-                                                    {item.product?.name} <span className="text-muted-foreground">{item.product?.sku}</span>
+                                                    <div className="flex flex-col items-start gap-0.5">
+                                                        {item.product?.name}
+                                                        <span className="text-muted-foreground">{item.product?.sku}</span>
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground">
                                                     {item.quantity_received} / {item.quantity}
@@ -165,7 +177,10 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                     {data.items[index]?.quantity_received}
                                                     <InputError message={errors[`items.${index}.quantity_received`]} />
                                                 </TableCell>
-                                                <TableCell>{locations.find((loc) => loc.id === data.items[index]?.location_id)?.name}</TableCell>
+                                                <TableCell className="w-48">
+                                                    {locations.find((l) => l.id === data.items[index]?.location_id)?.name}
+                                                    <InputError message={errors[`items.${index}.location_id`]} />
+                                                </TableCell>
                                                 <Dialog
                                                     open={openDialogIndex === index}
                                                     onOpenChange={(open) => setOpenDialogIndex(open ? index : null)}
@@ -206,10 +221,10 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                                 />
                                                             </Field>
                                                             <Field>
-                                                                <Label htmlFor="batch_id">Batch</Label>
+                                                                <Label htmlFor="location_id">Location</Label>
                                                                 <Popover
-                                                                    open={batchPopoverOpen}
-                                                                    onOpenChange={setBatchPopoverOpen}
+                                                                    open={locationPopoverOpen}
+                                                                    onOpenChange={setLocationPopoverOpen}
                                                                     defaultOpen={false}
                                                                 >
                                                                     <PopoverTrigger asChild>
@@ -218,66 +233,45 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                                             size="sm"
                                                                             className="w-full justify-between text-left"
                                                                         >
-                                                                            {data.items[index]?.batch_id
-                                                                                ? batches.find((b) => b.id === data.items[index].batch_id)
-                                                                                      ?.batch_number || 'Create New Batch'
-                                                                                : 'Create New Batch'}
+                                                                            <span>
+                                                                                {locations.find((l) => l.id === data.items[index]?.location_id)?.name}
+                                                                            </span>
+                                                                            <ChevronDownIcon className="size-4" />
                                                                         </Button>
                                                                     </PopoverTrigger>
-                                                                    <PopoverContent align="start" className="w-auto p-0">
-                                                                        <Command>
-                                                                            <CommandInput placeholder="Search batches..." />
-                                                                            <CommandEmpty>
-                                                                                {!batches && (
-                                                                                    <div className="text-muted-foreground p-2 text-sm">
-                                                                                        Loading...
-                                                                                    </div>
-                                                                                )}
-                                                                                {batches && <div>No batches found.</div>}
-                                                                            </CommandEmpty>
-                                                                            <CommandList>
-                                                                                <CommandItem
-                                                                                    onSelect={() => {
-                                                                                        setData((prevData) => {
-                                                                                            const newItems = [...prevData.items];
-                                                                                            newItems[index].batch_id = ''; // Use a special value to indicate a new batch
-                                                                                            return {
-                                                                                                ...prevData,
-                                                                                                items: newItems,
-                                                                                            };
-                                                                                        });
-                                                                                        setBatchPopoverOpen(false); // Close the popover after selection
-                                                                                    }}
-                                                                                >
-                                                                                    Create New Batch
-                                                                                </CommandItem>
-                                                                                {batches &&
-                                                                                    batches.map(
-                                                                                        (batch) =>
-                                                                                            batch.product_id === item.product_id && (
-                                                                                                <CommandItem
-                                                                                                    key={batch.id}
-                                                                                                    onSelect={() => {
-                                                                                                        setData((prevData) => {
-                                                                                                            const newItems = [...prevData.items];
-                                                                                                            newItems[index].batch_id = batch.id;
-                                                                                                            return {
-                                                                                                                ...prevData,
-                                                                                                                items: newItems,
-                                                                                                            };
-                                                                                                        });
-                                                                                                        setBatchPopoverOpen(false); // Close the popover after selection
-                                                                                                    }}
-                                                                                                >
-                                                                                                    {batch.batch_number} {batch.product?.name}
-                                                                                                </CommandItem>
-                                                                                            ),
-                                                                                    )}
-                                                                            </CommandList>
-                                                                        </Command>
+                                                                    <PopoverContent className="w-full" align="start">
+                                                                        <SelectCommand
+                                                                            lists={locations}
+                                                                            getId={(l) => l.id}
+                                                                            getKey={(l) => l.id}
+                                                                            getLabel={(l) => {
+                                                                                return (
+                                                                                    <p className="flex flex-col items-start gap-0.5">
+                                                                                        {l.name}
+                                                                                        <span className="text-muted-foreground text-xs">
+                                                                                            ({l.warehouse?.name})
+                                                                                        </span>
+                                                                                    </p>
+                                                                                );
+                                                                            }}
+                                                                            getSearchValue={(l) => l.name}
+                                                                            onSelect={(l) => {
+                                                                                setData((prevData) => {
+                                                                                    const newItems = [...prevData.items];
+                                                                                    newItems[index].location_id = l.id;
+                                                                                    return {
+                                                                                        ...prevData,
+                                                                                        items: newItems,
+                                                                                    };
+                                                                                });
+
+                                                                                setLocationPopoverOpen(false);
+                                                                            }}
+                                                                        />
                                                                     </PopoverContent>
                                                                 </Popover>
                                                             </Field>
+
                                                             <Field>
                                                                 <Label htmlFor="quantity_received">Receive Quantity</Label>
                                                                 <Input
@@ -294,66 +288,6 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                                 />
 
                                                                 <InputError message={errors[`items.${index}.quantity_received`]} />
-                                                            </Field>
-
-                                                            <Field>
-                                                                <Label htmlFor="location_id">Receive Location</Label>
-                                                                <Popover
-                                                                    open={popoverLocationOpen}
-                                                                    onOpenChange={setPopoverLocationOpen}
-                                                                    defaultOpen={false}
-                                                                >
-                                                                    <PopoverTrigger asChild>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            className="w-full justify-between text-left"
-                                                                        >
-                                                                            {data.items[index]?.location_id
-                                                                                ? locations.find((loc) => loc.id === data.items[index].location_id)
-                                                                                      ?.name || 'Select Location'
-                                                                                : 'Select Location'}
-                                                                        </Button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent>
-                                                                        <Command>
-                                                                            <CommandInput placeholder="Search locations..." />
-                                                                            <CommandEmpty>
-                                                                                {!locations && (
-                                                                                    <div className="text-muted-foreground p-2 text-sm">
-                                                                                        Loading...
-                                                                                    </div>
-                                                                                )}
-                                                                                {locations && <div>No locations found.</div>}
-                                                                            </CommandEmpty>
-                                                                            <CommandList>
-                                                                                {locations &&
-                                                                                    locations.map((location) => (
-                                                                                        <CommandItem
-                                                                                            key={location.id}
-                                                                                            onSelect={() => {
-                                                                                                // Handle location selection logic here
-                                                                                                console.log('Selected location:', location);
-                                                                                                setData((prevData) => {
-                                                                                                    const newItems = [...prevData.items];
-                                                                                                    if (!newItems[index].location_id) {
-                                                                                                        newItems[index].location_id = location.id;
-                                                                                                    } else {
-                                                                                                        // If a location is already selected, you can choose to replace it or allow multiple selections
-                                                                                                        newItems[index].location_id = location.id; // Replace with the new selection
-                                                                                                    }
-                                                                                                    return { ...prevData, items: newItems };
-                                                                                                });
-                                                                                                setPopoverLocationOpen(false); // Close the popover after selection
-                                                                                            }}
-                                                                                        >
-                                                                                            {location.name}
-                                                                                        </CommandItem>
-                                                                                    ))}
-                                                                            </CommandList>
-                                                                        </Command>
-                                                                    </PopoverContent>
-                                                                </Popover>
                                                             </Field>
                                                         </FieldGroup>
                                                         <DialogFooter>

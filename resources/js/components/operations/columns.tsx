@@ -107,7 +107,7 @@ export const columns: ColumnDef<Operation>[] = [
             const quantity = row.original.quantity;
             const unit = row.original.unit ?? '';
             if (unit === 'pcs') return quantity !== undefined ? `${Number(quantity)}` : '-';
-            return quantity !== undefined ? `${quantity}` : '-';
+            return quantity !== undefined ? `${Number(quantity).toPrecision(2)}` : '-';
         },
         header: 'Quantity',
     },

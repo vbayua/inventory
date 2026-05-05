@@ -184,6 +184,7 @@ export interface PurchaseOrderItem {
     product?: Product;
     created_at?: string;
     updated_at?: string;
+    quantity_received?: number;
 }
 
 export interface PurchaseOrder {
@@ -286,6 +287,7 @@ export interface QcInspection {
     checklist?: QcChecklist;
     results?: QcInspectionResult[];
     inspector?: User;
+    approver?: User;
     created_at?: string;
     updated_at?: string;
 }

@@ -16,13 +16,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Inspections', href: '/qc/inspections' },
 ];
 
-type FilterTab = 'all' | 'pending' | 'checking' | 'pass' | 'reject';
+type FilterTab = 'all' | 'pending' | 'checking' | 'pass' | 'reject' | 'approved' | 'partial_pass';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
     pending: { label: 'Pending', className: 'bg-amber-100 text-amber-800 hover:bg-amber-100' },
     checking: { label: 'Checking', className: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
     pass: { label: 'Pass', className: 'bg-green-100 text-green-800 hover:bg-green-100' },
     reject: { label: 'Reject', className: 'bg-red-100 text-red-800 hover:bg-red-100' },
+    approved: { label: 'Approved', className: 'bg-green-100 text-green-800 hover:bg-green-100' },
+    partial_pass: { label: 'Partial Pass', className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' },
 };
 
 const tabLabels: { key: FilterTab; label: string }[] = [
@@ -31,16 +33,16 @@ const tabLabels: { key: FilterTab; label: string }[] = [
     { key: 'checking', label: 'Checking' },
     { key: 'pass', label: 'Pass' },
     { key: 'reject', label: 'Reject' },
+    { key: 'approved', label: 'Approved' },
+    { key: 'partial_pass', label: 'Partial Pass' },
 ];
 
 export default function Index({ inspections }: { inspections: QcInspection[] }) {
     const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
-    const filtered =
-        activeTab === 'all' ? inspections : inspections.filter((i) => i.status === activeTab);
+    const filtered = activeTab === 'all' ? inspections : inspections.filter((i) => i.status === activeTab);
 
-    const countFor = (tab: FilterTab) =>
-        tab === 'all' ? inspections.length : inspections.filter((i) => i.status === tab).length;
+    const countFor = (tab: FilterTab) => (tab === 'all' ? inspections.length : inspections.filter((i) => i.status === tab).length);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -51,14 +53,12 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold">QC Inspections</h1>
-                            <p className="text-muted-foreground mt-1 text-sm">
-                                Quality control inspections for received items.
-                            </p>
+                            <p className="text-muted-foreground mt-1 text-sm">Quality control inspections for received items.</p>
                         </div>
                     </div>
 
                     {/* Filter Tabs */}
-                    <div className="flex gap-1 rounded-lg border p-1 w-fit">
+                    <div className="flex w-fit gap-1 rounded-lg border p-1">
                         {tabLabels.map(({ key, label }) => (
                             <button
                                 key={key}
@@ -72,9 +72,7 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
                                 {label}
                                 <span
                                     className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${
-                                        activeTab === key
-                                            ? 'bg-primary-foreground/20 text-primary-foreground'
-                                            : 'bg-muted text-muted-foreground'
+                                        activeTab === key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
                                     }`}
                                 >
                                     {countFor(key)}
@@ -90,9 +88,7 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
                                 <ClipboardCheck className="h-5 w-5" />
                                 Inspections
                             </CardTitle>
-                            <CardDescription>
-                                {filtered.length} inspection(s) found.
-                            </CardDescription>
+                            <CardDescription>{filtered.length} inspection(s) found.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -111,10 +107,7 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
                                 <TableBody>
                                     {filtered.length === 0 ? (
                                         <TableRow>
-                                            <TableCell
-                                                colSpan={8}
-                                                className="text-muted-foreground py-10 text-center"
-                                            >
+                                            <TableCell colSpan={8} className="text-muted-foreground py-10 text-center">
                                                 No inspections found.
                                             </TableCell>
                                         </TableRow>
@@ -125,33 +118,20 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
                                                 className: 'bg-gray-100 text-gray-800',
                                             };
                                             const product =
-                                                inspection.receive_order_item?.product ??
-                                                inspection.receive_order_item?.purchase_order_item?.product;
+                                                inspection.receive_order_item?.product ?? inspection.receive_order_item?.purchase_order_item?.product;
 
                                             return (
                                                 <TableRow
                                                     key={inspection.id}
                                                     className="cursor-pointer"
-                                                    onClick={() =>
-                                                        router.get(
-                                                            route('qc.inspections.show', inspection.id),
-                                                        )
-                                                    }
+                                                    onClick={() => router.get(route('qc.inspections.show', inspection.id))}
                                                 >
-                                                    <TableCell className="text-muted-foreground font-mono text-sm">
-                                                        #{inspection.id}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {inspection.receive_order?.receive_number ?? '-'}
-                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground font-mono text-sm">#{inspection.id}</TableCell>
+                                                    <TableCell className="font-medium">{inspection.receive_order?.receive_number ?? '-'}</TableCell>
                                                     <TableCell>
                                                         <div>
                                                             <p className="font-medium">{product?.name ?? '-'}</p>
-                                                            {product?.sku && (
-                                                                <p className="text-muted-foreground text-xs">
-                                                                    {product.sku}
-                                                                </p>
-                                                            )}
+                                                            {product?.sku && <p className="text-muted-foreground text-xs">{product.sku}</p>}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-right">
@@ -161,31 +141,16 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
                                                         <Badge className={cfg.className}>{cfg.label}</Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        {inspection.inspector?.name ?? (
-                                                            <span className="text-muted-foreground">Unassigned</span>
-                                                        )}
+                                                        {inspection.inspector?.name ?? <span className="text-muted-foreground">Unassigned</span>}
                                                     </TableCell>
                                                     <TableCell>
                                                         {inspection.inspection_date
-                                                            ? format(
-                                                                  new Date(inspection.inspection_date),
-                                                                  'LLL dd, yyyy',
-                                                              )
+                                                            ? format(new Date(inspection.inspection_date), 'LLL dd, yyyy')
                                                             : '-'}
                                                     </TableCell>
-                                                    <TableCell
-                                                        className="text-right"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
+                                                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                                         <Button variant="outline" size="sm" asChild>
-                                                            <Link
-                                                                href={route(
-                                                                    'qc.inspections.show',
-                                                                    inspection.id,
-                                                                )}
-                                                            >
-                                                                View
-                                                            </Link>
+                                                            <Link href={route('qc.inspections.show', inspection.id)}>View</Link>
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>

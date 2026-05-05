@@ -2,13 +2,18 @@ import ContainerLayout from '@/components/container-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldGroup } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { QcChecklist, QcInspection } from '@/types/resources';
+import { Batch, QcChecklist, QcInspection } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { ArrowLeft, CalendarIcon, CheckCircle2, ClipboardCheck, Link2Icon, MapPin, Package, User, XCircle } from 'lucide-react';
@@ -27,6 +32,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     pass: { label: 'Pass', className: 'bg-green-100 text-green-800 hover:bg-green-100' },
     reject: { label: 'Reject', className: 'bg-red-100 text-red-800 hover:bg-red-100' },
     partial_pass: { label: 'Partial Pass', className: 'bg-orange-100 text-orange-800 hover:bg-orange-100' },
+    approved: { label: 'Approved', className: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
 };
 
 const resultConfig: Record<string, { label: string; className: string }> = {
@@ -42,16 +48,17 @@ type ItemResult = {
     notes: string;
 };
 
-type OverallResult = 'pass' | 'reject' | '';
+type OverallResult = 'pass' | 'reject' | 'approved' | '';
 
 interface Props {
     inspection: QcInspection;
     availableChecklists: QcChecklist[];
+    batch: Batch[];
 }
 
-export default function Show({ inspection, availableChecklists }: Props) {
+export default function Show({ inspection, availableChecklists, batch }: Props) {
     breadcrumbs[2].href = `/qc/inspections/${inspection.id}`;
-    console.log(availableChecklists);
+    // console.log(availableChecklists);
     const product = inspection.receive_order_item?.product ?? inspection.receive_order_item?.purchase_order_item?.product;
 
     const statusCfg = statusConfig[inspection.status] ?? {
@@ -183,8 +190,50 @@ export default function Show({ inspection, availableChecklists }: Props) {
             },
             {
                 onSuccess: () => {},
-                onError: () => {
+                onError: (error) => {
                     toast.error('Failed to submit inspection.');
+                    console.log(error);
+                    setSubmitProcessing(false);
+                },
+                onFinish: () => setSubmitProcessing(false),
+            },
+        );
+    };
+
+    const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+    const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
+    const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+
+    const handleApprove = () => {
+        setSubmitProcessing(true);
+        router.post(
+            route('qc.inspections.approve', inspection.id),
+            {
+                ...(isNonRawMaterial
+                    ? {
+                          quantity_passed: quantityPassed,
+                          quantity_rejected: quantityRejected,
+                      }
+                    : {
+                          overall_result: overallResult,
+                      }),
+                rejection_reason: quantityRejected > 0 || overallResult === 'reject' ? rejectionReason : null,
+                notes: submitNotes || null,
+                results: items
+                    .filter((i) => i.item_name.trim() !== '')
+                    .map((i) => ({
+                        qc_checklist_item_id: i.qc_checklist_item_id ?? null,
+                        item_name: i.item_name,
+                        result: i.result || 'na',
+                        notes: i.notes || null,
+                    })),
+                batch_id: selectedBatch?.id,
+            },
+            {
+                onSuccess: () => {},
+                onError: (error) => {
+                    toast.error('Failed to approve inspection.');
+                    console.log(error);
                     setSubmitProcessing(false);
                 },
                 onFinish: () => setSubmitProcessing(false),
@@ -616,7 +665,9 @@ export default function Show({ inspection, availableChecklists }: Props) {
                     )}
 
                     {/* ── PASS / REJECT / PARTIAL PASS: Read-only Results ── */}
-                    {(['pass', 'reject', 'partial_pass'] as const).includes(inspection.status as 'pass' | 'reject' | 'partial_pass') && (
+                    {(['pass', 'reject', 'partial_pass', 'approved'] as const).includes(
+                        inspection.status as 'pass' | 'reject' | 'partial_pass' | 'approved',
+                    ) && (
                         <div className="space-y-6">
                             {/* Summary card */}
                             <Card>
@@ -643,6 +694,13 @@ export default function Show({ inspection, availableChecklists }: Props) {
                                             <div>
                                                 <p className="text-muted-foreground text-sm font-medium">Inspection Date</p>
                                                 <p className="mt-1 text-sm">{format(new Date(inspection.inspection_date), 'LLL dd, yyyy HH:mm')}</p>
+                                            </div>
+                                        )}
+
+                                        {inspection.approver && (
+                                            <div>
+                                                <p className="text-muted-foreground text-sm font-medium">Approved By</p>
+                                                <p className="mt-1 text-sm">{inspection.approver.name}</p>
                                             </div>
                                         )}
 
@@ -675,6 +733,77 @@ export default function Show({ inspection, availableChecklists }: Props) {
                                             </div>
                                         )}
                                     </div>
+
+                                    <div className="grid grid-cols-1 justify-items-end gap-4">
+                                        <Button variant="default" onClick={() => setApproveDialogOpen(true)} disabled={submitProcessing}>
+                                            Approve QC
+                                        </Button>
+                                    </div>
+                                    <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+                                        <DialogContent>
+                                            <DialogTitle>Approve QC Inspection</DialogTitle>
+                                            <DialogDescription>
+                                                <p>Assign batch to stock before approving this inspection.</p>
+                                            </DialogDescription>
+                                            <FieldGroup>
+                                                <Field>
+                                                    <Label>Batch</Label>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Input
+                                                            id="batch_id"
+                                                            type="text"
+                                                            value={selectedBatch?.batch_number ?? 'Create New Batch'}
+                                                            readOnly
+                                                        />
+                                                        <Popover open={batchPopoverOpen} onOpenChange={setBatchPopoverOpen}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline">Choose Batch</Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent align="start">
+                                                                <Command>
+                                                                    <CommandInput placeholder="Search batch..." />
+                                                                    <CommandEmpty>No results found.</CommandEmpty>
+                                                                    <CommandList>
+                                                                        <CommandItem
+                                                                            onSelect={() => {
+                                                                                setSelectedBatch(null);
+                                                                                setBatchPopoverOpen(false);
+                                                                            }}
+                                                                        >
+                                                                            Create New Batch
+                                                                        </CommandItem>
+                                                                        {batch &&
+                                                                            batch.map(
+                                                                                (item) =>
+                                                                                    item.product_id === product.id && (
+                                                                                        <CommandItem
+                                                                                            key={item.id}
+                                                                                            onSelect={() => {
+                                                                                                setSelectedBatch(item);
+                                                                                                setBatchPopoverOpen(false);
+                                                                                            }}
+                                                                                        >
+                                                                                            {item.batch_number}
+                                                                                        </CommandItem>
+                                                                                    ),
+                                                                            )}
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </div>
+                                                </Field>
+                                            </FieldGroup>
+                                            <div className="mt-4 flex gap-4">
+                                                <Button variant="default" onClick={() => handleApprove()}>
+                                                    Approve
+                                                </Button>
+                                                <Button variant="destructive" onClick={() => setApproveDialogOpen(false)}>
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 </CardContent>
                             </Card>
 

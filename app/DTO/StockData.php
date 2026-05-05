@@ -37,7 +37,14 @@ readonly class StockData implements ArrayAccess
         public string $unit,
 
         /** Quantity involved in the operation. */
-        public float $quantity,
+        public ?float $quantity,
+
+        public ?float $quantity_on_hold,
+
+        public ?float $quantity_reserved,
+
+        public ?float $quantity_rejected,
+
 
         /** Threshold below which the stock is considered low. */
         public ?float $minimum_quantity = 0,
@@ -64,6 +71,9 @@ readonly class StockData implements ArrayAccess
         public ?string $container_unit = null,
 
         public ?int $user_id = null,
+
+        public ?string $status = null,
+        public ?string $quality_status = 'not_required',
     ) {}
 
     // -------------------------------------------------------------------------
@@ -83,9 +93,9 @@ readonly class StockData implements ArrayAccess
             throw new \InvalidArgumentException('StockData requires a location_id.');
         }
 
-        if (! isset($data['quantity'])) {
-            throw new \InvalidArgumentException('StockData requires a quantity.');
-        }
+        // if (! isset($data['quantity'])) {
+        //     throw new \InvalidArgumentException('StockData requires a quantity.');
+        // }
 
         if (! isset($data['unit'])) {
             throw new \InvalidArgumentException('StockData requires a unit.');
@@ -102,6 +112,9 @@ readonly class StockData implements ArrayAccess
             supplier_id: $supplier !== null ? (int) $supplier : null,
             unit: isset($data['unit']) ? (string) $data['unit'] : null,
             quantity: isset($data['quantity']) ? (float) $data['quantity'] : 0.0,
+            quantity_on_hold: isset($data['quantity_on_hold']) ? (float) $data['quantity_on_hold'] : 0.0,
+            quantity_reserved: isset($data['quantity_reserved']) ? (float) $data['quantity_reserved'] : 0.0,
+            quantity_rejected: isset($data['quantity_rejected']) ? (float) $data['quantity_rejected'] : 0.0,
             minimum_quantity: isset($data['minimum_quantity']) ? (float) $data['minimum_quantity'] : 0.0,
             date: isset($data['date']) ? (string) $data['date'] : null,
             remarks: isset($data['remarks']) ? (string) $data['remarks'] : null,
@@ -109,6 +122,8 @@ readonly class StockData implements ArrayAccess
             container_capacity: isset($data['container_capacity']) ? (float) $data['container_capacity'] : null,
             container_unit: isset($data['container_unit']) ? (string) $data['container_unit'] : null,
             user_id: isset($data['user_id']) ? (int) $data['user_id'] : null,
+            status: isset($data['status']) ? (string) $data['status'] : null,
+            quality_status: isset($data['quality_status']) ? (string) $data['quality_status'] : null,
         );
     }
 
@@ -123,9 +138,9 @@ readonly class StockData implements ArrayAccess
             throw new \InvalidArgumentException('StockData requires a location_id.');
         }
 
-        if (! isset($stock->quantity)) {
-            throw new \InvalidArgumentException('StockData requires a quantity.');
-        }
+        // if (! isset($stock->quantity)) {
+        //     throw new \InvalidArgumentException('StockData requires a quantity.');
+        // }
 
         if (! isset($stock->unit)) {
             throw new \InvalidArgumentException('StockData requires a unit.');
@@ -136,7 +151,10 @@ readonly class StockData implements ArrayAccess
             batch_id: $stock->batch_id !== null ? (int) $stock->batch_id : null,
             supplier_id: null,
             unit: $stock->unit !== null ? (string) $stock->unit : null,
-            quantity: (float) $stock->quantity,
+            quantity: (float) $stock->quantity !== null ? (float) $stock->quantity : 0.0,
+            quantity_on_hold: $stock->quantity_on_hold !== null ? (float) $stock->quantity_on_hold : 0.0,
+            quantity_reserved: $stock->quantity_reserved !== null ? (float) $stock->quantity_reserved : 0.0,
+            quantity_rejected: $stock->quantity_rejected !== null ? (float) $stock->quantity_rejected : 0.0,
             minimum_quantity: (float) ($stock->minimum_quantity ?? 0.0),
             date: null,
             remarks: $stock->remarks !== null ? (string) $stock->remarks : null,
@@ -144,6 +162,8 @@ readonly class StockData implements ArrayAccess
             container_capacity: $stock->container_capacity !== null ? (float) $stock->container_capacity : null,
             container_unit: $stock->container_unit !== null ? (string) $stock->container_unit : null,
             user_id: $stock->user_id !== null ? (int) $stock->user_id : null,
+            status: $stock->status !== null ? (string) $stock->status : null,
+            quality_status: $stock->quality_status !== null ? (string) $stock->quality_status : 'not_required',
         );
     }
 
@@ -187,6 +207,18 @@ readonly class StockData implements ArrayAccess
                 ? (float) $overrides['quantity']
                 : $this->quantity,
 
+            quantity_on_hold: isset($overrides['quantity_on_hold'])
+                ? (float) $overrides['quantity_on_hold']
+                : $this->quantity_on_hold,
+
+            quantity_reserved: isset($overrides['quantity_reserved'])
+                ? (float) $overrides['quantity_reserved']
+                : $this->quantity_reserved,
+
+            quantity_rejected: isset($overrides['quantity_rejected'])
+                ? (float) $overrides['quantity_rejected']
+                : $this->quantity_rejected,
+
             minimum_quantity: isset($overrides['minimum_quantity'])
                 ? (float) $overrides['minimum_quantity']
                 : $this->minimum_quantity,
@@ -210,6 +242,14 @@ readonly class StockData implements ArrayAccess
             container_unit: array_key_exists('container_unit', $overrides)
                 ? ($overrides['container_unit'] !== null ? (string) $overrides['container_unit'] : null)
                 : $this->container_unit,
+
+            status: array_key_exists('status', $overrides)
+                ? ($overrides['status'] !== null ? (string) $overrides['status'] : null)
+                : $this->status,
+
+            quality_status: array_key_exists('quality_status', $overrides)
+                ? ($overrides['quality_status'] !== null ? (string) $overrides['quality_status'] : 'not_required')
+                : $this->quality_status,
         );
     }
 
@@ -271,6 +311,9 @@ readonly class StockData implements ArrayAccess
             'supplier_id'        => $this->supplier_id,
             'unit'               => $this->unit,
             'quantity'           => $this->quantity,
+            'quantity_on_hold'   => $this->quantity_on_hold,
+            'quantity_reserved'  => $this->quantity_reserved,
+            'quantity_rejected'  => $this->quantity_rejected,
             'minimum_quantity'   => $this->minimum_quantity,
             'date'               => $this->date,
             'remarks'            => $this->remarks,
@@ -278,6 +321,8 @@ readonly class StockData implements ArrayAccess
             'container_capacity' => $this->container_capacity,
             'container_unit'     => $this->container_unit,
             'user_id'            => $this->user_id,
+            'status'             => $this->status,
+            'quality_status'     => $this->quality_status,
         ];
     }
 }

@@ -36,6 +36,7 @@ class BatchAssignmentService
         switch($typeCode) {
             case 'RMP':
                 $policyClass = Arr::get($this->policies, 'raw_material', $this->defaultPolicy);
+                break;
             case 'PP':
                 $policyClass = Arr::get($this->policies, 'packaging_primary', $this->defaultPolicy);
                 break;
