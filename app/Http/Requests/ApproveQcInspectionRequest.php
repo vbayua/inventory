@@ -31,6 +31,8 @@ class ApproveQcInspectionRequest extends FormRequest
             'results.*.result'               => 'required|in:pass,fail,na',
             'results.*.notes'                => 'nullable|string',
             'batch_id'                       => 'nullable|exists:batches,id',
+            'minimum_quantity'               => 'nullable|integer|min:0',
+            'approval_notes'                => 'nullable|string',
         ];
     }
 }

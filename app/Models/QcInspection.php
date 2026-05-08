@@ -50,6 +50,6 @@ class QcInspection extends Model
 
     public function approval(): HasOne
     {
-        return $this->hasOne(QcApproval::class);
+        return $this->hasOne(QcApproval::class, 'qc_inspection_id');
     }
 }

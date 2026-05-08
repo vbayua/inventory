@@ -288,6 +288,17 @@ export interface QcInspection {
     results?: QcInspectionResult[];
     inspector?: User;
     approver?: User;
+    approval?: QcApproval;
     created_at?: string;
     updated_at?: string;
+}
+
+export interface QcApproval {
+    id: number;
+    status: 'pending' | 'approved' | 'rejected';
+    qc_inspection_id: number;
+    approved_by?: number;
+    approved_at?: string;
+    qc_inspection?: QcInspection;
+    approver?: User;
 }

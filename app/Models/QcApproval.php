@@ -9,6 +9,7 @@ class QcApproval extends Model
     protected $fillable = [
         'qc_inspection_id',
         'status',
+        'notes',
         'approved_by',
         'approved_at',
     ];
@@ -19,10 +20,10 @@ class QcApproval extends Model
 
     public function qcInspection()
     {
-        return $this->belongsTo(QcInspection::class);
+        return $this->belongsTo(QcInspection::class, 'qc_inspection_id');
     }
 
-    public function approvedBy()
+    public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
     }

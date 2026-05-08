@@ -105,6 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('qc/inspections')->name('qc.inspections.')->group(function () {
         Route::get('/', [\App\Http\Controllers\QcInspectionController::class, 'index'])->name('index');
         Route::get('/{inspection}', [\App\Http\Controllers\QcInspectionController::class, 'show'])->name('show');
+        Route::get('/{inspection}/approvals', [\App\Http\Controllers\QcInspectionController::class, 'approvals'])->name('approvals');
         Route::post('/{inspection}/start', [\App\Http\Controllers\QcInspectionController::class, 'start'])->name('start');
         Route::post('/{inspection}/approve', [\App\Http\Controllers\QcInspectionController::class, 'approve'])->name('approve');
         Route::post('/{inspection}/submit', [\App\Http\Controllers\QcInspectionController::class, 'submit'])->name('submit');

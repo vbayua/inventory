@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
@@ -32,6 +33,12 @@ const statusConfig: Record<string, { label: string; className: string }> = {
     pass: { label: 'Pass', className: 'bg-green-100 text-green-800 hover:bg-green-100' },
     reject: { label: 'Reject', className: 'bg-red-100 text-red-800 hover:bg-red-100' },
     partial_pass: { label: 'Partial Pass', className: 'bg-orange-100 text-orange-800 hover:bg-orange-100' },
+    approved: { label: 'Approved', className: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
+};
+
+const approvalStatusConfig: Record<string, { label: string; className: string }> = {
+    pending: { label: 'Approve Pending', className: 'bg-amber-100 text-amber-800 hover:bg-amber-100' },
+    reject: { label: 'Reject', className: 'bg-red-100 text-red-800 hover:bg-red-100' },
     approved: { label: 'Approved', className: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
 };
 
@@ -63,6 +70,11 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
 
     const statusCfg = statusConfig[inspection.status] ?? {
         label: inspection.status,
+        className: 'bg-gray-100 text-gray-700',
+    };
+
+    const approvalStatusCfg = approvalStatusConfig[inspection.approval?.status ?? ''] ?? {
+        label: inspection.approval?.status ?? '',
         className: 'bg-gray-100 text-gray-700',
     };
 
@@ -203,6 +215,8 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
     const [approveDialogOpen, setApproveDialogOpen] = useState(false);
     const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
     const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+    const [minimumQuantity, setMinimumQuantity] = useState<number>(0);
+    const [approvalNotes, setApprovalNotes] = useState('');
 
     const handleApprove = () => {
         setSubmitProcessing(true);
@@ -228,6 +242,8 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
                         notes: i.notes || null,
                     })),
                 batch_id: selectedBatch?.id,
+                minimum_quantity: minimumQuantity,
+                approval_notes: approvalNotes?.trim() !== '' ? approvalNotes : null,
             },
             {
                 onSuccess: () => {},
@@ -266,8 +282,9 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
                                 </CardTitle>
                                 <CardDescription className="mt-1">Quality control inspection record.</CardDescription>
                             </div>
-                            <div className="mt-3 md:mt-0">
+                            <div className="mt-3 flex items-center gap-2 md:mt-0">
                                 <Badge className={statusCfg.className}>{statusCfg.label}</Badge>
+                                <Badge className={approvalStatusCfg.className}>{approvalStatusCfg.label}</Badge>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -674,7 +691,7 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
                                 <CardHeader>
                                     <CardTitle>Inspection Summary</CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="space-y-12">
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                         <div>
                                             <p className="text-muted-foreground text-sm font-medium">Final Result</p>
@@ -727,85 +744,143 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
                                         {(inspection.status === 'reject' || inspection.status === 'partial_pass') && inspection.rejection_reason && (
                                             <div className="sm:col-span-3">
                                                 <p className="text-sm font-medium text-red-600">Rejection Reason</p>
-                                                <p className="mt-1 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                                                    {inspection.rejection_reason}
-                                                </p>
+                                                <p className="mt-1 rounded-md border p-3 text-sm">{inspection.rejection_reason}</p>
                                             </div>
                                         )}
                                     </div>
-
-                                    <div className="grid grid-cols-1 justify-items-end gap-4">
-                                        <Button variant="default" onClick={() => setApproveDialogOpen(true)} disabled={submitProcessing}>
-                                            Approve QC
-                                        </Button>
-                                    </div>
-                                    <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-                                        <DialogContent>
-                                            <DialogTitle>Approve QC Inspection</DialogTitle>
-                                            <DialogDescription>
-                                                <p>Assign batch to stock before approving this inspection.</p>
-                                            </DialogDescription>
-                                            <FieldGroup>
-                                                <Field>
-                                                    <Label>Batch</Label>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Input
-                                                            id="batch_id"
-                                                            type="text"
-                                                            value={selectedBatch?.batch_number ?? 'Create New Batch'}
-                                                            readOnly
-                                                        />
-                                                        <Popover open={batchPopoverOpen} onOpenChange={setBatchPopoverOpen}>
-                                                            <PopoverTrigger asChild>
-                                                                <Button variant="outline">Choose Batch</Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent align="start">
-                                                                <Command>
-                                                                    <CommandInput placeholder="Search batch..." />
-                                                                    <CommandEmpty>No results found.</CommandEmpty>
-                                                                    <CommandList>
-                                                                        <CommandItem
-                                                                            onSelect={() => {
-                                                                                setSelectedBatch(null);
-                                                                                setBatchPopoverOpen(false);
-                                                                            }}
-                                                                        >
-                                                                            Create New Batch
-                                                                        </CommandItem>
-                                                                        {batch &&
-                                                                            batch.map(
-                                                                                (item) =>
-                                                                                    item.product_id === product.id && (
-                                                                                        <CommandItem
-                                                                                            key={item.id}
-                                                                                            onSelect={() => {
-                                                                                                setSelectedBatch(item);
-                                                                                                setBatchPopoverOpen(false);
-                                                                                            }}
-                                                                                        >
-                                                                                            {item.batch_number}
-                                                                                        </CommandItem>
-                                                                                    ),
-                                                                            )}
-                                                                    </CommandList>
-                                                                </Command>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    </div>
-                                                </Field>
-                                            </FieldGroup>
-                                            <div className="mt-4 flex gap-4">
-                                                <Button variant="default" onClick={() => handleApprove()}>
-                                                    Approve
-                                                </Button>
-                                                <Button variant="destructive" onClick={() => setApproveDialogOpen(false)}>
-                                                    Cancel
-                                                </Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
                                 </CardContent>
                             </Card>
+
+                            {(inspection.status === 'pass' || inspection.status === 'partial_pass') && inspection.approval?.status !== 'approved' && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Approve QC Form</CardTitle>
+                                        <CardDescription>Assign batch & approve QC</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div>
+                                            <div className="grid grid-cols-1 gap-4">
+                                                <FieldGroup>
+                                                    <Field>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Popover open={batchPopoverOpen} onOpenChange={setBatchPopoverOpen}>
+                                                                <PopoverTrigger asChild>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Label>Batch Assignment : </Label>
+                                                                        <Button variant="outline">
+                                                                            {selectedBatch?.batch_number ?? 'Create New Batch'}
+                                                                        </Button>
+                                                                    </div>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent align="start">
+                                                                    <Command>
+                                                                        <CommandInput placeholder="Search batch..." />
+                                                                        <CommandEmpty>No results found.</CommandEmpty>
+                                                                        <CommandList>
+                                                                            <CommandItem
+                                                                                onSelect={() => {
+                                                                                    setSelectedBatch(null);
+                                                                                    setBatchPopoverOpen(false);
+                                                                                }}
+                                                                            >
+                                                                                Create New Batch
+                                                                            </CommandItem>
+                                                                            {batch &&
+                                                                                batch.map(
+                                                                                    (item) =>
+                                                                                        item.product_id === product.id && (
+                                                                                            <CommandItem
+                                                                                                key={item.id}
+                                                                                                onSelect={() => {
+                                                                                                    setSelectedBatch(item);
+                                                                                                    setBatchPopoverOpen(false);
+                                                                                                }}
+                                                                                            >
+                                                                                                {item.batch_number}
+                                                                                            </CommandItem>
+                                                                                        ),
+                                                                                )}
+                                                                        </CommandList>
+                                                                    </Command>
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                        </div>
+                                                    </Field>
+                                                    {!selectedBatch && (
+                                                        <Field>
+                                                            <Input
+                                                                id="minimum_quantity"
+                                                                type="number"
+                                                                placeholder="Minimum Quantity"
+                                                                defaultValue={0}
+                                                                onChange={(e) => setMinimumQuantity(Number(e.target.value))}
+                                                            />
+                                                        </Field>
+                                                    )}
+                                                    <Field>
+                                                        <Label>Notes</Label>
+                                                        <Textarea
+                                                            id="approval_notes"
+                                                            placeholder="Approval Notes"
+                                                            value={approvalNotes}
+                                                            onChange={(e) => setApprovalNotes(e.target.value)}
+                                                        />
+                                                    </Field>
+                                                </FieldGroup>
+                                            </div>
+                                            <div className="grid grid-cols-1 justify-items-end gap-4">
+                                                <Separator decorative={true} />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <Button variant="default" onClick={() => setApproveDialogOpen(true)} disabled={submitProcessing}>
+                                                        Approve QC Result
+                                                    </Button>
+                                                    <Button variant="destructive" disabled={submitProcessing}>
+                                                        Reject QC Result
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+                                            <DialogContent>
+                                                <DialogTitle>Assign to Batch {selectedBatch?.batch_number ?? 'New Batch'} ?</DialogTitle>
+                                                <DialogDescription>Confirm the batch assignment before approving this inspection.</DialogDescription>
+                                                <div className="mt-4 flex gap-4">
+                                                    <Button variant="default" onClick={() => handleApprove()}>
+                                                        Approve
+                                                    </Button>
+                                                    <Button variant="secondary" onClick={() => setApproveDialogOpen(false)}>
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {inspection.approval?.approved_by && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Approval Result</CardTitle>
+                                        <CardDescription>Approved by {inspection.approval?.approver?.name}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                            <div>
+                                                <p className="text-muted-foreground font-medium">Approved at: </p>
+                                                <p>
+                                                    {inspection.approval?.approved_at &&
+                                                        new Date(inspection.approval?.approved_at).toLocaleString('id-ID')}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground font-medium">Approved by:</p>
+                                                <p>{inspection.approval?.approver?.name}</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             {/* Results table */}
                             {inspection.results && inspection.results.length > 0 && (

@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('qc_approvals', function (Blueprint $table) {
-            $table->id();
-            $table->string('status')->default('pending');
-            $table->foreignId('approved_by')->constrained('users');
-            $table->timestamp('approved_at')->nullable();
-            $table->timestamps();
+        Schema::table('qc_approvals', function (Blueprint $table) {
+            $table->unsignedBigInteger('approved_by')->nullable()->change();
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('qc_approvals');
+        Schema::table('qc_approvals', function (Blueprint $table) {
+            $table->unsignedBigInteger('approved_by')->nullable(false)->change();
+        });
     }
 };

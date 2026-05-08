@@ -8,6 +8,7 @@ use App\Http\Requests\RejectInspectionRequest;
 use App\Http\Requests\SubmitQcInspectionRequest;
 use App\Http\Requests\UpdateQcInspectionRequest;
 use App\Models\Batch;
+use App\Models\QcApproval;
 use App\Models\QcChecklist;
 use App\Models\QcInspection;
 use App\Models\QcInspectionResult;
@@ -30,8 +31,9 @@ class QcInspectionController extends Controller
     {
         $inspections = QcInspection::with([
             'receiveOrder:id,receive_number,receive_date',
-            'receiveOrderItem.purchaseOrderItem.product:id,name',
+            'receiveOrderItem.purchaseOrderItem.product:id,name,sku',
             'inspector:id,name',
+            'approval:id,status,qc_inspection_id,approved_by,approved_at'
         ])->latest()->get();
 
         return Inertia::render('Qc/Inspections/Index', [
@@ -51,10 +53,11 @@ class QcInspectionController extends Controller
             'results.checklistItem',
             'inspector:id,name',
             'approver:id,name',
+            'approval:id,status,notes,qc_inspection_id,approved_by,approved_at',
+            'approval.approver:id,name'
         ];
 
         $inspection->load($relations);
-
         $availableChecklists = QcChecklist::where('is_active', true)
             ->get(['id', 'name', 'description']);
 
@@ -182,6 +185,8 @@ class QcInspectionController extends Controller
                 'quantity_rejected' => $quantityRejected,
             ]);
 
+            $inspection->approval()->create();
+
         });
 
         return redirect()->back()->with('success', 'Inspection submitted successfully.');
@@ -289,6 +294,17 @@ class QcInspectionController extends Controller
             return redirect()->back()->with('error', 'Inspection already approved.');
         }
 
+        // $approval = QcApproval::where('qc_inspection_id', $inspection->id)->first();
+
+        // if ($approval) {
+        //     if (!$inspection->approval_id) {
+        //         $inspection->approval_id = $approval->id;
+        //         $inspection->save();
+        //     }
+        //     $inspection->refresh();
+        //     // return redirect()->back()->with('success', 'Inspection approved successfully.');
+        // }
+
 
         $receiveOrderItem = $inspection->receiveOrderItem;
         $product = $receiveOrderItem->purchaseOrderItem->product;
@@ -309,9 +325,10 @@ class QcInspectionController extends Controller
 
         // dd($quantity, $unit, $locationId, $batchId, $supplierId);
 
-        DB::transaction(function () use ($inspection, $stockData, $product) {
+        DB::transaction(function () use ($inspection, $stockData, $product, $request) {
 
             $stockOperation = app(StockOperationService::class);
+
             $stock = $stockOperation->createStockOperation(
                 'inbound',
                 $product,
@@ -320,12 +337,15 @@ class QcInspectionController extends Controller
                 $stockData['unit'],
                 'Approved by ' . Auth::user()->name
             );
+
+            $approval = $inspection->approval->updateOrFail([
+                'qc_inspection_id' => $inspection->id,
+                'status' => 'approved',
+                'notes' => $request->approval_notes,
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
         });
-
-        // Update inspection status
-
-        // Assign batch from request or create new batch
-        // Create stock operation
 
         $this->attemptPurchaseOrderCompletion($inspection);
         return redirect()->back()->with('success', 'Inspection approved successfully.');
@@ -333,12 +353,21 @@ class QcInspectionController extends Controller
 
     public function reject(RejectInspectionRequest $request, QcInspection $inspection)
     {
-        $inspection->update([
-            'status' => 'reject',
-            'rejected_at' => now(),
+        QcApproval::updateOrCreate([
+            'inspection_id' => $inspection->id,
+            'status' => 'rejected',
+            'notes' => $request->notes,
             'rejected_by' => Auth::id(),
+            'rejected_at' => now(),
         ]);
 
+        return redirect()->back()->with('success', 'Inspection rejected successfully.');
+    }
+
+
+    public function approvals(QcInspection $inspection)
+    {
+        return $inspection->approval;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

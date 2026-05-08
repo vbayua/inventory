@@ -7,9 +7,11 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Service\BatchPolicies\BatchPolicyInterface;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 
 class BatchAssignmentService
 {
@@ -74,7 +76,9 @@ class BatchAssignmentService
         string $operationType = 'inbound',
         ?string $operationDate = null,
         ?int $supplierId = null,
-        ?int $minQty = 0
+        ?int $minQty = 0,
+        ?string $manufactureDate = null,
+        ?string $expiryDate = null
         ): ?int
     {
         if ($product instanceof Product) {
@@ -130,15 +134,22 @@ class BatchAssignmentService
             $supplierId,
             $operationDate->toDateString()
         );
-        $expiryDate = $product->productType->defaultExpiryDate();
 
-        if ($expiryDate) {
-            $expiryDate = now()->addDays($expiryDate);
+        $manufactureDate = $manufactureDate ? Carbon::parse($manufactureDate) : null;
+        $expiryDate = $expiryDate ? Carbon::parse($expiryDate) : null;
+
+        if ($manufactureDate < $expiryDate) {
+            return InvalidArgumentException::withMessages(['expiryDate' => 'Expiry date must be after manufacture date']);
+        }
+
+        if ($manufactureDate && !$expiryDate) {
+            $expiryDate = Carbon::parse($manufactureDate)->addDays($product->productType->defaultExpiryDate());
         }
 
         $newBatch = Batch::create([
             'product_id' => $product->id,
             'batch_number' => $batchNumber,
+            'manufacture_date' => $manufactureDate ?? null,
             'expiry_date' => $expiryDate ?? null,
             'minimum_quantity' => $minQty,
             'supplier_id' => $supplierId,
