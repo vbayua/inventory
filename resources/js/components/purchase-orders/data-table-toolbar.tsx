@@ -10,6 +10,8 @@ import { Calendar } from '../ui/calendar';
 import { Input } from '../ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
+import { Field, FieldLabel } from '../ui/field';
+import { ButtonGroup } from '../ui/button-group';
 
 interface Option {
     label: string;
@@ -106,19 +108,13 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                <span className="text-muted-foreground text-sm">Cari: </span>
-                <Input
-                    placeholder="Cari No. PO atau Supplier"
-                    value={(table.getState().globalFilter as string) ?? ''}
-                    onChange={(event) => table.setGlobalFilter(event.target.value)}
-                    className="focus:border-primary h-12 w-full max-w-sm focus:ring-0"
-                />
-                <span className="text-muted-foreground text-sm">Filter: </span>
                 {supplierColumn && supplierFilterOptions && (
                     <DataTableFacetedFilter column={supplierColumn} title="Supplier" options={supplierFilterOptions} />
                 )}
                 {statusColumn && statusFilterOptions && <DataTableFacetedFilter column={statusColumn} title="Status" options={statusFilterOptions} />}
-                {orderDateColumn && (
+                <Field>
+                    <ButtonGroup>
+                        {orderDateColumn && (
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
@@ -140,7 +136,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar initialFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
+                            <Calendar autoFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
                         </PopoverContent>
                     </Popover>
                 )}
@@ -165,6 +161,8 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                         </DropdownMenuContent>
                     </DropdownMenu>
                 )}
+                    </ButtonGroup>
+                </Field>
                 {(isFiltered || dateRange) && (
                     <Button variant="ghost" onClick={handleReset} className="h-8 px-2 lg:px-3">
                         Reset

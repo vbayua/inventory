@@ -4,7 +4,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { PurchaseOrder } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
+import { Eye, MoreHorizontal } from 'lucide-react';
+import { Checkbox } from '../ui/checkbox';
 
 const statusConfig = (status: string) => {
     switch (status) {
@@ -23,6 +24,24 @@ const statusConfig = (status: string) => {
 
 export const columns: ColumnDef<PurchaseOrder>[] = [
     {
+        id: 'actions',
+        cell: ({ row }) => {
+            const purchaseOrder = row.original;
+            const viewPurchaseOrder = route('purchase-orders.show', { id: purchaseOrder.id });
+            return (
+                <div className="flex items-center">
+                    <Button variant="ghost" className="h-8 w-8 p-0" asChild>
+                        <Link href={viewPurchaseOrder} className="text-primary text-lg font-medium">
+                        <span className="sr-only">View PO</span>
+                            <Eye className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                </div>
+            );
+        },
+    },
+    {
+        id: 'po_number',
         accessorKey: 'po_number',
         header: ({ column }) => {
             return <DataTableColumnHeader column={column} title="PO Number" />;
@@ -33,6 +52,7 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
     },
     {
         id: 'supplier',
+        accessorKey: 'Supplier',
         accessorFn: (row) => row.supplier?.partner?.name,
         header: ({ column }) => {
             return <DataTableColumnHeader column={column} title="Supplier" />;
@@ -80,31 +100,6 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
             const status = cell.getValue() as string;
             const config = statusConfig(status);
             return <span className={`inline-block rounded px-2 py-1 ${config.color}`}>{config.label}</span>;
-        },
-    },
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            const purchaseOrder = row.original;
-            const viewPurchaseOrder = route('purchase-orders.show', { id: purchaseOrder.id });
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>
-                            <Link href={viewPurchaseOrder} className="w-full">
-                                View PO
-                            </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
         },
     },
 ];
