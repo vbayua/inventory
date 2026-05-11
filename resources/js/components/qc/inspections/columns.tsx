@@ -51,13 +51,13 @@ export const columns: ColumnDef<QcInspection>[] = [
     {
         id: 'quantity_received',
         accessorKey: 'quantity_received',
-        header: ({ column }) => <div className="text-center">Quantity Received</div>,
-        cell: ({ row }) => <div className="text-center">{row.original.receive_order_item?.quantity_received ?? '-'}</div>,
+        header: ({ column }) => <div className="">Quantity Received</div>,
+        cell: ({ row }) => <div className="">{row.original.receive_order_item?.quantity_received ?? '-'}</div>,
     },
     {
         id: 'status',
         accessorKey: 'status',
-        header: 'Quality Status',
+        header: ({ column }) => <div className="">Quality Status</div>,
         cell: ({ row }) => {
             const inspection = row.original;
             const cfg = statusConfig[inspection.status] ?? {
@@ -65,28 +65,39 @@ export const columns: ColumnDef<QcInspection>[] = [
                 className: 'bg-gray-100 text-gray-800',
             };
 
-            return <Badge className={cfg.className}>{cfg.label}</Badge>;
+            return (
+                <div className="">
+                    <Badge className={cfg.className}>{cfg.label}</Badge>
+                </div>
+            );
         },
     },
     {
         id: 'inspector',
         accessorKey: 'inspector',
-        header: ({ column }) => <div className="text-center">Inspector</div>,
-        cell: ({ row }) => <div className="text-center">{row.original.inspector?.name ?? '-'}</div>,
+        header: ({ column }) => <div className="text-right">Inspector</div>,
+        cell: ({ row }) => <div className="text-right">{row.original.inspector?.name ?? '-'}</div>,
     },
     {
         id: 'inspection_date',
         accessorKey: 'inspection_date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Inspection Date" />,
+        header: ({ column }) => <DataTableColumnHeader className="justify-end" column={column} title="Inspection Date" />,
         cell: ({ row }) => {
-            const date = new Date(row.original.inspection_date ?? '');
-            return date.toLocaleDateString('id-ID', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-            });
+            const inspectionDate = row.original.inspection_date;
+            const date = inspectionDate ? new Date(inspectionDate) : null;
+            return date ? (
+                <div className="text-right">
+                    {date.toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    })}
+                </div>
+            ) : (
+                <div className="text-right">-</div>
+            );
         },
         // Enable filtering by a date range passed in the column filter value
         filterFn: (row, id, value) => {
@@ -131,21 +142,25 @@ export const columns: ColumnDef<QcInspection>[] = [
     {
         id: 'approval',
         accessorKey: 'approval',
-        header: 'Approval',
+        header: ({ column }) => <div className="text-right">Approval</div>,
         cell: ({ row }) => {
             const approval = row.original.approval;
             console.log(approval?.status);
             const cfg = statusConfig[approval?.status ?? 'pending'];
-            return <Badge className={cfg.className}>{cfg.label}</Badge>;
+            return (
+                <div className="text-right">
+                    <Badge className={cfg.className}>{cfg.label}</Badge>
+                </div>
+            );
         },
     },
     {
         id: 'actions',
-        header: 'Actions',
+        header: ({ column }) => <div className="text-right">Actions</div>,
         cell: ({ row }) => {
             const inspection = row.original;
             return (
-                <div>
+                <div className="text-right">
                     <Button variant="ghost" size="sm" asChild>
                         <Link href={`/qc/inspections/${inspection.id}`}>View</Link>
                     </Button>

@@ -274,18 +274,31 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
 
                                                             <Field>
                                                                 <Label htmlFor="quantity_received">Receive Quantity</Label>
-                                                                <Input
-                                                                    type="text"
-                                                                    min={0}
-                                                                    max={item.quantity - item.quantity_received}
-                                                                    value={data.items[index]?.quantity_received ?? 0}
-                                                                    onChange={(e) => {
-                                                                        const newItems = [...data.items];
-                                                                        const parsed = parseInt(e.target.value);
-                                                                        newItems[index].quantity_received = isNaN(parsed) ? 0 : parsed;
-                                                                        setData('items', newItems);
-                                                                    }}
-                                                                />
+                                                                <div>
+                                                                    <Input
+                                                                        type="text"
+                                                                        min={0}
+                                                                        max={item.quantity - item.quantity_received}
+                                                                        value={data.items[index]?.quantity_received ?? 0}
+                                                                        onChange={(e) => {
+                                                                            const newItems = [...data.items];
+                                                                            const parsed = parseInt(e.target.value);
+                                                                            newItems[index].quantity_received = isNaN(parsed) ? 0 : parsed;
+                                                                            setData('items', newItems);
+                                                                        }}
+                                                                    />
+                                                                    <Button
+                                                                        variant="secondary"
+                                                                        onClick={() => {
+                                                                            const newItems = [...data.items];
+                                                                            const allRemainingQty = item.quantity - item.quantity_received;
+                                                                            newItems[index].quantity_received = allRemainingQty;
+                                                                            setData('items', newItems);
+                                                                        }}
+                                                                    >
+                                                                        Receive All
+                                                                    </Button>
+                                                                </div>
 
                                                                 <InputError message={errors[`items.${index}.quantity_received`]} />
                                                             </Field>

@@ -465,15 +465,17 @@ class QcInspectionController extends Controller
 
         if ($hasUnresolved) return;
 
-        // Condition 3: no rejected inspections
-        $hasRejections = QcInspection::whereHas('receiveOrder', function ($q) use ($purchaseOrder) {
-            $q->where('purchase_order_id', $purchaseOrder->id);
-        })->whereIn('status', ['reject', 'partial_pass'])->exists();
+        if($inspection->approval->status !== 'approved') return;
 
-        if ($hasRejections) return;
+
+        // // Condition 3: no rejected inspections
+        // $hasRejections = QcInspection::whereHas('receiveOrder', function ($q) use ($purchaseOrder) {
+        //     $q->where('purchase_order_id', $purchaseOrder->id);
+        // })->whereIn('status', ['reject', 'partial_pass'])->exists();
+
+        // if ($hasRejections) return;
 
         // Condition 4: Inspection is validated
-
 
         $purchaseOrder->update(['status' => 'completed']);
     }
