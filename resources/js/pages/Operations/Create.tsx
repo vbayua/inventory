@@ -1,22 +1,26 @@
-import ContainerFormLayout from '@/components/container-form-layout';
-import InputError from '@/components/input-error';
+import ContainerLayout from '@/components/container-layout';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SelectCommand from '@/components/ui/select-command';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
-import { Batch, Product, Stock, Unit } from '@/types/resources';
-import { Head, useForm } from '@inertiajs/react';
+import { Batch, Product, Stock, Unit, Warehouse } from '@/types/resources';
+import { Head, router, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
-import { SubmitEventHandler, useEffect, useRef } from 'react';
+import { Box, CalendarIcon, Check, ChevronsUpDown, Warehouse as IconWarehouse } from 'lucide-react';
+import { SubmitEventHandler, useEffect, useRef, useState } from 'react';
+import OperationTypeSelect from './page-components/Create/OperationTypeSelect';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,9 +49,11 @@ type OperationForm = {
 };
 
 type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
+
 export default function Create({
     stocks,
     products,
+    warehouses,
     locations,
     batches,
     units,
@@ -56,35 +62,17 @@ export default function Create({
 }: {
     stocks: Stock[];
     products: Product[];
+    warehouses: Warehouse[];
     locations: Location[];
     batches: Batch[];
     units: Unit[];
-    stockQuery?: any;
+    stockQuery?: Stock;
     operationType?: OperationType;
+    requests?: any;
 }) {
-    // Ensure products are unique by ID only
-    const uniqueProductIds = new Set();
-    const productList = products.reduce((acc, item) => {
-        if (!uniqueProductIds.has(item.id)) {
-            uniqueProductIds.add(item.id);
-            acc.push(item);
-        }
-        return acc;
-    }, []);
-
-    const formatQuantity = (value: string, base_unit: string): string => {
-        const numberValue = parseFloat(value);
-        if (isNaN(numberValue)) return '0';
-
-        if (base_unit.toLowerCase() === 'item') {
-            return numberValue.toFixed(0);
-        }
-        return numberValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    };
-
     const quantityRef = useRef<HTMLInputElement>(null);
     const stockData = stockQuery;
-    const locationId = operationType === 'inbound' ? '' : stockData?.location_id ? String(stockData.location_id) : '';
+    const locationId = stockData?.location_id ? String(stockData.location_id) : '';
     const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
         product: stockData?.product_id ? String(stockData.product_id) : '',
         batch: stockData?.batch_id ? String(stockData.batch_id) : '',
@@ -100,17 +88,38 @@ export default function Create({
     });
 
     // Product selection
-    const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
+    // const selectedProduct = productList.find((product: any) => product.id.toString() === data.product);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(stockData?.product_id ? stockData?.product : null);
     const selectedBatch = batches.find((batch) => batch.id.toString() === data.batch);
     const selectedLocation = locations.find((location) => location.id.toString() === data.location);
     const selectedLocationDestination = locations.find((location) => location.id.toString() === data.destination_location);
+    const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
+        stockData?.location?.warehouse_id ? stockData.location.warehouse : null,
+    );
 
     // Batch filtering based on selected product
-    const filteredBatches = data.product ? batches.filter((batch) => batch.product_id === selectedProduct.id) : [];
 
-    const currentStock = stocks.find(
-        (stock) => stock.product_id && selectedProduct?.id && stock.batch_id === selectedBatch?.id && stock.location_id === parseInt(data.location),
-    );
+    // const filteredBatches = data.product ? batches.filter((batch) => batch.product_id === selectedProduct.id) : [];
+    const filteredBatches = selectedProduct ? batches.filter((batch) => batch.product_id === selectedProduct.id) : [];
+    const filteredLocations =
+        selectedProduct && selectedBatch && selectedWarehouse
+            ? selectedWarehouse.locations?.filter((location) =>
+                  stocks.some(
+                      (stock: any) =>
+                          stock.batch_id === selectedBatch.id &&
+                          stock.product_id === selectedProduct.id &&
+                          stock.location_id === location.id &&
+                          stock.quantity > 0,
+                  ),
+              )
+            : [];
+
+    const currentStock = stockData
+        ? stocks.find(
+              (stock) =>
+                  stock.product_id && selectedProduct?.id && stock.batch_id === selectedBatch?.id && stock.location_id === parseInt(data.location),
+          )
+        : null;
     const stockQuantity = currentStock?.quantity ?? 0;
     const stockUnit = currentStock?.unit;
     // Filter unit have the same base_unit as the selected product
@@ -121,20 +130,14 @@ export default function Create({
         if (stockData?.unit) {
             setData('unit', stockData?.unit);
         }
-    }, [stockData]);
-    const filteredLocations: Location[] =
-        selectedProduct && selectedBatch
-            ? locations.filter((location: Location) =>
-                  stocks.some(
-                      // for some stocks that are...
-                      (stock: any) =>
-                          stock.batch_id === selectedBatch.id &&
-                          stock.product_id === selectedProduct.id &&
-                          stock.location_id === location.id &&
-                          stock.quantity > 0,
-                  ),
-              )
-            : [];
+    }, [stockData, setData]);
+
+    const operationTypes = [
+        { value: 'outbound', label: 'Stock Out (Keluar/Pengeluaran)' },
+        { value: 'inbound', label: 'Stock In (Masuk/Penerimaan)' },
+        { value: 'transfer', label: 'Transfer Stock (Pindah)' },
+        { value: 'return', label: 'Pengembalian Stock' },
+    ];
 
     const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();
@@ -150,49 +153,85 @@ export default function Create({
         });
     };
 
-    const operationTypes = [
-        { value: 'outbound', label: 'Stock Out (Keluar/Pengeluaran)' },
-        { value: 'inbound', label: 'Stock In (Masuk/Penerimaan)' },
-        { value: 'transfer', label: 'Transfer Stock (Pindah)' },
-        { value: 'return', label: 'Pengembalian Stock' },
-    ];
+    const searchProduct = (productName: string) => {
+        router.visit(route('operations.create', { product_name: productName }), {
+            only: ['products'],
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const toggleOperationType = (value: string) => {
+        setData('operationType', value);
+        setData('batch', '');
+        setData('location', '');
+        setData('quantity', 0);
+        setData('date', '');
+        setData('remarks', '');
+    };
+
+    const handleSelectedProduct = (product: Product) => {
+        setSelectedProduct(product);
+        setData('batch', '');
+    };
+
+    const handleSelectedWarehouse = (warehouse: Warehouse) => {
+        setSelectedWarehouse(warehouse);
+        setData('location', '');
+    };
+
+    const [productDialogOpen, setProductDialogOpen] = useState(false);
+    const [warehousePopoverOpen, setWarehousePopoverOpen] = useState(false);
+    const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const debouncedSearch = (value: string) => {
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+        searchTimeoutRef.current = setTimeout(() => {
+            searchProduct(value);
+        }, 300);
+    };
+
+    useEffect(() => {
+        if (!productDialogOpen) {
+            setSearchTerm('');
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+            // Reset products filter when dialog closes
+            router.visit(route('operations.create'), {
+                only: ['products'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }
+    }, [productDialogOpen]);
+
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    console.log(products.data);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
-            <ContainerFormLayout>
+            <ContainerLayout>
                 <form onSubmit={createOperation} className="space-y-6">
                     <h1 className="mb-12 text-2xl font-semibold">Operasi Stok</h1>
-                    <div className="mb-6">
-                        <Label className="mb-4 block">Jenis Operasi</Label>
-                        <Select
-                            onValueChange={(value) => {
-                                setData('operationType', value);
-                                // setData('product', '');
-                                setData('batch', '');
-                                setData('location', '');
-                                setData('quantity', 0);
-                                setData('date', '');
-                                setData('remarks', '');
-                            }}
-                            value={data.operationType}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Pilih jenis operasi (In, Out, Transfer)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    {operationTypes.map((type) => (
-                                        <SelectItem key={type.value} value={type.value}>
-                                            {type.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-
-                        <InputError message={errors.operationType} />
-                    </div>
+                    <OperationTypeSelect
+                        operationTypes={operationTypes}
+                        selectedValue={data.operationType}
+                        toggleOperationType={toggleOperationType}
+                    />
+                    <Separator />
 
                     {/*ADJUSTMENT SECTION*/}
                     {data.operationType === 'adjustment' && (
@@ -224,92 +263,136 @@ export default function Create({
                     )}
                     {/*END OF ADJUSTMENT SECTION*/}
 
-                    <div className="space-y-6">
-                        <div>
-                            <Label className="mb-2 block">Nama Product</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        className={cn('w-full justify-between', errors.product && 'text-muted-foreground border-red-500')}
-                                    >
-                                        {selectedProduct?.name ?? 'Pilih product'}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="p-0">
-                                    <SelectCommand
-                                        lists={productList}
-                                        getKey={(item) => item.id}
-                                        getId={(item) => item.id}
-                                        getLabel={(item) => item.name}
-                                        onSelect={(item) => {
-                                            setData('product', String(item.id));
-                                            setData('batch', '');
-                                            setData('location', '');
-                                        }}
-                                        placeholder="Cari product..."
-                                        emptyText="No product found"
-                                        getSearchValue={(item) => `${item.name} ${item.sku}`}
-                                        renderItem={(item) => (
-                                            <span>
-                                                {item.name}
-                                                <span className="text-muted-foreground ml-2 text-sm">({item.sku})</span>
-                                            </span>
-                                        )}
+                    <div className="space-y-4">
+                        <div className="mb-4 flex items-center gap-2">
+                            <Box className="text-primary" />
+                            <h2 className="text-xl font-semibold">Product Details</h2>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
+                            <Field>
+                                <FieldLabel className="block">Pilih Product</FieldLabel>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="text"
+                                        className="w-full"
+                                        value={selectedProduct ? `${selectedProduct?.sku} ${selectedProduct?.name}` : 'No Product Selected'}
+                                        readOnly
                                     />
-                                </PopoverContent>
-                            </Popover>
+                                    <Button
+                                        variant="default"
+                                        className={cn('max-w-content justify-between', errors.product && 'text-muted-foreground border-red-500')}
+                                        onClick={() => setProductDialogOpen(true)}
+                                        type="button"
+                                    >
+                                        Pilih Product
+                                    </Button>
+                                </div>
+                                <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+                                    <DialogContent className="sm:max-w-lg">
+                                        <DialogHeader>
+                                            <DialogTitle>Product List</DialogTitle>
+                                        </DialogHeader>
+                                        <Select></Select>
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <Input
+                                                type="text"
+                                                placeholder="Search products..."
+                                                value={searchTerm}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setSearchTerm(value);
+                                                }}
+                                            />
+                                            <Button
+                                                onClick={() => {
+                                                    debouncedSearch(searchTerm);
+                                                }}
+                                                type="button"
+                                            >
+                                                Search
+                                            </Button>
+                                        </div>
+                                        <ScrollArea className="max-h-64 overflow-y-auto border p-2">
+                                            <Table className="border">
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Product</TableHead>
+                                                        <TableHead>SKU</TableHead>
+                                                        {/*<TableHead>Quantity</TableHead>*/}
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {products.data.map((product: Product) => (
+                                                        <TableRow key={product.id}>
+                                                            <TableCell>{product.name}</TableCell>
+                                                            <TableCell>{product.sku}</TableCell>
+                                                            {/*<TableCell>{product.quantity}</TableCell>*/}
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </ScrollArea>
+                                    </DialogContent>
+                                </Dialog>
+                            </Field>
+
+                            <Field>
+                                <FieldLabel className="block">Batch</FieldLabel>
+                                <div>
+                                    <Popover open={batchPopoverOpen} onOpenChange={setBatchPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn('w-full justify-between', errors.batch && 'text-muted-foreground border-red-500')}
+                                            >
+                                                {selectedBatch?.batch_number ?? 'Pilih batch'}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="p-0" align="start">
+                                            <SelectCommand
+                                                lists={filteredBatches}
+                                                getKey={(item) => item.id}
+                                                getId={(item) => item.id}
+                                                getLabel={(item) => item.batch_number}
+                                                onSelect={(item) => {
+                                                    setData('batch', String(item.id));
+                                                    setData('location', '');
+                                                    setBatchPopoverOpen(false);
+                                                }}
+                                                placeholder="Cari batch..."
+                                                emptyText={
+                                                    <>
+                                                        <span>Tidak ada batch untuk product yang dipilih</span>
+                                                        <br />
+                                                        <Button
+                                                            variant={'link'}
+                                                            onClick={() => {
+                                                                window.open(route('batch.create', { product: selectedProduct?.id }), '_blank');
+                                                            }}
+                                                        >
+                                                            Register Batch Baru?
+                                                        </Button>
+                                                    </>
+                                                }
+                                                renderItem={(item) => <span>{item.batch_number}</span>}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            </Field>
                         </div>
 
-                        <div>
-                            <Label className="mb-2 block">Batch</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        className={cn('w-full justify-between', errors.batch && 'text-muted-foreground border-red-500')}
-                                    >
-                                        {selectedBatch?.batch_number ?? 'Pilih batch'}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="p-0">
-                                    <SelectCommand
-                                        lists={filteredBatches}
-                                        getKey={(item) => item.id}
-                                        getId={(item) => item.id}
-                                        getLabel={(item) => item.batch_number}
-                                        onSelect={(item) => {
-                                            setData('batch', String(item.id));
-                                            setData('location', '');
-                                        }}
-                                        placeholder="Cari batch..."
-                                        emptyText={
-                                            <>
-                                                <span>Tidak ada batch untuk product yang dipilih</span>
-                                                <br />
-                                                <Button
-                                                    variant={'link'}
-                                                    onClick={() => {
-                                                        window.open(route('batch.create', { product: selectedProduct?.id }), '_blank');
-                                                    }}
-                                                >
-                                                    Register Batch Baru?
-                                                </Button>
-                                            </>
-                                        }
-                                        renderItem={(item) => <span>{item.batch_number}</span>}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                        <Separator />
 
                         {/*TRANSFER SECTION*/}
                         {data.operationType === 'transfer' && (
                             <>
+                                <div className="mb-4 flex items-center gap-2">
+                                    <IconWarehouse className="text-primary" />
+                                    <h2 className="text-xl font-semibold">Transfer Details</h2>
+                                </div>
                                 <div>
                                     <Label className="mb-2 block">Lokasi Sumber</Label>
                                     <Popover>
@@ -471,35 +554,79 @@ export default function Create({
                         {/*OUTBOUND SECTION*/}
                         {data.operationType === 'outbound' && (
                             <>
-                                <div>
-                                    <Label className="mb-2 block">Lokasi</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                className={cn('w-full justify-between', errors.location && 'text-muted-foreground border-red-500')}
-                                            >
-                                                {selectedLocation?.name ?? 'Pilih lokasi'}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="p-0" align="start">
-                                            <SelectCommand
-                                                lists={filteredLocations}
-                                                getKey={(item) => item.id}
-                                                getId={(item) => item.id}
-                                                getLabel={(item) => item.name}
-                                                onSelect={(item) => {
-                                                    setData('location', String(item.id));
-                                                }}
-                                                placeholder="Search location..."
-                                                emptyText="No location found"
-                                                renderItem={(item) => <span>{item.name}</span>}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
+                                <div className="mb-4 flex items-center gap-2">
+                                    <IconWarehouse className="text-primary" />
+                                    <h2 className="text-xl font-semibold">Lokasi & Gudang</h2>
                                 </div>
+                                <div className="grid grid-cols-1 gap-4 rounded-md border p-4">
+                                    <div>
+                                        <Label className="mb-2 block">Gudang</Label>
+                                        <Popover open={warehousePopoverOpen} onOpenChange={setWarehousePopoverOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    className={cn(
+                                                        'w-full justify-between',
+                                                        errors.location && 'text-muted-foreground border-red-500',
+                                                    )}
+                                                >
+                                                    {selectedWarehouse?.name || 'Pilih Gudang'}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="p-0" align="start">
+                                                <SelectCommand
+                                                    lists={warehouses}
+                                                    getKey={(item) => item.id}
+                                                    getId={(item) => item.id}
+                                                    getLabel={(item) => item.name}
+                                                    onSelect={(item) => {
+                                                        handleSelectedWarehouse(item);
+                                                        setWarehousePopoverOpen(false);
+                                                    }}
+                                                    placeholder="Search warehouse..."
+                                                    emptyText="No warehouse found"
+                                                    renderItem={(item) => <span>{item.name}</span>}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+
+                                    <div>
+                                        <Label className="mb-2 block">Lokasi Item</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    className={cn(
+                                                        'w-full justify-between',
+                                                        errors.location && 'text-muted-foreground border-red-500',
+                                                    )}
+                                                >
+                                                    {selectedLocation?.name ?? 'Pilih lokasi'}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="p-0" align="start">
+                                                <SelectCommand
+                                                    lists={filteredLocations}
+                                                    getKey={(item) => item.id}
+                                                    getId={(item) => item.id}
+                                                    getLabel={(item) => item.name}
+                                                    onSelect={(item) => {
+                                                        setData('location', String(item.id));
+                                                    }}
+                                                    placeholder="Search location..."
+                                                    emptyText="No location found"
+                                                    renderItem={(item) => <span>{item.name}</span>}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <Label className="mb-2 block">Quantity</Label>
                                     <div className="flex items-center gap-2">
@@ -866,7 +993,7 @@ export default function Create({
                         </Button>
                     )}
                 </form>
-            </ContainerFormLayout>
+            </ContainerLayout>
         </AppLayout>
     );
 }

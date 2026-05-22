@@ -6,10 +6,13 @@ use App\DTO\StockData;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
 use App\Models\Operation;
+use App\Models\Product;
 use App\Models\Stock;
+use App\Models\Warehouse;
 use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class OperationController extends Controller
 {
@@ -39,23 +42,31 @@ class OperationController extends Controller
             'batch:id,product_id,batch_number,expiry_date',
             'location:id,name'
         ])->get();
-        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
+        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
         // // // Ensure products are unique by ID only the products
         // $stock = $stock->unique('batch_id')->values();
 
         $batches = \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
 
         $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
-        $locations = \App\Models\Location::all(['id', 'name']);
+        $warehouse = Warehouse::with(['locations'])->get();
+        $locations = $warehouse->flatMap(fn ($w) => $w->locations)->unique('id')->values();
         $stockId = $request->get('stock_id');
         $operationType = $request->get('operation_type');
         $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
 
+        $productQuery = $request->product_name;
+        $products = $productQuery
+        ? Product::query()->when($productQuery, function ($query, $search) {
+            $query->where('name', 'like', "%{$search}%");
+        })->with('unit')->select(['id', 'name', 'sku', 'unit'])->paginate()->withQueryString()
+        : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate();
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => $products,
             'batches' => $batches,
             'units' => $units,
+            'warehouses' => $warehouse,
             'locations' => $locations,
             'stockQuery' => $stockQuery,
             'operationType' => $operationType,
