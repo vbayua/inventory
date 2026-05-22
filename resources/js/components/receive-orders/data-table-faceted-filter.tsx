@@ -26,8 +26,8 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title, options }
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-12 border-dashed">
-                    <Filter className="mr-2 h-4 w-4" />
+                <Button variant="outline" size="sm" className="border-dashed">
+                    <Filter className="mr-2 w-4" />
                     {title}
                     {selectedValues?.size > 0 && (
                         <>
@@ -54,7 +54,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title, options }
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0" align="start">
+            <PopoverContent className="w-80 p-0" align="center">
                 <Command>
                     <CommandInput placeholder={title} />
                     <CommandList>

@@ -1,11 +1,9 @@
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PurchaseOrder } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Eye, MoreHorizontal } from 'lucide-react';
-import { Checkbox } from '../ui/checkbox';
+import { Eye } from 'lucide-react';
 
 const statusConfig = (status: string) => {
     switch (status) {
@@ -32,7 +30,7 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
                 <div className="flex items-center">
                     <Button variant="ghost" className="h-8 w-8 p-0" asChild>
                         <Link href={viewPurchaseOrder} className="text-primary text-lg font-medium">
-                        <span className="sr-only">View PO</span>
+                            <span className="sr-only">View PO</span>
                             <Eye className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -60,7 +58,7 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
     },
     {
         accessorKey: 'order_date',
-        header: 'Order Date',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Order Date" />,
         cell: ({ cell }) => {
             const date = new Date(cell.getValue() as string);
             return date.toLocaleDateString('en-US', {

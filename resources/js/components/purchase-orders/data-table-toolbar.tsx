@@ -6,12 +6,11 @@ import { CalendarIcon, X } from 'lucide-react';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
 import { Button } from '../ui/button';
+import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
-import { Input } from '../ui/input';
+import { Field } from '../ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
-import { Field, FieldLabel } from '../ui/field';
-import { ButtonGroup } from '../ui/button-group';
 
 interface Option {
     label: string;
@@ -81,6 +80,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const supplierColumn = table.getColumn('supplier');
     const orderDateColumn = table.getColumn('order_date');
     const statusColumn = table.getColumn('status');
+
     const supplierFilterOptions = supplierColumn
         ? Array.from(supplierColumn.getFacetedUniqueValues().entries()).map(([value]) => ({
               label: String(value),
@@ -115,52 +115,52 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                 <Field>
                     <ButtonGroup>
                         {orderDateColumn && (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {dateRange?.from ? (
-                                    dateRange.to ? (
-                                        <>
-                                            {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
-                                        </>
-                                    ) : (
-                                        format(dateRange.from, 'LLL dd, y')
-                                    )
-                                ) : (
-                                    <span>Order Date Range</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar autoFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
-                        </PopoverContent>
-                    </Popover>
-                )}
-                {orderDateColumn && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 px-2 lg:px-3">
-                                Quick Date
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-auto p-0" align="start">
-                            {quickDateTemplates.map((item) => (
-                                <Button
-                                    key={item.value}
-                                    variant="ghost"
-                                    className="w-full justify-start"
-                                    onClick={() => setDateRange(resolveQuickDate(item.value))}
-                                >
-                                    {item.label}
-                                </Button>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {dateRange?.from ? (
+                                            dateRange.to ? (
+                                                <>
+                                                    {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
+                                                </>
+                                            ) : (
+                                                format(dateRange.from, 'LLL dd, y')
+                                            )
+                                        ) : (
+                                            <span>Order Date Range</span>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar autoFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                        {orderDateColumn && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-8 px-2 lg:px-3">
+                                        Quick Date
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-auto p-0" align="end">
+                                    {quickDateTemplates.map((item) => (
+                                        <Button
+                                            key={item.value}
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            onClick={() => setDateRange(resolveQuickDate(item.value))}
+                                        >
+                                            {item.label}
+                                        </Button>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
                     </ButtonGroup>
                 </Field>
                 {(isFiltered || dateRange) && (

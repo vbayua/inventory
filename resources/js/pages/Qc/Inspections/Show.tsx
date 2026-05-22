@@ -284,7 +284,7 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
                             </div>
                             <div className="mt-3 flex items-center gap-2 md:mt-0">
                                 <Badge className={statusCfg.className}>{statusCfg.label}</Badge>
-                                <Badge className={approvalStatusCfg.className}>{approvalStatusCfg.label}</Badge>
+                                {inspection.approval?.status && <Badge className={approvalStatusCfg.className}>{approvalStatusCfg.label}</Badge>}
                             </div>
                         </CardHeader>
                         <CardContent>

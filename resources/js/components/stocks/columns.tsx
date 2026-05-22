@@ -1,11 +1,8 @@
 import { Stock } from '@/types/resources';
 import { Link, router } from '@inertiajs/react';
-import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { DataTableColumnHeader } from '../data-table-column-header';
-import { Button } from '../ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { ActionDropdown } from './action-dropdown';
 
 const handleCreateOperation = (id: number, operation_type: any) => {
     return function () {
@@ -48,6 +45,12 @@ const statusConfig = {
 
 export const columns: ColumnDef<Stock>[] = [
     {
+        id: 'actions',
+        enableHiding: false,
+        cell: ({ row }) => <ActionDropdown item={row.original} />,
+    },
+
+    {
         id: 'product_sku',
         accessorKey: 'SKU',
         accessorFn: (row) => row.product?.sku,
@@ -80,7 +83,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'product_name',
         accessorKey: 'Product Name',
         accessorFn: (row) => row.product?.name,
-        header: 'Nama Product',
+        header: 'Item',
         meta: {
             filterVariant: 'select',
         },
@@ -111,6 +114,10 @@ export const columns: ColumnDef<Stock>[] = [
         accessorKey: 'Location',
         accessorFn: (row) => row.location?.name,
         header: 'Lokasi',
+        cell: ({ row }) => {
+            const location = row.original?.location?.name ?? '-';
+            return <Link href={`/location/${row.original?.location?.id}`}>{location}</Link>;
+        },
         meta: {
             filterVariant: 'select',
         },
@@ -120,6 +127,10 @@ export const columns: ColumnDef<Stock>[] = [
         accessorKey: 'Warehouse',
         accessorFn: (row) => row.location?.warehouse?.name, // for filtering and sorting
         header: 'Gudang',
+        cell: ({ row }) => {
+            const warehouse = row.original?.location?.warehouse?.name ?? '-';
+            return <Link href={`/warehouse/${row.original?.location?.warehouse?.id}`}>{warehouse}</Link>;
+        },
         meta: {
             filterVariant: 'select',
         },
@@ -208,42 +219,5 @@ export const columns: ColumnDef<Stock>[] = [
             }
             return true;
         },
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-        cell: ({ row }) => (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {/*<DropdownMenuItem onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}>Copy Batch Number</DropdownMenuItem>*/}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem asChild>
-                            <Link href={route('stocks.show', { stock: row.original.id })}> View Detail </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Operasi Stok</DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'inbound')}>Stock In</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'outbound')}>Stock Out</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Kartu Stock</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                        <Link href={route('stocks.stock-card', { stock: row.original.id })}> View Stock Card </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        ),
     },
 ];

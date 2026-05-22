@@ -37,6 +37,7 @@ export interface Product {
     updated_at?: string;
     pivot?: SupplierProductsPivot;
     suppliers?: Supplier[];
+    data?: Product[];
 }
 
 export interface Partner {
@@ -76,6 +77,7 @@ export interface Warehouse {
     name: string;
     created_at?: string;
     updated_at?: string;
+    locations?: Location[];
 }
 
 export interface Location {

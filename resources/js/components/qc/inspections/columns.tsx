@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { QcInspection } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
+import { Eye } from 'lucide-react';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
     pending: { label: 'Pending', className: 'bg-amber-100 text-amber-800 hover:bg-amber-100' },
@@ -16,7 +17,21 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 export const columns: ColumnDef<QcInspection>[] = [
     {
-        id: 'ID',
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => {
+            const inspection = row.original;
+            return (
+                <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/qc/inspections/${inspection.id}`}>
+                        <Eye className="h-4 w-4" />
+                    </Link>
+                </Button>
+            );
+        },
+    },
+    {
+        id: 'Id',
         accessorKey: 'id',
         header: 'ID',
         cell: ({ row }) => <span>#{row.original.id ?? '-'}</span>,
@@ -150,20 +165,6 @@ export const columns: ColumnDef<QcInspection>[] = [
             return (
                 <div className="text-right">
                     <Badge className={cfg.className}>{cfg.label}</Badge>
-                </div>
-            );
-        },
-    },
-    {
-        id: 'actions',
-        header: ({ column }) => <div className="text-right">Actions</div>,
-        cell: ({ row }) => {
-            const inspection = row.original;
-            return (
-                <div className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/qc/inspections/${inspection.id}`}>View</Link>
-                    </Button>
                 </div>
             );
         },

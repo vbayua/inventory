@@ -105,7 +105,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`PO - ${purchaseOrder.po_number}`} />
             <ContainerLayout>
-                <div className="space-y-6">
+                <div className="mb-6 grid grid-cols-1 gap-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <Button variant={'link'} asChild>

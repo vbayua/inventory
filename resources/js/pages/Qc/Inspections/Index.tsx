@@ -43,16 +43,18 @@ export default function Index({ inspections }: { inspections: QcInspection[] }) 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="QC Inspections" />
-            <ContainerLayout>
+            <ContainerLayout className="p-0">
                 <div className="space-y-6">
                     {/* Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="mb-4 flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold">QC Inspections</h1>
                             <p className="text-muted-foreground mt-1 text-sm">Quality control inspections for received items.</p>
                         </div>
                     </div>
-                    <DataTable data={inspections} columns={columns} clientSide={true} />
+                    <div>
+                        <DataTable data={inspections} columns={columns} clientSide={true} />
+                    </div>
                 </div>
             </ContainerLayout>
         </AppLayout>

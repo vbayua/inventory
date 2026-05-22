@@ -1,7 +1,9 @@
-export default function ContainerLayout({ children }: { children: React.ReactNode }) {
+import { cn } from '@/lib/utils';
+
+export default function ContainerLayout({ className, children }: { className?: string; children: React.ReactNode }) {
     return (
-        <div className={'flex flex-1 flex-col pt-6'}>
-            <div className="mx-6 px-6 sm:mx-2">{children}</div>
+        <div className={cn('flex flex-1 flex-col pt-6')}>
+            <div className={cn('mx-2 px-2 sm:mx-6', className)}>{children}</div>
         </div>
     );
 }

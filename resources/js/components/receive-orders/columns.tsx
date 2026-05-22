@@ -1,12 +1,28 @@
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ReceiveOrder } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
+import { Eye } from 'lucide-react';
+import { Button } from '../ui/button';
 
 export const columns: ColumnDef<ReceiveOrder>[] = [
+    {
+        id: 'actions',
+        cell: ({ row }) => {
+            const receiveOrder = row.original;
+            const viewReceiveOrder = route('receive-orders.show', { id: receiveOrder.id });
+            return (
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href={viewReceiveOrder} className="flex items-center gap-1">
+                            <span className="sr-only">View Details</span>
+                            <Eye className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                </div>
+            );
+        },
+    },
     {
         accessorKey: 'receive_number',
         header: ({ column }) => {
@@ -23,7 +39,14 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
             return <DataTableColumnHeader column={column} title="PO Number" />;
         },
         cell: ({ cell }) => {
-            return <Link href={route('purchase-orders.show', { id: cell.row.original.purchase_order_id })}>{cell.getValue() as string}</Link>;
+            return (
+                <Link
+                    href={route('purchase-orders.show', { id: cell.row.original.purchase_order_id })}
+                    className="hover:cursor-pointer hover:underline"
+                >
+                    {cell.getValue() as string}
+                </Link>
+            );
         },
     },
     {
@@ -82,31 +105,6 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
         },
         cell: ({ cell }) => {
             return <>{(cell.getValue() as string) ?? '-'}</>;
-        },
-    },
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            const receiveOrder = row.original;
-            const viewReceiveOrder = route('receive-orders.show', { id: receiveOrder.id });
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>
-                            <Link href={viewReceiveOrder} className="w-full">
-                                View Details
-                            </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
         },
     },
 ];
