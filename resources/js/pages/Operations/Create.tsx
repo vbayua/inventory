@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SelectCommand from '@/components/ui/select-command';
 import { Separator } from '@/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -170,7 +170,7 @@ export default function Create({
         setData('remarks', '');
     };
 
-    const handleSelectedProduct = (product: Product) => {
+    const handleProductSelect = (product: Product) => {
         setSelectedProduct(product);
         setData('batch', '');
     };
@@ -288,7 +288,7 @@ export default function Create({
                                     </Button>
                                 </div>
                                 <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-                                    <DialogContent className="sm:max-w-lg">
+                                    <DialogContent className="w-full">
                                         <DialogHeader>
                                             <DialogTitle>Product List</DialogTitle>
                                         </DialogHeader>
@@ -312,26 +312,31 @@ export default function Create({
                                                 Search
                                             </Button>
                                         </div>
-                                        <ScrollArea className="max-h-64 overflow-y-auto border p-2">
-                                            <Table className="border">
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Product</TableHead>
-                                                        <TableHead>SKU</TableHead>
-                                                        {/*<TableHead>Quantity</TableHead>*/}
-                                                    </TableRow>
+                                        <div className="relative max-h-96 w-full overflow-y-auto rounded-md border">
+                                            <table className="w-full caption-bottom text-sm">
+                                                <TableHeader className="bg-muted top-0 z-10 font-medium *:font-bold">
+                                                    <TableHead>Product</TableHead>
+                                                    <TableHead>SKU</TableHead>
+                                                    {/*<TableHead>Quantity</TableHead>*/}
                                                 </TableHeader>
                                                 <TableBody>
                                                     {products.data.map((product: Product) => (
-                                                        <TableRow key={product.id}>
+                                                        <TableRow
+                                                            key={product.id}
+                                                            onClick={() => {
+                                                                handleProductSelect(product);
+                                                                setProductDialogOpen(false);
+                                                            }}
+                                                            className={selectedProduct?.id === product.id ? 'selected' : ''}
+                                                        >
                                                             <TableCell>{product.name}</TableCell>
                                                             <TableCell>{product.sku}</TableCell>
                                                             {/*<TableCell>{product.quantity}</TableCell>*/}
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
-                                            </Table>
-                                        </ScrollArea>
+                                            </table>
+                                        </div>
                                     </DialogContent>
                                 </Dialog>
                             </Field>
