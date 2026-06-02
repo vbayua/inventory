@@ -525,6 +525,11 @@ class StockOperationService
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode, $withContainer) {
             $productId = $product instanceof Product ? $product->id : $product;
             $quantityUnit = $this->getUnitRecord($unit);
+
+            if ($quantityUnit->unit_type === 'item') {
+                $quantity = intval($quantity);
+            }
+
             $qualityStatus = $stockData['quality_status'] ?? 'not_required';
             $bucket = $this->resolveBucketColumn($qualityStatus);
             $stock = Stock::where('product_id', $productId)
@@ -588,6 +593,7 @@ class StockOperationService
                 default:
                     throw new InvalidArgumentException("Unknown stock change mode: {$mode}");
             }
+
 
             $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
             $stock->updateOrFail([
