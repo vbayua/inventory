@@ -26,7 +26,7 @@ export interface Product {
     brand_name?: string;
     scientific_name?: string;
     sku: string;
-    unit: string;
+    unit: Unit;
     price?: number;
     category_id?: number;
     product_type_id?: number;

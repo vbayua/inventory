@@ -1,8 +1,10 @@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
 
 type SelectCommandProps<T> = {
     lists?: T[];
+    defaultValue?: T;
     onSelect: (item: T) => void;
     placeholder?: string;
     emptyText?: string | ReactNode;
@@ -23,6 +25,7 @@ function defaultId(item: any, index: number): string | number {
 }
 export default function SelectCommand<T>({
     lists,
+    defaultValue,
     onSelect,
     placeholder = 'Select an item',
     emptyText = 'No data found.',
@@ -36,6 +39,8 @@ export default function SelectCommand<T>({
 
     const resolveLabel = (item: any) => (getLabel ? getLabel(item) : defaultLabel(item));
     const resolveSearchValue = (item: any) => (getSearchValue ? getSearchValue(item) : resolveLabel(item));
+
+    const defaultKey = defaultValue ? resolveKey(defaultValue as any, 0) : undefined;
     return (
         <Command>
             <CommandInput placeholder={placeholder} />
@@ -50,6 +55,7 @@ export default function SelectCommand<T>({
                             const key = resolveKey(item as any, index);
                             const label = resolveLabel(item as any);
                             const searchValue = resolveSearchValue(item as any);
+                            const isSelected = defaultKey === key;
                             return (
                                 <CommandItem
                                     key={key}
@@ -57,9 +63,10 @@ export default function SelectCommand<T>({
                                     onSelect={() => {
                                         onSelect(item);
                                     }}
-                                    className="flex w-full justify-between"
+                                    className={cn('flex w-full justify-between', isSelected && 'bg-accent/50')}
                                 >
                                     {renderItem ? renderItem(item) : label}
+                                    {isSelected && <span className="text-muted-foreground">✓</span>}
                                 </CommandItem>
                             );
                         })}

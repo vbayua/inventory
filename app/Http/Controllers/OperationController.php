@@ -40,7 +40,8 @@ class OperationController extends Controller
             'product:id,name,sku,unit',
             'product.unit:name,base_unit',
             'batch:id,product_id,batch_number,expiry_date',
-            'location:id,name'
+            'location:id,name,warehouse_id',
+            'location.warehouse:id,name'
         ])->get();
         $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
         // // // Ensure products are unique by ID only the products
@@ -55,12 +56,26 @@ class OperationController extends Controller
         $operationType = $request->get('operation_type');
         $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
 
-        $productQuery = $request->product_name;
-        $products = $productQuery
-        ? Product::query()->when($productQuery, function ($query, $search) {
-            $query->where('name', 'like', "%{$search}%");
-        })->with('unit')->select(['id', 'name', 'sku', 'unit'])->paginate()->withQueryString()
-        : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate();
+        $query = Product::query()
+            ->when($request->search_term, function ($query, $search) use ($request) {
+                $query->when($request->has_stock, function ($query) {
+                    $query->whereHas('stocks');
+                })
+                ->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%");
+            })
+            ->when($request->has_stock, function ($query) {
+                $query->withWhereHas('stocks', function ($query) {
+                    $query->where('quantity', '>', 0);
+                });
+            })
+            ->with('unit')
+            ->select(['id', 'name', 'sku', 'unit'])
+            ->paginate(10)
+            ->onEachSide(1)
+            ->withQueryString();
+
+        $products = $query;
+        // : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate(10)->onEachSide(1);
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => $products,
@@ -117,30 +132,29 @@ class OperationController extends Controller
                     'container_quantity' => $validatedData['container_quantity'] ?? null,
                     'container_unit' => $validatedData['container_unit'] ?? null,
                 ]);
-                $operationService->createInitialStock(
-                    $validatedData['product'],
-                    $stockData
-                );
-            } else {
-                // For inbound operations, call the service for inbound operations
-                $operationService->createInboundOperation(
-                    $stockData->product,
-                    $stockData,
-                    $operationQuantity,
-                    $validatedData['unit'],
-                    $validatedData['remarks'] ?? '',
-                    $validatedData['date'],
-                );
             }
-        } elseif ($operationType === 'outbound') {
-            // For outbound operations, we decrement the stock
-            $operationService->createOutboundOperation(
-                $stockData->product,
+
+            $operationService->createStockOperation(
+                'inbound',
+                $validatedData['product'],
                 $stockData,
                 $operationQuantity,
                 $validatedData['unit'],
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
+                $validatedData['with_container'] ?? false,
+            );
+        } elseif ($operationType === 'outbound') {
+            // For outbound operations, we decrement the stock
+            $operationService->createStockOperation(
+                'outbound',
+                $validatedData['product'],
+                $stockData,
+                $operationQuantity,
+                $validatedData['unit'],
+                $validatedData['remarks'] ?? '',
+                $validatedData['date'],
+                $validatedData['with_container'] ?? false,
             );
         } elseif ($operationType === 'adjustment') {
             $operationService->adjustStockOperation(

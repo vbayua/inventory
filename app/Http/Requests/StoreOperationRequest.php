@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Unit;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOperationRequest extends FormRequest
@@ -38,5 +39,24 @@ class StoreOperationRequest extends FormRequest
              'container_quantity' => 'nullable|numeric|min:0',
              'container_unit' => 'nullable|exists:units,name',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator) {
+            $unitName = $this->input('unit');
+            $quantity = $this->input('quantity');
+
+            if ($unitName && $quantity !== null) {
+                $unit = Unit::find($unitName);
+
+                if ($unit && $unit->unit_type === 'item' && floor((float) $quantity) != (float) $quantity) {
+                    $validator->errors()->add('quantity', 'Quantity must be a whole number when unit type is item.');
+                }
+            }
+        });
     }
 }
