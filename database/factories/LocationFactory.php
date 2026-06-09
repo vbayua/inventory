@@ -17,6 +17,7 @@ class LocationFactory extends Factory
     public function definition(): array
     {
         return [
+            'warehouse_id' => \App\Models\Warehouse::factory(),
             'name' => $this->faker->unique()->words(2, true),
         ];
     }

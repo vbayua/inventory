@@ -69,15 +69,22 @@ class Product extends Model
         return $this->belongsTo(ProductType::class, 'product_type_id', 'id');
     }
 
-    public function getUnitTypeAttribute()
+    public function getProductTypeDefaultLocationAttribute()
     {
-        return $this->unit ? $this->unit->unit_type : null;
+        return $this->productType()->defaultLocation();
     }
 
-    public function getBaseUnitAttribute()
-    {
-        return $this->unit ? $this->unit->base_unit : null;
-    }
+    public function getUnitTypeAttribute()
+        {
+            $unit = $this->getRelationValue('unit'); // explicitly fetch relation
+            return $unit ? $unit->unit_type : null;
+        }
+
+        public function getBaseUnitAttribute()
+        {
+            $unit = $this->getRelationValue('unit'); // explicitly fetch relation
+            return $unit ? $unit->base_unit : null;
+        }
 
     public function getAllStockQty()
     {

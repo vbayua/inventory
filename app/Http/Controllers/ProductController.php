@@ -69,8 +69,6 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, StockOperationService $stockOperationService, BatchAssignmentService $batchService)
     {
-        // $this->authorize('create', Product::class);
-
         $request->merge([
             'category_id' => $request->category_id === 'none' ? null : $request->category_id,
             'supplier_id' => $request->supplier_id === 'none' ? null : $request->supplier_id,
@@ -82,6 +80,14 @@ class ProductController extends Controller
             'quantity',
             'minimum_quantity',
         ]);
+
+        // Check if product type is the same as the sku prefix
+        $productType = \App\Models\ProductType::find($request->product_type_id);
+        if ($productType && !str_starts_with($request->sku, $productType->type_code)) {
+            throw ValidationException::withMessages([
+                'sku' => "Item code must start with the product type code: $productType->type_code",
+            ]);
+        }
 
         DB::beginTransaction();
         //  Create a default batch for the product
@@ -106,13 +112,6 @@ class ProductController extends Controller
                     'container_unit',
                 ]
             );
-
-            // // If with_begin_stock is true and stock is created then attach the product to the supplier.
-            // $newProduct->suppliers()->attach($request->supplier_id, [
-            //     'price' => $request->price,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ]);
 
             $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
             if (! $stock) {

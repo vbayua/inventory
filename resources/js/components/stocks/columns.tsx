@@ -1,93 +1,10 @@
+import { Stock } from '@/types/resources';
 import { Link, router } from '@inertiajs/react';
-import { DropdownMenuSeparator } from '@radix-ui/react-dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
-import { toast } from 'sonner';
 import { DataTableColumnHeader } from '../data-table-column-header';
-import { Button } from '../ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { ActionDropdown } from './action-dropdown';
 
-type ProductType = {
-    id: number;
-    name?: string;
-    type_code?: string;
-};
-
-type Partner = {
-    id: number;
-    name?: string;
-};
-type Supplier = {
-    id: number;
-    partner?: Partner;
-};
-
-type Product = {
-    id: number;
-    name?: string;
-    sku?: string;
-    product_type?: ProductType;
-};
-
-type Batch = {
-    id: number;
-    batch_number?: string;
-    supplier?: Supplier;
-};
-
-type Warehouse = {
-    id: number;
-    name?: string;
-};
-
-type Location = {
-    id: number;
-    name?: string;
-    warehouse?: Warehouse;
-};
-
-type Stock = {
-    id: number;
-    product?: Product;
-    location?: Location;
-    batch?: Batch;
-    status?: string;
-    quantity?: number;
-    unit?: string;
-    minimum_quantity?: number;
-    created_at?: string;
-    updated_at?: string;
-};
-
-type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer';
-
-const handleCopyBatchNumber = (batchNumber: string) => {
-    return function () {
-        navigator.clipboard
-            .writeText(batchNumber)
-            .then(() => {
-                toast.success('Batch number copied to clipboard');
-            })
-            .catch(() => {
-                toast.error('Failed to copy batch number');
-            });
-    };
-};
-
-const handleViewStock = (id: number, product_name: any) => {
-    return function () {
-        router.get(
-            'stocks.show',
-            { id },
-            {
-                preserveState: true,
-                preserveScroll: true,
-            },
-        );
-    };
-};
-
-const handleCreateOperation = (id: number, operation_type: OperationType) => {
+const handleCreateOperation = (id: number, operation_type: any) => {
     return function () {
         router.get(
             route('operations.create'),
@@ -128,6 +45,12 @@ const statusConfig = {
 
 export const columns: ColumnDef<Stock>[] = [
     {
+        id: 'actions',
+        enableHiding: false,
+        cell: ({ row }) => <ActionDropdown item={row.original} />,
+    },
+
+    {
         id: 'product_sku',
         accessorKey: 'SKU',
         accessorFn: (row) => row.product?.sku,
@@ -160,7 +83,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'product_name',
         accessorKey: 'Product Name',
         accessorFn: (row) => row.product?.name,
-        header: 'Nama Product',
+        header: 'Item',
         meta: {
             filterVariant: 'select',
         },
@@ -182,6 +105,7 @@ export const columns: ColumnDef<Stock>[] = [
         cell: ({ row }) => {
             const quantity = row.original.quantity;
             const unit = row.original.unit ?? '';
+            if (unit === 'pcs') return quantity !== undefined ? `${Number(quantity)} ${unit}` : '-';
             return quantity !== undefined ? `${quantity} ${unit}` : '-';
         },
     },
@@ -190,6 +114,10 @@ export const columns: ColumnDef<Stock>[] = [
         accessorKey: 'Location',
         accessorFn: (row) => row.location?.name,
         header: 'Lokasi',
+        cell: ({ row }) => {
+            const location = row.original?.location?.name ?? '-';
+            return <Link href={`/location/${row.original?.location?.id}`}>{location}</Link>;
+        },
         meta: {
             filterVariant: 'select',
         },
@@ -199,6 +127,10 @@ export const columns: ColumnDef<Stock>[] = [
         accessorKey: 'Warehouse',
         accessorFn: (row) => row.location?.warehouse?.name, // for filtering and sorting
         header: 'Gudang',
+        cell: ({ row }) => {
+            const warehouse = row.original?.location?.warehouse?.name ?? '-';
+            return <Link href={`/warehouse/${row.original?.location?.warehouse?.id}`}>{warehouse}</Link>;
+        },
         meta: {
             filterVariant: 'select',
         },
@@ -254,7 +186,8 @@ export const columns: ColumnDef<Stock>[] = [
             if (!value || (!value.from && !value.to)) {
                 return true;
             }
-            const rowDate = new Date(row.original.updated_at);
+
+            const rowDate = new Date(row.original.updated_at ?? '');
 
             const normalizeStartOfDay = (d: Date) => {
                 const nd = new Date(d);
@@ -286,42 +219,5 @@ export const columns: ColumnDef<Stock>[] = [
             }
             return true;
         },
-    },
-    {
-        id: 'actions',
-        enableHiding: false,
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-        cell: ({ row }) => (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {/*<DropdownMenuItem onClick={handleCopyBatchNumber(row.original.batch?.batch_number ?? '')}>Copy Batch Number</DropdownMenuItem>*/}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem asChild>
-                            <Link href={route('stocks.show', { stock: row.original.id })}> View Detail </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Operasi Stok</DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'inbound')}>Stock In</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'outbound')}>Stock Out</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCreateOperation(row.original.id, 'transfer')}>Transfer Stock</DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Kartu Stock</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                        <Link href={route('stocks.stock-card', { stock: row.original.id })}> View Stock Card </Link>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        ),
     },
 ];

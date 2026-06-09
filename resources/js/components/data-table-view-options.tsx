@@ -11,7 +11,7 @@ export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="ml-auto flex h-12 hover:cursor-pointer">
+                <Button variant="outline" size="sm" className="ml-auto flex hover:cursor-pointer">
                     <Settings2 />
                     Columns
                 </Button>
@@ -30,7 +30,7 @@ export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) 
                                 checked={column.getIsVisible()}
                                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
                             >
-                                {column.id}
+                                {String(column.id).trim().replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/^./, (str) => str.toUpperCase())}
                             </DropdownMenuCheckboxItem>
                         );
                     })}

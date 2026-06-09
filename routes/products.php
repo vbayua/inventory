@@ -25,6 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{productType}/edit', [ProductTypeController::class, 'edit'])->name('product-types.edit');
         Route::delete('/{productType}', [ProductTypeController::class, 'destroy'])->name('product-types.destroy');
         Route::put('/{productType}', [ProductTypeController::class, 'update'])->name('product-types.update');
+        Route::patch('/{productType}/settings', [ProductTypeController::class, 'updateSettings'])->name('product-types.update-settings');
     });
     Route::prefix('categories')->group(function () {
         Route::get('/', [CategoryController::class, 'index'])->name('categories.index');

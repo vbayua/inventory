@@ -1,3 +1,4 @@
+import { Warehouse } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
@@ -5,14 +6,7 @@ import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-type WarehouseIndex = {
-    id: number;
-    name: string;
-    created_at: string;
-    updated_at: string;
-};
-
-export const columns: ColumnDef<WarehouseIndex>[] = [
+export const columns: ColumnDef<Warehouse>[] = [
     {
         accessorKey: 'name',
         header: 'Nama Gudang',
@@ -27,7 +21,7 @@ export const columns: ColumnDef<WarehouseIndex>[] = [
     {
         accessorKey: 'created_at',
         cell: ({ row }) => {
-            const createdAt = new Date(row.original.created_at);
+            const createdAt = new Date(row.original.created_at ?? '');
             return createdAt.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
@@ -44,7 +38,7 @@ export const columns: ColumnDef<WarehouseIndex>[] = [
     {
         accessorKey: 'updated_at',
         cell: ({ row }) => {
-            const updatedAt = new Date(row.original.updated_at);
+            const updatedAt = new Date(row.original.updated_at ?? '');
             return updatedAt.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',

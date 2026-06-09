@@ -1,91 +1,69 @@
-import { ColumnDef } from '@tanstack/react-table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Button, buttonVariants } from '../ui/button'
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
-import { Link, router } from '@inertiajs/react'
-import { toast } from 'sonner'
-import { DataTableColumnHeader } from '../data-table-column-header'
+import { Category } from '@/types/resources';
+import { Link, router } from '@inertiajs/react';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
+import { DataTableColumnHeader } from '../data-table-column-header';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
-type CategoryIndex = {
-    id: number;
-    name: string;
-    slug?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-export const columns: ColumnDef<CategoryIndex>[] = [
+export const columns: ColumnDef<Category>[] = [
     {
-        accessorKey: "name",
+        accessorKey: 'name',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Category"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Category" />;
         },
     },
     {
-        accessorKey: "created_at",
+        accessorKey: 'created_at',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Created At"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Created At" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.created_at)
+            const date = new Date(row.original.created_at ?? '');
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-            })
+            });
         },
-        enableHiding: true
+        enableHiding: true,
     },
     {
-        accessorKey: "updated_at",
+        accessorKey: 'updated_at',
         header: ({ column }) => {
-            return (
-                <DataTableColumnHeader
-                    column={column}
-                    title="Last Updated"
-                />
-            )
+            return <DataTableColumnHeader column={column} title="Last Updated" />;
         },
         cell: ({ row }) => {
-            const date = new Date(row.original.updated_at)
+            const date = new Date(row.original.updated_at);
             return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-            })
-        }
+            });
+        },
     },
     {
-        id: "actions",
+        id: 'actions',
         cell: ({ row }) => {
-            const category = row.original
-            const viewCategory = route('categories.show', { id: category.id })
-            const editCategory = route('categories.edit', { id: category.id })
+            const category = row.original;
+            const viewCategory = route('categories.show', { id: category.id });
+            const editCategory = route('categories.edit', { id: category.id });
             const deleteCategory = () => {
                 if (confirm('Are you sure you want to delete this category?')) {
                     router.delete(route('category.destroy', { id: category.id }), {
                         preserveScroll: true,
                         onSuccess: () => {
-                            toast.success('Category deleted successfully')
+                            toast.success('Category deleted successfully');
                         },
                         onError: (errors) => {
                             if (errors.name) {
-                                toast.error(errors.name)
+                                toast.error(errors.name);
                             }
-                        }
-                    })
+                        },
+                    });
                 }
-            }
+            };
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -94,7 +72,7 @@ export const columns: ColumnDef<CategoryIndex>[] = [
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align='end'>
+                    <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>
                             <Link href={viewCategory} className={'w-full'}>
@@ -108,7 +86,7 @@ export const columns: ColumnDef<CategoryIndex>[] = [
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
-        }
-    }
-]
+            );
+        },
+    },
+];

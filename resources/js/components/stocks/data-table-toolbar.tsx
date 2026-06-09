@@ -7,8 +7,9 @@ import { CalendarIcon, X } from 'lucide-react';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
 import { Button } from '../ui/button';
+import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
-import { Input } from '../ui/input';
+import { Field } from '../ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
 
@@ -82,94 +83,90 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                <span className="text-sm font-medium">Cari:</span>
-                <Input
-                    placeholder="Search batch or product"
-                    value={(table.getState().globalFilter as string) ?? ''}
-                    onChange={(event) => table.setGlobalFilter(event.target.value)}
-                    className="h-12 w-full max-w-sm"
-                />
-                <span className="text-sm font-medium">Filter:</span>
                 {table.getColumn('product_type') && (
                     <DataTableFacetedFilter column={table.getColumn('product_type')} title="Product Type" options={productTypes} />
                 )}
                 {table.getColumn('status') && <DataTableFacetedFilter column={table.getColumn('status')} title="Status" options={status} />}
-                {table.getColumn('updated_at') && (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={'outline'}
-                                className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {dateRange?.from ? (
-                                    dateRange.to ? (
-                                        <>
-                                            {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
-                                        </>
-                                    ) : (
-                                        format(dateRange.from, 'LLL dd, y')
-                                    )
-                                ) : (
-                                    <span>Last Update Range</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar initialFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
-                        </PopoverContent>
-                    </Popover>
-                )}
-                {table.getColumn('updated_at') && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="h-8 px-2 lg:px-3">
-                                Quick Date
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-auto p-0" align="start">
-                            {quickDateTemplate.map((item) => (
-                                <Button
-                                    key={item.value}
-                                    variant="ghost"
-                                    className="w-full justify-start"
-                                    onClick={() => {
-                                        const now = new Date();
-                                        let from: Date;
-                                        let to: Date;
+                <Field>
+                    <ButtonGroup>
+                        {table.getColumn('updated_at') && (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={'outline'}
+                                        className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {dateRange?.from ? (
+                                            dateRange.to ? (
+                                                <>
+                                                    {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
+                                                </>
+                                            ) : (
+                                                format(dateRange.from, 'LLL dd, y')
+                                            )
+                                        ) : (
+                                            <span>Last Update Range</span>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar autoFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                        {table.getColumn('updated_at') && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-8 px-2 lg:px-3">
+                                        Quick Date
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-auto p-0" align="start">
+                                    {quickDateTemplate.map((item) => (
+                                        <Button
+                                            key={item.value}
+                                            variant="ghost"
+                                            className="w-full justify-start"
+                                            onClick={() => {
+                                                const now = new Date();
+                                                let from: Date;
+                                                let to: Date;
 
-                                        switch (item.value) {
-                                            case 'today':
-                                                from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                                                to = from;
-                                                break;
-                                            case 'this_week':
-                                                const firstDayOfWeek = now.getDate() - now.getDay();
-                                                from = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek);
-                                                to = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek + 6);
-                                                break;
-                                            case 'this_month':
-                                                from = new Date(now.getFullYear(), now.getMonth(), 1);
-                                                to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                                                break;
-                                            case 'this_year':
-                                                from = new Date(now.getFullYear(), 0, 1);
-                                                to = new Date(now.getFullYear(), 11, 31);
-                                                break;
-                                            default:
-                                                from = now;
-                                                to = now;
-                                        }
+                                                switch (item.value) {
+                                                    case 'today':
+                                                        from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                                        to = from;
+                                                        break;
+                                                    case 'this_week':
+                                                        const firstDayOfWeek = now.getDate() - now.getDay();
+                                                        from = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek);
+                                                        to = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek + 6);
+                                                        break;
+                                                    case 'this_month':
+                                                        from = new Date(now.getFullYear(), now.getMonth(), 1);
+                                                        to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                                        break;
+                                                    case 'this_year':
+                                                        from = new Date(now.getFullYear(), 0, 1);
+                                                        to = new Date(now.getFullYear(), 11, 31);
+                                                        break;
+                                                    default:
+                                                        from = now;
+                                                        to = now;
+                                                }
 
-                                        setDateRange({ from, to });
-                                    }}
-                                >
-                                    {item.label}
-                                </Button>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
+                                                setDateRange({ from, to });
+                                            }}
+                                        >
+                                            {item.label}
+                                        </Button>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+                    </ButtonGroup>
+                </Field>
 
                 {isFiltered && (
                     <Button

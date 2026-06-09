@@ -1,100 +1,13 @@
+import { Operation } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowDown, ArrowDownUp, Edit2, LogIn, Minus, MoreHorizontal, Plus } from 'lucide-react';
+import { Cog, MoreHorizontal } from 'lucide-react';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import operationConfig from './config';
 
-type OperationIndex = {
-    id: number;
-    operation_type: string;
-    product: {
-        id: number;
-    } & Record<string, unknown>;
-    location: {
-        id: number;
-    } & Record<string, unknown>;
-    batch: {
-        id: number;
-        batch_number: string;
-    } & Record<string, unknown>;
-    user?: {
-        id: number;
-        name: string;
-    } & Record<string, unknown>;
-    unit: string;
-    quantity: number;
-    remarks: string;
-    created_at: string;
-    operation_date: string;
-};
-
-const operationConfig = {
-    inbound: {
-        id: 'inbound',
-        label: 'IN',
-        color: 'bg-green-200 text-green-800',
-        variant: 'default' as const,
-        icon: Plus,
-        prefix: '+',
-    },
-    outbound: {
-        id: 'outbound',
-        label: 'OUT',
-        color: 'bg-red-200 text-red-800',
-        variant: 'secondary' as const,
-        icon: Minus,
-        prefix: '-',
-    },
-    initial: {
-        id: 'initial',
-        label: 'INITIAL',
-        color: 'bg-purple-200 text-purple-800',
-        variant: 'secondary' as const,
-        icon: Plus,
-        prefix: '+',
-    },
-    adjustment: {
-        id: 'adjustment',
-        label: 'ADJ',
-        color: 'bg-yellow-100 text-yellow-800',
-        variant: 'outline' as const,
-        icon: Edit2,
-    },
-    transfer: {
-        id: 'transfer',
-        label: 'Transfer',
-        color: 'bg-indigo-100 text-indigo-800',
-        variant: 'default' as const,
-        icon: LogIn,
-    },
-    transfer_in: {
-        id: 'transfer_in',
-        label: 'TRANSFER IN',
-        color: 'bg-teal-100 text-teal-800',
-        variant: 'default' as const,
-        icon: ArrowDownUp,
-        prefix: '+',
-    },
-    transfer_out: {
-        id: 'transfer_out',
-        label: 'TRANSFER OUT',
-        color: 'bg-indigo-100 text-indigo-800',
-        variant: 'default' as const,
-        icon: ArrowDownUp,
-        prefix: '-',
-    },
-    return: {
-        id: 'return',
-        label: 'RETURN',
-        color: 'bg-cyan-100 text-cyan-800',
-        variant: 'default' as const,
-        icon: ArrowDown,
-        prefix: '+',
-    },
-};
-
-export const columns: ColumnDef<OperationIndex>[] = [
+export const columns: ColumnDef<Operation>[] = [
     {
         accessorKey: 'operation_date',
         header: ({ column }) => {
@@ -171,11 +84,14 @@ export const columns: ColumnDef<OperationIndex>[] = [
         header: 'Operasi Stok',
         cell: ({ row }) => {
             const operationType = row.original.operation_type;
-            const config = operationConfig[operationType as keyof typeof operationConfig] || {
+            const isOperationKey = (k: unknown): k is keyof typeof operationConfig => typeof k === 'string' && k in operationConfig;
+            const defaultConfig = {
                 label: 'Unknown',
                 color: 'bg-gray-100 text-gray-800',
                 variant: 'default' as const,
+                icon: Cog,
             };
+            const config = isOperationKey(operationType) ? operationConfig[operationType] : defaultConfig;
             return (
                 <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${config.color} rounded`}>
                     {config.icon && <config.icon className="mr-1 h-4 w-4" />}
@@ -187,6 +103,12 @@ export const columns: ColumnDef<OperationIndex>[] = [
     {
         id: 'quantity',
         accessorFn: (row) => row.quantity,
+        cell: ({ row }) => {
+            const quantity = row.original.quantity;
+            const unit = row.original.unit ?? '';
+            if (unit === 'pcs') return quantity !== undefined ? `${Number(quantity)}` : '-';
+            return quantity !== undefined ? `${Number(quantity).toPrecision(2)}` : '-';
+        },
         header: 'Quantity',
     },
     {

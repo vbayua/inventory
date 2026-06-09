@@ -1,28 +1,10 @@
-import { Link, router } from '@inertiajs/react';
+import { Product } from '@/types/resources';
+import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
-import { toast } from 'sonner';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
-
-type ProductIndex = {
-    id: number;
-    name: string;
-    sku: string;
-    unit: string;
-    price: number;
-    categories: {
-        id: number;
-        [key: string]: any; // Adjust this type based on your category structure
-    };
-    product_type?: {
-        id: number;
-        type_code: string;
-    };
-    created_at: string;
-    updated_at: string;
-};
 
 const productTypeConfig = {
     RMP: {
@@ -46,7 +28,7 @@ const productTypeConfig = {
         label: 'Packaging Contribute',
     },
 };
-export const columns: ColumnDef<ProductIndex>[] = [
+export const columns: ColumnDef<Product>[] = [
     {
         accessorKey: 'sku',
         header: ({ column }) => {
@@ -140,21 +122,6 @@ export const columns: ColumnDef<ProductIndex>[] = [
             const product = row.original;
             const viewProduct = route('products.show', { id: product.id });
             const editProduct = route('products.edit', { id: product.id });
-            const deleteProduct = () => {
-                if (confirm('Are you sure you want to delete this product?')) {
-                    router.delete(route('products.destroy', { id: product.id }), {
-                        preserveScroll: true,
-                        onSuccess: () => {
-                            toast.success('Product deleted successfully');
-                        },
-                        onError: (errors) => {
-                            if (errors.name) {
-                                toast.error(errors.name);
-                            }
-                        },
-                    });
-                }
-            };
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

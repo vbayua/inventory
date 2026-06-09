@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\StockData;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
 use App\Models\Operation;
+use App\Models\Product;
 use App\Models\Stock;
+use App\Models\Warehouse;
 use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class OperationController extends Controller
 {
@@ -22,8 +26,6 @@ class OperationController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', Operation::class);
-
         return Inertia('Operations/Index', [
             'operations' => Operation::with(['product', 'batch', 'location', 'user:id,name'])->latest()->get(),
         ]);
@@ -34,37 +36,52 @@ class OperationController extends Controller
      */
     public function create(Request $request)
     {
-        // Caches
-        $this->authorize('create', Operation::class);
-
-        $stock = \App\Models\Stock::with(['product.unit'])
-            ->select([
-                'id',
-                'product_id',
-                'batch_id',
-                'location_id',
-                'quantity',
-                'unit',
-                'sku',
-            ])
-            ->get();
-        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->get();
+        $stock = Stock::with([
+            'product:id,name,sku,unit',
+            'product.unit:name,base_unit',
+            'batch:id,product_id,batch_number,expiry_date',
+            'location:id,name,warehouse_id',
+            'location.warehouse:id,name'
+        ])->get();
+        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
         // // // Ensure products are unique by ID only the products
         // $stock = $stock->unique('batch_id')->values();
 
         $batches = \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
 
         $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
-        $locations = \App\Models\Location::all(['id', 'name']);
+        $warehouse = Warehouse::with(['locations'])->get();
+        $locations = $warehouse->flatMap(fn ($w) => $w->locations)->unique('id')->values();
         $stockId = $request->get('stock_id');
         $operationType = $request->get('operation_type');
         $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
 
+        $query = Product::query()
+            ->when($request->search_term, function ($query, $search) use ($request) {
+                $query->when($request->has_stock, function ($query) {
+                    $query->whereHas('stocks');
+                })
+                ->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%");
+            })
+            ->when($request->has_stock, function ($query) {
+                $query->withWhereHas('stocks', function ($query) {
+                    $query->where('quantity', '>', 0);
+                });
+            })
+            ->with('unit')
+            ->select(['id', 'name', 'sku', 'unit'])
+            ->paginate(10)
+            ->onEachSide(1)
+            ->withQueryString();
+
+        $products = $query;
+        // : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate(10)->onEachSide(1);
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => $products,
             'batches' => $batches,
             'units' => $units,
+            'warehouses' => $warehouse,
             'locations' => $locations,
             'stockQuery' => $stockQuery,
             'operationType' => $operationType,
@@ -76,24 +93,8 @@ class OperationController extends Controller
      */
     public function store(StoreOperationRequest $request, StockOperationService $operationService, BatchAssignmentService $batchAssignmentService)
     {
-        $this->authorize('create', Operation::class);
 
-        $validatedData = $request->validate([
-            'operationType' => 'required|in:inbound,outbound,adjustment,transfer,return',
-            'adjustmentType' => 'required|in:addition,subtraction',
-            'product' => 'required|exists:products,id',
-            'location' => 'required_unless:operationType,transfer|exists:locations,id',
-            'batch' => 'required|exists:batches,id',
-            'quantity' => 'required|numeric|min:0',
-            'unit' => 'required|exists:units,name',
-            'date' => 'required|date',
-            'remarks' => 'nullable|string|max:255',
-            'source_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
-            'destination_location' => 'nullable|required_if:operationType,transfer|exists:locations,id',
-            'with_container' => 'nullable|boolean',
-            'container_quantity' => 'nullable|numeric|min:0',
-            'container_unit' => 'nullable|exists:units,name',
-        ]);
+        $validatedData = $request->validated();
 
         $validatedData['batch'] = $batchAssignmentService->determineBatch(
             $validatedData['product'],
@@ -118,7 +119,7 @@ class OperationController extends Controller
 
         if ($operationType === 'inbound') {
             if (! $stockData) {
-                $stockData = [
+                $stockData = StockData::fromArray([
                     'location_id' => $validatedData['location'],
                     'batch_id' => $validatedData['batch'],
                     'quantity' => $operationQuantity,
@@ -130,31 +131,30 @@ class OperationController extends Controller
                     'with_container' => $validatedData['with_container'] ?? false,
                     'container_quantity' => $validatedData['container_quantity'] ?? null,
                     'container_unit' => $validatedData['container_unit'] ?? null,
-                ];
-                $operationService->createInitialStock(
-                    $validatedData['product'],
-                    $stockData
-                );
-            } else {
-                // For inbound operations, call the service for inbound operations
-                $operationService->createInboundOperation(
-                    $stockData->product,
-                    $stockData,
-                    $operationQuantity,
-                    $validatedData['unit'],
-                    $validatedData['remarks'] ?? '',
-                    $validatedData['date'],
-                );
+                ]);
             }
-        } elseif ($operationType === 'outbound') {
-            // For outbound operations, we decrement the stock
-            $operationService->createOutboundOperation(
-                $stockData->product,
+
+            $operationService->createStockOperation(
+                'inbound',
+                $validatedData['product'],
                 $stockData,
                 $operationQuantity,
                 $validatedData['unit'],
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
+                $validatedData['with_container'] ?? false,
+            );
+        } elseif ($operationType === 'outbound') {
+            // For outbound operations, we decrement the stock
+            $operationService->createStockOperation(
+                'outbound',
+                $validatedData['product'],
+                $stockData,
+                $operationQuantity,
+                $validatedData['unit'],
+                $validatedData['remarks'] ?? '',
+                $validatedData['date'],
+                $validatedData['with_container'] ?? false,
             );
         } elseif ($operationType === 'adjustment') {
             $operationService->adjustStockOperation(

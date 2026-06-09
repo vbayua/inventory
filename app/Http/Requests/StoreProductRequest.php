@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 
 class StoreProductRequest extends FormRequest
 {
@@ -23,7 +24,34 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string',],
-            'sku' => ['required', 'unique:products,sku', 'string'],
+            'sku' => ['required', 'regex:/^[A-Z]+\d{4}[A-Z]?$/',
+            function (string $attribute, mixed $value, \Closure $fail) {
+                if (!is_string($value) || $value === '') {
+                    return;
+                }
+
+                // Grab all type codes (e.g. RMP, PP, PS...)
+                $typeCodes = DB::table('product_types')
+                    ->whereNotNull('type_code')
+                    ->pluck('type_code')
+                    ->filter()
+                    ->map(fn ($c) => strtoupper(trim((string) $c)))
+                    ->values();
+
+                // If there are no configured type codes, decide whether to fail or skip.
+                if ($typeCodes->isEmpty()) {
+                    $fail('No product type codes are configured, so SKU cannot be validated.');
+                    return;
+                }
+
+                $sku = strtoupper($value);
+
+                $matches = $typeCodes->contains(fn (string $code) => str_starts_with($sku, $code));
+                if (!$matches) {
+                    $fail('The SKU must start with a valid product type code.');
+                }
+            },
+            'unique:products,sku', 'string'],
             'unit' => ['required', 'string'],
             'is_active' => ['required', 'boolean'],
             'product_type_id' => ['required', 'exists:product_types,id'],

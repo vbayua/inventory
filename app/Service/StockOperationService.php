@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\StockData;
 use App\Models\Batch;
 use App\Models\Location;
 use App\Models\Operation;
@@ -14,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class StockOperationService
@@ -22,15 +24,15 @@ class StockOperationService
 
     protected $batchService;
 
-    protected const INITIAL = 'initial';
+    protected const string INITIAL = 'initial';
 
-    protected const INBOUND = 'inbound';
+    protected const string INBOUND = 'inbound';
 
-    protected const OUTBOUND = 'outbound';
+    protected const string OUTBOUND = 'outbound';
 
-    protected const TRANSFER = 'transfer';
+    protected const string TRANSFER = 'transfer';
 
-    protected const ADJUSTMENT = 'adjustment';
+    protected const string ADJUSTMENT = 'adjustment';
 
     public function __construct(UnitConverter $unitConverter, BatchAssignmentService $batchService)
     {
@@ -38,29 +40,44 @@ class StockOperationService
         $this->batchService = $batchService;
     }
 
-    public function createInitialStock(Product|int $product, array $stockData)
+    public function createStockOperation(string $operationType, Product|int $product, Stock|StockData $stockData, float $quantity, Unit|string $unit, string $remarks = '', $operationDate = null, ?bool $withContainer = false)
     {
-        // dd($product->id, $product, $stockData);
+        switch ($operationType) {
+            case self::INBOUND:
+                return $this->createInboundOperation($product, $stockData, $quantity, $unit, $remarks, $operationDate);
+            case self::OUTBOUND:
+                return $this->createOutboundOperation($product, $stockData, $quantity, $unit, $remarks, $operationDate);
+            case self::ADJUSTMENT:
+                return $this->adjustStockOperation($stockData, $quantity, $unit, 'adjustment', $remarks, $operationDate, $withContainer);
+            default:
+                throw new \InvalidArgumentException("Unknown operation type: {$operationType}");
+        }
+    }
+
+    public function createInitialStock(Product|int $product, StockData $stockData)
+    {
         return DB::transaction(function () use ($product, $stockData) {
             $supplierId = $stockData['supplier_id'] ?? null;
+            $batchId = $stockData['batch_id'] ?? null;
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
-            $batchId = isset($stockData['batch_id'])
-                ? $this->batchService->determineBatch(
-                    $product,
-                    $stockData['batch_id'],
-                    operationType: self::INBOUND,
-                    supplierId: $supplierId
-                )
-                : $this->batchService->determineBatch(
-                    $product,
-                    operationType: self::INBOUND,
-                    supplierId: $supplierId
-                );
+            $batch = $batchId ? $this->batchService->determineBatch(
+                $product,
+                (int) $batchId,
+                self::INITIAL,
+                $stockData['date'] ?? null,
+                $supplierId,
+                $stockData['quantity']
+            ) : $this->batchService->determineBatch(
+                product: $product,
+                operationType: self::INITIAL,
+                operationDate: $stockData['date'] ?? null,
+                supplierId: $supplierId,
+                minQty:$stockData['minimum_quantity']
+            );
 
-            if ($batchId) {
-                $stockData['batch_id'] = $batchId;
-            }
+            $stockData = $stockData->with(['batch_id' => (int) $batch]);
+
             $operation = $this->createOperation(
                 self::INITIAL,
                 $product,
@@ -70,7 +87,7 @@ class StockOperationService
                 $stockData['remarks'] ?? 'Initial stock',
                 $stockData['date'] ?? now()
             );
-            $this->setStock(
+            $stock = $this->setStock(
                 $product,
                 $stockData,
                 $stockData['quantity'],
@@ -79,7 +96,7 @@ class StockOperationService
                 $stockData['with_container'] ?? false
             );
 
-            return $operation;
+            return $stock;
         });
     }
 
@@ -134,11 +151,67 @@ class StockOperationService
         });
     }
 
-    public function createInboundOperation(Product|int $product, Stock|array $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
+    public function createInboundOperation(Product|int $product, Stock|StockData $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $receiveQuantity, $unit, $remarks, $operationDate) {
-            $operation = $this->createOperation(
-                'inbound',
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
+
+            // A Stock model instance always refers to an existing record.
+            // A StockData DTO requires a DB look-up to decide which path to take.
+            $stockExists = $stockData instanceof Stock
+                ? true
+                : Stock::where('product_id', $product->id)
+                    ->where('location_id', $stockData['location_id'])
+                    ->where('batch_id', $stockData['batch_id'])
+                    ->exists();
+
+            if ($stockExists) {
+                // ── Inbound into an existing batch ────────────────────────────
+                $this->createOperation(
+                    self::INBOUND,
+                    $product,
+                    $stockData,
+                    $receiveQuantity,
+                    $unit,
+                    $remarks,
+                    $operationDate
+                );
+
+                return $this->setStock(
+                    $product,
+                    $stockData,
+                    $receiveQuantity,
+                    $unit,
+                    'increment',
+                    $stockData['with_container'] ?? false
+                );
+            }
+
+            // ── Initial stock: no existing stock record for this batch ────────
+            // Determine (or create) the appropriate batch before recording stock.
+            $batchId    = $stockData['batch_id'] ?? null;
+            $supplierId = $stockData['supplier_id'] ?? null;
+
+            $resolvedBatchId = $batchId
+                ? $this->batchService->determineBatch(
+                    $product,
+                    (int) $batchId,
+                    self::INBOUND,
+                    $stockData['date'] ?? null,
+                    $supplierId,
+                )
+                : $this->batchService->determineBatch(
+                    product: $product,
+                    operationType: self::INBOUND,
+                    operationDate: $stockData['date'] ?? null,
+                    supplierId: $supplierId,
+                    minQty: (int) ($stockData['minimum_quantity'] ?? 0),
+                );
+
+            $stockData = $stockData->with(['batch_id' => (int) $resolvedBatchId]);
+
+            $this->createOperation(
+                self::INITIAL,
                 $product,
                 $stockData,
                 $receiveQuantity,
@@ -146,20 +219,19 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            $this->setStock(
+
+            return $this->setStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
                 $unit,
-                'increment',
+                'set',
                 $stockData['with_container'] ?? false
             );
-
-            return $operation;
         });
     }
 
-    public function createOutboundOperation(Product|int $product, Stock|array $stockData, float $usageQuantity, string $unit, string $remarks = 'Outbound Operation', $operationDate = null)
+    public function createOutboundOperation(Product|int $product, Stock|StockData $stockData, float $usageQuantity, string $unit, string $remarks = 'Outbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -171,7 +243,7 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
-            $this->setStock(
+            $stock = $this->setStock(
                 $product,
                 $stockData,
                 $usageQuantity,
@@ -180,11 +252,11 @@ class StockOperationService
                 $stockData['with_container'] ?? false
             );
 
-            return $operation;
+            return $stock;
         });
     }
 
-    public function createReturnOperation(Product|int $product, Stock|array $stockData, float $returnQuantity, string $unit, string $remarks = 'Return Operation', $operationDate = null)
+    public function createReturnOperation(Product|int $product, Stock|StockData $stockData, float $returnQuantity, string $unit, string $remarks = 'Return Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $returnQuantity, $unit, $remarks, $operationDate) {
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
@@ -243,6 +315,12 @@ class StockOperationService
                 ->where('batch_id', $batchId)
                 ->lockForUpdate()
                 ->first();
+
+            if ($quantity > $sourceStock->quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => "Transfer quantity {$quantity} exceeds available stock of {$sourceStock->quantity} at source location.",
+                ]);
+            }
 
             if (! $destinationStock) {
                 $destinationStock = Stock::create([
@@ -319,7 +397,7 @@ class StockOperationService
         });
     }
 
-    public function createTransferOutOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
+    public function createTransferOutOperation(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -343,7 +421,7 @@ class StockOperationService
         });
     }
 
-    public function createTransferInOperation($product, $stockData, $quantity, $unit, $remarks = null, $operationDate = null, ?bool $withContainer = false)
+    public function createTransferInOperation(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
             $operation = $this->createOperation(
@@ -380,7 +458,7 @@ class StockOperationService
      *
      * @param  string  $type  The type/category of the operation (e.g., 'ISSUE', 'ADJUSTMENT', 'RECEIPT').
      * @param  Product|int  $product  Product model instance or its primary key.
-     * @param  Stock|array  $stockData  Stock instance or associative array containing at least 'location_id' and optionally 'batch_id'.
+     * @param  Stock|StockData  $stockData  Stock model instance or StockData DTO containing at least 'location_id' and optionally 'batch_id'.
      * @param  float  $usageQuantity  The quantity involved in the operation (stored as given; no unit conversion performed here).
      * @param  Unit|string  $unit  Unit model instance or its name string used for the operation record.
      * @param  string  $remarks  Free-form remarks or notes (empty string if null/omitted).
@@ -389,7 +467,7 @@ class StockOperationService
      *
      * @throws \Throwable If the database transaction fails.
      */
-    private function createOperation(string $type, Product|int $product, Stock|array $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null): Operation
+    private function createOperation(string $type, Product|int $product, Stock|StockData $stockData, float $usageQuantity, Unit|string $unit, string $remarks, $operationDate = null): Operation
     {
         return DB::transaction(function () use ($type, $product, $stockData, $usageQuantity, $unit, $remarks, $operationDate) {
             $productId = $product instanceof Product ? $product->id : $product;
@@ -413,14 +491,15 @@ class StockOperationService
                 'quantity' => $usageQuantity,
                 'operation_date' => $operationDateWithAddedTime,
                 'remarks' => $remarks ?? '',
-                'user_id' => Auth::id(),
+                'user_id' => $stockData['user_id'] ?? Auth::id(),
             ]);
 
             return $operation;
         });
     }
 
-    public function setStockStatus(float $quantity, float $minimum_quantity)
+
+    public function setStockStatus(float $quantity, float $minimum_quantity = 0, string $status = ''): string
     {
         if ($quantity <= 0) {
             return 'out_of_stock';
@@ -431,12 +510,28 @@ class StockOperationService
         }
     }
 
-    private function setStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
+    private function resolveBucketColumn(?string $qualityStatus):string
+    {
+        return match($qualityStatus) {
+            'pending', 'checking', 'on_hold' => 'quantity_on_hold',
+            'reserved' => 'quantity_reserved',
+            'rejected' => 'quantity_rejected',
+            default => 'quantity',
+        };
+    }
+
+    private function setStock(Product|int $product, Stock|StockData $stockData, float $quantity, ?string $unit, string $mode, ?bool $withContainer = false): Stock
     {
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $mode, $withContainer) {
             $productId = $product instanceof Product ? $product->id : $product;
-
             $quantityUnit = $this->getUnitRecord($unit);
+
+            if ($quantityUnit->unit_type === 'item') {
+                $quantity = intval($quantity);
+            }
+
+            $qualityStatus = $stockData['quality_status'] ?? 'not_required';
+            $bucket = $this->resolveBucketColumn($qualityStatus);
             $stock = Stock::where('product_id', $productId)
                 ->where('location_id', $stockData['location_id'])
                 ->where('batch_id', $stockData['batch_id'])
@@ -444,18 +539,21 @@ class StockOperationService
                 ->lockForUpdate()
                 ->first();
 
-            if (! $stock && $mode === 'set') {
+            if (! $stock || $mode === 'set') {
                 $stock = new Stock;
                 $stock->product_id = $productId;
                 $stock->location_id = $stockData['location_id'];
                 $stock->batch_id = $stockData['batch_id'] ?? null;
                 $stock->unit = $quantityUnit->name;
                 $stock->quantity = 0;
+                $stock->quantity_on_hold = 0;
+                $stock->quantity_reserved = 0;
+                $stock->quantity_rejected = 0;
                 $stock->minimum_quantity = $stockData['minimum_quantity'];
                 $stock->container_capacity = $stockData['container_capacity'] ?? null;
                 $stock->container_unit = $stockData['container_unit'] ?? null;
                 $stock->status = 'out_of_stock';
-                $stock->user_id = Auth::id();
+                $stock->user_id = $stockData['user_id'] ?? Auth::id();
                 $stock->save();
                 // Relock newly reted row to be safe in high contention
                 $stock = Stock::where('id', $stock->id)->lockForUpdate()->firstOrFail();
@@ -470,7 +568,9 @@ class StockOperationService
             $qtyInBase = $withContainer
                 ? $this->unitConverter->containerToBaseUnit($quantity, $stock)
                 : $this->unitConverter->toBaseUnit($quantity, $quantityUnit);
-            $currentStockQtyInBase = $this->unitConverter->toBaseUnit($stock->quantity, $stockUnit);
+
+            //  Read from TARGET bucket.
+            $currentBucketQtyInBase = $this->unitConverter->toBaseUnit($stock->{$bucket} ?? 0, $stockUnit);
 
             $newInBase = (float) 0;
 
@@ -479,22 +579,26 @@ class StockOperationService
                     $newInBase = $qtyInBase;
                     break;
                 case 'increment':
-                    $newInBase = $currentStockQtyInBase + $qtyInBase;
+                    $newInBase = $currentBucketQtyInBase + $qtyInBase;
                     break;
                 case 'decrement':
-                    if ($currentStockQtyInBase < $qtyInBase) {
+                    if ($currentBucketQtyInBase < $qtyInBase) {
                         $name = $product instanceof Product ? $product->name : (string) $productId;
-                        throw new \Exception("Insufficient stock for product: '{$name}'.");
+                        throw ValidationException::withMessages([
+                            'quantity' => "Insufficient stock for product: {$name}",
+                        ]);
                     }
-                    $newInBase = $currentStockQtyInBase - $qtyInBase;
+                    $newInBase = $currentBucketQtyInBase - $qtyInBase;
                     break;
                 default:
                     throw new InvalidArgumentException("Unknown stock change mode: {$mode}");
             }
 
+
             $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
             $stock->updateOrFail([
-                'quantity' => $newQuantity,
+                $bucket => $newQuantity,
+                'quality_status' => $qualityStatus,
                 'status' => $this->setStockStatus($newQuantity, $stock->batch->minimum_quantity),
             ]);
 
@@ -502,6 +606,21 @@ class StockOperationService
         });
     }
 
+    public function transitionStockBucket(Stock $stock, float $quantity, string $fromBucket, string $toBucket, string $qualityStatus): Stock
+    {
+        return DB::transaction(function () use ($stock, $quantity, $fromBucket, $toBucket, $qualityStatus) {
+            $stock = Stock::where('id', $stock->id)->lockForUpdate()->firstOrFail();
+
+            $stock->updateOrFail([
+                $fromBucket => max(0, ($stock->{$fromBucket} ?? 0) - $quantity),
+                $toBucket => ($stock->{$toBucket} ?? 0) + $quantity,
+                'quality_status' => $qualityStatus,
+                'status' => $this->setStockStatus($stock->{$toBucket} + $quantity, $stock->batch->minimum_quantity),
+            ]);
+
+            return $stock->fresh();
+        });
+    }
     private function transferStock(Product|int $product, int $sourceStockLocation, int $destinationStockLocation, int $batchId, float $quantity, ?string $unit)
     {
         return DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
@@ -544,7 +663,7 @@ class StockOperationService
         return Unit::findOrFail($unit);
     }
 
-    private function lockAndLoadStock(Product|int $product, array $stockData): Stock
+    private function lockAndLoadStock(Product|int $product, StockData $stockData): Stock
     {
         $productId = $product instanceof Product ? $product->id : $product;
 
@@ -555,7 +674,7 @@ class StockOperationService
             ->firstOrFail();
     }
 
-    private function incrementStock(Product|int $product, Stock|array $stockData, float $quantity = 0, ?string $unit = null)
+    private function incrementStock(Product|int $product, Stock|StockData $stockData, float $quantity = 0, ?string $unit = null)
     {
 
         // Use unit conversion service to convert quantity to base unit
@@ -602,7 +721,7 @@ class StockOperationService
         });
     }
 
-    private function decrementStock(Product|int $product, Stock|array $stockData, float $quantity, ?string $unit)
+    private function decrementStock(Product|int $product, Stock|StockData $stockData, float $quantity, ?string $unit)
     {
         if ($quantity <= 0) {
             throw new \InvalidArgumentException('Quantity must be a positive number.');

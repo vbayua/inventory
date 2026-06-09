@@ -67,11 +67,11 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     <DataTableViewOptions table={table} />
                 </div>
             </div>
-            <div className="rounded-md border p-2 md:p-4">
+            <div className="grid w-full [&>div]:max-h-120 [&>div]:rounded [&>div]:border gap-4">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow key={headerGroup.id} className="sticky top-0 bg-background *:whitespace-nowrap after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border after:content-['']">
                                 {headerGroup.headers.map((header) => {
                                     return (
                                         <TableHead key={header.id}>

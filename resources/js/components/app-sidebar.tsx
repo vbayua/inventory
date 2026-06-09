@@ -13,9 +13,22 @@ import {
     SidebarTrigger,
     useSidebar,
 } from '@/components/ui/sidebar';
-import { NavItem } from '@/types';
+import { NavItem, SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Box, Boxes, Building, Building2, ChartBar, CheckCheck, ChevronRight, Cog, Folder, MapPin } from 'lucide-react';
+import {
+    Box,
+    Boxes,
+    Building,
+    Building2,
+    ChartBar,
+    CheckCheck,
+    ChevronRight,
+    ClipboardCheck,
+    ClipboardList,
+    Cog,
+    MapPin,
+    ShieldCheck,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Icon } from './ui/icon';
@@ -105,6 +118,36 @@ const supplierNavItem: NavItem[] = [
     },
 ];
 
+const qcNavItems: NavItem[] = [
+    {
+        title: 'QC Inspections',
+        href: '/qc/inspections',
+        icon: ClipboardCheck,
+        uri: 'qc_inspection',
+    },
+    {
+        title: 'QC Checklists',
+        href: '/qc/checklists',
+        icon: ClipboardList,
+        uri: 'qc_checklist',
+    },
+];
+
+const purchaseOrderNavItems: NavItem[] = [
+    {
+        title: 'Purchase Orders',
+        href: '/purchase-orders',
+        icon: Box,
+        uri: 'purchase_orders',
+    },
+    {
+        title: 'Receive Orders',
+        href: '/receive-orders',
+        icon: Box,
+        uri: 'receive_orders',
+    },
+];
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -140,30 +183,32 @@ const mainNavItems: NavItem[] = [
         items: supplierNavItem,
         uri: 'supplier',
     },
-];
-
-const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
+        title: 'Purchasing',
+        href: '/purchase-orders',
+        icon: Box,
+        items: purchaseOrderNavItems,
+        uri: 'purchase-orders',
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Quality Control',
+        href: '/qc/inspections',
+        icon: ShieldCheck,
+        items: qcNavItems,
+        uri: 'qc',
     },
 ];
 
 export function AppSidebar() {
-    const page = usePage();
+    const page = usePage<SharedData>();
     const { state } = useSidebar();
-    const { viewPermissions } = page.props.auth;
+    const viewPermissions: Record<string, boolean> = page.props.auth?.viewPermissions ?? {};
     const permissions = Object.keys(viewPermissions).filter((key) => viewPermissions[key] === true);
-
     // const cleanUrl = page.url.startsWith('/') ? page.url.slice(1) : page.url;
 
-    const filteredNavItems = mainNavItems.filter((item) => item.items?.some((subItem) => permissions.includes(subItem.uri)));
+    const filteredNavItems = mainNavItems.filter(
+        (item) => !item.items || item.items.length === 0 || item.items.some((subItem) => !subItem.uri || permissions.includes(subItem.uri)),
+    );
     return (
         <Sidebar collapsible="offcanvas" variant="inset" className="w-64 flex-shrink-0">
             <SidebarHeader>

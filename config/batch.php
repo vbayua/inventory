@@ -10,8 +10,11 @@ return [
     */
     'default' => \App\Service\BatchPolicies\DefaultBatchPolicy::class,
     'policies' => [
-        'RMP' => \App\Service\BatchPolicies\RawMaterialBatchPolicy::class,
-        // 'PERISHABLE' => \App\Service\BatchPolicies\PerishableBatchPolicy::class,
+        'raw_material' => \App\Service\BatchPolicies\RawMaterialBatchPolicy::class,
+        'packaging_primary' => \App\Service\BatchPolicies\PrimaryPackagingBatchPolicy::class,
+        'packaging_secondary' => \App\Service\BatchPolicies\SecondaryPackagingBatchPolicy::class,
+        'packaging_tertiary' => \App\Service\BatchPolicies\TertiaryPackagingBatchPolicy::class,
+        // 'finished_product' => \App\Service\BatchPolicies\FinishedProductBatchPolicy::class
         // Add more product type codes and their corresponding policies here
     ],
 

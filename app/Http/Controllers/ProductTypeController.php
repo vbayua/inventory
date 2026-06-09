@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductTypeRequest;
 use App\Http\Requests\UpdateProductTypeRequest;
+use App\Models\Location;
 use App\Models\ProductType;
 use App\Rules\Permissions\Product\ProductPermissions;
 use Inertia\Inertia;
@@ -22,6 +23,7 @@ class ProductTypeController extends Controller
     {
         return Inertia::render('ProductTypes/Show', [
             'productType' => $productType,
+            'locations' => Location::select('id', 'name')->get(),
         ]);
     }
 
@@ -60,5 +62,16 @@ class ProductTypeController extends Controller
         ]);
 
         return redirect()->route('product-types.index')->with('success', 'Product Type updated successfully.');
+    }
+
+    public function updateSettings(UpdateProductTypeRequest $request, ProductType $productType)
+    {
+        $validated = $request->validated();
+        $productType->update([
+            'batch_interval_days' => $validated['batch_interval_days'],
+            'default_location_id' => $validated['default_location_id'],
+        ]);
+
+        return redirect()->route('product-types.show', $productType)->with('success', 'Product Type settings updated successfully.');
     }
 }

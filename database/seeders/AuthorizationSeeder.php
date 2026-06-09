@@ -11,17 +11,36 @@ class AuthorizationSeeder extends Seeder
 {
     public function run(): void
     {
-        $resources = ['product', 'partner', 'stock', 'supplier', 'operation', 'warehouse', 'location', 'category', 'productType', 'unit', 'adjustment'];
+        $resources = [
+            'product',
+            'partner',
+            'stock',
+            'supplier',
+            'operation',
+            'warehouse',
+            'location',
+            'category',
+            'productType',
+            'unit',
+            'adjustment',
+            'purchase_order',
+            'receive_order',
+            'user',
+            'qc_checklist',
+            'qc_inspection'
+        ];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
-        $permissions = collect($resources)->flatMap(function (string $resource) use ($actions) {
-            return collect($actions)->map(function (string $action) use ($resource) {
-                return Permission::firstOrCreate(
+        $permissions = collect($resources)->flatMap(
+            fn(string $resource) =>
+            collect($actions)->map(
+                fn(string $action) =>
+                Permission::firstOrCreate(
                     ['name' => "{$resource}.{$action}"],
                     ['description' => ucfirst($action).' '.$resource]
-                );
-            });
-        });
+                )
+            )
+        );
 
         $adminRole = Role::firstOrCreate(
             ['name' => 'admin'],
@@ -50,23 +69,30 @@ class AuthorizationSeeder extends Seeder
         );
 
         $adminUser = User::where('email', 'admin@example.com')->first();
-        if ($adminUser) {
-            $adminUser->roles()->syncWithoutDetaching([$adminRole->id]);
-        }
-
         $operatorUser = User::where('email', 'operator@example.com')->first();
-        if ($operatorUser) {
-            $operatorUser->roles()->syncWithoutDetaching([$operatorRole->id]);
-        }
-        $userBimo = User::where('email', 'bimo.gudang@imperialkosmetika.id')->first();
-        if ($userBimo) {
-            $userBimo->roles()->syncWithoutDetaching([$adminRole->id]);
+        if ($adminUser) {
+            $this->command->info('Admin user exists');
+        } else {
+            $adminUser = User::factory()->admin()->create([
+                'name' => 'Admin User',
+                'email' => 'admin@example.com',
+            ]);
+            $this->command->info('Created admin user');
         }
 
-        $userDesi = User::where('email', 'desi.gudang@imperialkosmetika.id')->first();
-        if ($userDesi) {
-            $userDesi->roles()->syncWithoutDetaching([$adminRole->id]);
+        if ($operatorUser) {
+            $this->command->info('Operator user exists');
+        } else {
+            $operatorUser = User::factory()->operator()->create([
+                'name' => 'Operator User',
+                'email' => 'operator@example.com',
+            ]);
+            $this->command->info('Created operator user');
         }
+
+        $adminUser->assignRole('admin');
+        $operatorUser->assignRole('operator');
+
 
         $this->command->info('Authorization seeding completed successfully.');
     }

@@ -66,6 +66,50 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/users/{user}', [\App\Http\Controllers\AdminController::class, 'update'])->name('admin.users.update');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroy'])->name('admin.users.destroy');
     });
+
+    Route::prefix('purchase-orders')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/create', [\App\Http\Controllers\PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('/', [\App\Http\Controllers\PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('/{purchase_order}', [\App\Http\Controllers\PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::get('/{purchase_order}/edit', [\App\Http\Controllers\PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+        Route::put('/{purchase_order}', [\App\Http\Controllers\PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
+        Route::get('/{purchase_order}/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
+        Route::post('/{purchase_order}/receive', [\App\Http\Controllers\PurchaseOrderController::class, 'receiveStore'])->name('purchase-orders.process-receive');
+    });
+
+    Route::prefix('receive-orders')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReceiveOrderController::class, 'index'])->name('receive-orders.index');
+        Route::get('/create', [\App\Http\Controllers\ReceiveOrderController::class, 'create'])->name('receive-orders.create');
+        Route::post('/', [\App\Http\Controllers\ReceiveOrderController::class, 'store'])->name('receive-orders.store');
+        Route::get('/{receive_order}', [\App\Http\Controllers\ReceiveOrderController::class, 'show'])->name('receive-orders.show');
+        Route::get('/{receive_order}/item/{item}', [\App\Http\Controllers\ReceiveOrderController::class, 'showItem'])->name('receive-orders.item');
+        Route::get('/{receive_order}/edit', [\App\Http\Controllers\ReceiveOrderController::class, 'edit'])->name('receive-orders.edit');
+        Route::put('/{receive_order}', [\App\Http\Controllers\ReceiveOrderController::class, 'update'])->name('receive-orders.update');
+        Route::get('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receive'])->name('receive-orders.receive');
+        Route::post('/{receive_order}/receive', [\App\Http\Controllers\ReceiveOrderController::class, 'receiveStore'])->name('receive-orders.process-receive');
+    });
+
+    // QC Checklists
+    Route::prefix('qc/checklists')->name('qc.checklists.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\QcChecklistController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\QcChecklistController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\QcChecklistController::class, 'store'])->name('store');
+        Route::get('/{checklist}', [\App\Http\Controllers\QcChecklistController::class, 'show'])->name('show');
+        Route::get('/{checklist}/edit', [\App\Http\Controllers\QcChecklistController::class, 'edit'])->name('edit');
+        Route::put('/{checklist}', [\App\Http\Controllers\QcChecklistController::class, 'update'])->name('update');
+        Route::delete('/{checklist}', [\App\Http\Controllers\QcChecklistController::class, 'destroy'])->name('destroy');
+    });
+
+    // QC Inspections
+    Route::prefix('qc/inspections')->name('qc.inspections.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\QcInspectionController::class, 'index'])->name('index');
+        Route::get('/{inspection}', [\App\Http\Controllers\QcInspectionController::class, 'show'])->name('show');
+        Route::get('/{inspection}/approvals', [\App\Http\Controllers\QcInspectionController::class, 'approvals'])->name('approvals');
+        Route::post('/{inspection}/start', [\App\Http\Controllers\QcInspectionController::class, 'start'])->name('start');
+        Route::post('/{inspection}/approve', [\App\Http\Controllers\QcInspectionController::class, 'approve'])->name('approve');
+        Route::post('/{inspection}/submit', [\App\Http\Controllers\QcInspectionController::class, 'submit'])->name('submit');
+    });
 });
 
 require __DIR__.'/settings.php';

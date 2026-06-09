@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Status } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { Hash, MapPin, Package, Truck, Warehouse } from 'lucide-react';
 import { Badge } from '../ui/badge';
@@ -17,16 +18,16 @@ export default function StockDetailCard({
     status,
     minimum_quantity,
 }: {
-    batch_number: string;
-    product_id: number;
-    product_name: string;
-    warehouse_name: string;
-    location_name: string;
-    supplier_name: string;
-    quantity: number;
-    unit: string;
-    status: 'available' | 'out_of_stock' | 'reserved' | 'low_stock';
-    minimum_quantity: number;
+    batch_number: string | undefined;
+    product_id: number | undefined;
+    product_name: string | undefined;
+    warehouse_name: string | undefined;
+    location_name: string | undefined;
+    supplier_name: string | undefined;
+    quantity: number | undefined;
+    unit: string | undefined;
+    status: Status | undefined;
+    minimum_quantity: number | undefined;
 }) {
     const getStatusBadge = () => {
         switch (status) {
