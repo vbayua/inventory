@@ -14,6 +14,10 @@ export default function InboundSection({ form, warehouses }: { form: any; wareho
         handleWarehouseChange,
         handleLocationChange,
         currentStock,
+        warehousePopoverOpen,
+        locationPopoverOpen,
+        setWarehousePopoverOpen,
+        setLocationPopoverOpen,
     } = form;
     return (
         <>
@@ -24,6 +28,10 @@ export default function InboundSection({ form, warehouses }: { form: any; wareho
                 onWarehouseSelect={handleWarehouseChange}
                 selectedLocation={selectedLocation}
                 onLocationSelect={handleLocationChange}
+                warehousePopoverOpen={warehousePopoverOpen}
+                locationPopoverOpen={locationPopoverOpen}
+                setWarehousePopoverOpen={setWarehousePopoverOpen}
+                setLocationPopoverOpen={setLocationPopoverOpen}
                 errors={errors}
             />
 

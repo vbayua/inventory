@@ -14,6 +14,10 @@ export default function OutboundSection({ form, warehouses }: { form: any; wareh
         handleWarehouseChange,
         handleLocationChange,
         currentStock,
+        warehousePopoverOpen,
+        locationPopoverOpen,
+        setWarehousePopoverOpen,
+        setLocationPopoverOpen,
     } = form;
     console.log(currentStock);
     return (
@@ -22,6 +26,10 @@ export default function OutboundSection({ form, warehouses }: { form: any; wareh
                 warehouses={warehouses}
                 locations={filteredLocations}
                 selectedWarehouse={selectedWarehouse}
+                warehousePopoverOpen={warehousePopoverOpen}
+                setWarehousePopoverOpen={setWarehousePopoverOpen}
+                locationPopoverOpen={locationPopoverOpen}
+                setLocationPopoverOpen={setLocationPopoverOpen}
                 onWarehouseSelect={handleWarehouseChange}
                 selectedLocation={selectedLocation}
                 onLocationSelect={handleLocationChange}

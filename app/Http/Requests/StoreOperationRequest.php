@@ -17,7 +17,7 @@ class StoreOperationRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
+     *21
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
@@ -26,7 +26,7 @@ class StoreOperationRequest extends FormRequest
         [
              'operationType' => 'required|in:inbound,outbound,adjustment,transfer,return',
              'product' => 'required|exists:products,id',
-             'location' => 'required_unless:operationType,transfer|exists:locations,id',
+             'location' => 'required_unless:operationType,transfer|nullable|exists:locations,id',
              'batch' => 'required|exists:batches,id',
              'quantity' => 'required|numeric|min:0',
              'unit' => 'required|exists:units,name',

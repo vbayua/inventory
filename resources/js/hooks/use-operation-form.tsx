@@ -33,7 +33,7 @@ export default function useOperationForm({
     batches: Batch[];
     locations: Location[];
     units: Unit[];
-    stockQuery?: Stock;
+    stockQuery?: Stock | undefined;
     operationType: 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
     adjustmentType?: 'addition' | 'subtraction';
 }) {
@@ -56,6 +56,8 @@ export default function useOperationForm({
     const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse>();
     const [selectedLocation, setSelectedLocation] = useState<Location>();
     const [selectedUnit, setSelectedUnit] = useState<Unit>();
+    const [warehousePopoverOpen, setWarehousePopoverOpen] = useState(false);
+    const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
 
     const [selectedTransferLocations, setSelectedTransferLocations] = useState<{
         source_warehouse: Warehouse | undefined;
@@ -172,22 +174,36 @@ export default function useOperationForm({
     }, [selectedProduct, selectedBatch, selectedTransferLocations.destination_warehouse, warehouses]);
 
     const currentStock = useMemo(() => {
-        if (!selectedProduct || !selectedBatch || !selectedLocation || !selectedTransferLocations.source_location) return 0;
-        const currentStock = stocks.find(
-            (item: Stock) =>
-                item.batch_id === selectedBatch.id &&
-                item.product_id === selectedProduct.id &&
-                (item.location_id === selectedLocation.id || item.location_id === selectedTransferLocations?.source_location?.id),
-        );
-        if (currentStock) {
-            setSelectedUnit(units.find((unit) => unit.name === currentStock.unit));
-            setSelectedWarehouse(warehouses.find((warehouse) => warehouse.id === currentStock.location?.warehouse_id));
-            setData('batch', String(selectedBatch.id));
-            setData('unit', currentStock.unit);
-            return currentStock;
+        if (stockQuery) {
+            setSelectedProduct(stockQuery.product);
+            setSelectedBatch(stockQuery.batch);
+            setSelectedWarehouse(stockQuery.location?.warehouse);
+            setSelectedLocation(stockQuery.location);
+            setData('product', String(selectedProduct?.id));
+            setData('batch', String(selectedBatch?.id));
+            setData('unit', stockQuery.unit);
+            setData('location', String(selectedLocation?.id));
+            return stockQuery;
+        } else {
+            if (!selectedProduct && !selectedBatch && (!selectedLocation || !selectedTransferLocations.source_location)) return 0;
+            const currentStock = stocks
+                ? stocks.find(
+                      (item: Stock) =>
+                          item.batch_id === selectedBatch?.id &&
+                          item.product_id === selectedProduct?.id &&
+                          (item.location_id === selectedLocation?.id || item.location_id === selectedTransferLocations?.source_location?.id),
+                  )
+                : undefined;
+            if (currentStock) {
+                setSelectedUnit(units.find((unit) => unit.name === currentStock.unit));
+                setSelectedWarehouse(warehouses.find((warehouse) => warehouse.id === currentStock.location?.warehouse_id));
+                setData('batch', String(selectedBatch?.id));
+                setData('unit', currentStock.unit);
+                return currentStock;
+            }
+            return 0;
         }
-        return 0;
-    }, [selectedProduct, selectedBatch, selectedLocation, setData, units, warehouses, stocks, selectedTransferLocations.source_location]);
+    }, [stockQuery, selectedProduct, selectedBatch, selectedLocation, setData, units, warehouses, stocks, selectedTransferLocations.source_location]);
 
     const handleSubmit = () => {
         post('/operations', {
@@ -210,9 +226,13 @@ export default function useOperationForm({
         errors,
         reset,
         processing,
+        currentStock,
+        warehousePopoverOpen,
+        locationPopoverOpen,
+        setWarehousePopoverOpen,
+        setLocationPopoverOpen,
         selectedProduct,
         selectedBatch,
-        currentStock,
         selectedLocation,
         selectedWarehouse,
         selectedUnit,
