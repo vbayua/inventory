@@ -14,7 +14,7 @@ return [
         'packaging_primary' => \App\Service\BatchPolicies\PrimaryPackagingBatchPolicy::class,
         'packaging_secondary' => \App\Service\BatchPolicies\SecondaryPackagingBatchPolicy::class,
         'packaging_tertiary' => \App\Service\BatchPolicies\TertiaryPackagingBatchPolicy::class,
-        // 'finished_product' => \App\Service\BatchPolicies\FinishedProductBatchPolicy::class
+        'finished_goods' => \App\Service\BatchPolicies\FinishedGoodsBatchPolicy::class,
         // Add more product type codes and their corresponding policies here
     ],
 

@@ -31,9 +31,14 @@ class BatchAssignmentService
 
     protected function resolvePolicy(Product $product): BatchPolicyInterface
     {
-        // if ($product->productType === null) {
-        //     return app($this->defaultPolicy);
-        // }
+        if ($product->productType === null) {
+            return app($this->defaultPolicy);
+        }
+
+        if ($product->productType->name === 'Finished Goods') {
+            return app(Arr::get($this->policies, 'finished_goods', $this->defaultPolicy));
+        }
+
         $typeCode = optional($product->productType)->type_code;
         switch($typeCode) {
             case 'RMP':
@@ -70,6 +75,7 @@ class BatchAssignmentService
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the product is not found.
      * @throws \Illuminate\Validation\ValidationException If the supplier is not associated with the product.
      */
+
     public function determineBatch(
         Product|int $product,
         ?int $requestedBatchId = null,
