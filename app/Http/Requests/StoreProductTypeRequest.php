@@ -24,7 +24,8 @@ class StoreProductTypeRequest extends FormRequest
         return [
             'name' => ['required', 'unique:product_types,name', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'type_code' => ['required', 'unique:product_types,type_code', 'string'],
+            'disable_type_code' => ['required', 'boolean'],
+            'type_code' => ['required_if:disable_type_code,false', 'unique:product_types,type_code', 'nullable', 'string'],
         ];
     }
 }

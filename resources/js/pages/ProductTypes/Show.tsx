@@ -64,9 +64,9 @@ export default function Show({ productType, locations }: { productType: ProductT
                     {/* Back */}
                     <div>
                         <Button variant="link" asChild className="px-0">
-                            <Link href={route('qc.inspections.index')}>
+                            <Link href={route('product-types.index')}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Inspections
+                                Back to Product Type Index
                             </Link>
                         </Button>
                     </div>
