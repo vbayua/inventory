@@ -120,7 +120,7 @@ class BatchAssignmentService
             ->first();
 
         // If there is interval in the last received stock, check the interval.
-        if ($lastInbound ?-> $lastInbound->batch_id && $interval > 0) {
+        if ($lastInbound?->batch_id && $interval > 0) {
             $diff = $lastInbound->operation_date->diffInDays($operationDate);
             if ($diff < $interval) {
                 return $policy->determineBatch($product, $lastInbound->batch_id);
@@ -138,8 +138,8 @@ class BatchAssignmentService
         $manufactureDate = $manufactureDate ? Carbon::parse($manufactureDate) : null;
         $expiryDate = $expiryDate ? Carbon::parse($expiryDate) : null;
 
-        if ($manufactureDate < $expiryDate) {
-            return InvalidArgumentException::withMessages(['expiryDate' => 'Expiry date must be after manufacture date']);
+        if ($manufactureDate && $expiryDate && $manufactureDate > $expiryDate) {
+            throw ValidationException::withMessages(['expiryDate' => 'Expiry date must be after manufacture date']);
         }
 
         if ($manufactureDate && !$expiryDate) {
