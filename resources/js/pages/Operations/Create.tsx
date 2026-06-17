@@ -13,7 +13,7 @@ import { Batch, Location, Product, Stock, Unit, Warehouse } from '@/types/resour
 import { Head } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { BoxesIcon, CalendarIcon, ChevronsUpDown, NotepadTextIcon, PackageIcon } from 'lucide-react';
-import { SubmitEventHandler, useEffect, useState } from 'react';
+import { SubmitEventHandler, useState } from 'react';
 
 import { ButtonGroup } from '@/components/ui/button-group';
 import useOperationForm from '@/hooks/use-operation-form';
@@ -22,7 +22,6 @@ import InboundSection from './page-components/Create/InboundSection';
 import OperationTypeSelect from './page-components/Create/OperationTypeSelect';
 import OutboundSection from './page-components/Create/OutboundSection';
 import ProductSelectDialog from './page-components/Create/ProductSelectDialog';
-import ReturnSection from './page-components/Create/ReturnSection';
 import TransferSection from './page-components/Create/TransferSection';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -81,15 +80,9 @@ export default function Create({
         locations,
         batches,
         units,
-        stockQuery,
+        stockQuery: stock.data,
         operationType: operationType || 'outbound',
     });
-
-    useEffect(() => {
-        if (stock.data?.unit) {
-            form.setData('unit', stock.data?.unit);
-        }
-    }, [stock.data, form.setData, form]);
 
     const operationTypes = [
         { value: 'outbound', label: 'Stock Out (Keluar/Pengeluaran)' },
@@ -98,7 +91,7 @@ export default function Create({
         { value: 'return', label: 'Pengembalian Stock' },
     ];
 
-    const [operationTypeData, setOperationType] = useState<OperationType>('outbound');
+    const [operationTypeData, setOperationType] = useState<OperationType>(operationType || 'outbound');
 
     const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();
@@ -246,7 +239,7 @@ export default function Create({
                         {/*END OF INBOUND SECTION*/}
 
                         {/*RETURN SECTION*/}
-                        {operationTypeData === 'return' && <ReturnSection form={form} warehouses={warehouses} />}
+                        {/*{operationTypeData === 'return' && <ReturnSection form={form} warehouses={warehouses} />}*/}
                         {/*END OF RETURN SECTION*/}
 
                         {/* Adjust Qty Section */}

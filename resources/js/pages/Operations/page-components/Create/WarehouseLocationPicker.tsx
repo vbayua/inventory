@@ -5,12 +5,15 @@ import SelectCommand from '@/components/ui/select-command';
 import { cn } from '@/lib/utils';
 import { Location, Warehouse } from '@/types/resources';
 import { ChevronsUpDown, LocateIcon, WarehouseIcon } from 'lucide-react';
-import { useState } from 'react';
 
 export default function WarehouseLocationPicker({
     warehouses,
     locations,
     selectedWarehouse,
+    warehousePopoverOpen,
+    setWarehousePopoverOpen,
+    locationPopoverOpen,
+    setLocationPopoverOpen,
     onWarehouseSelect,
     selectedLocation,
     onLocationSelect,
@@ -19,13 +22,15 @@ export default function WarehouseLocationPicker({
     warehouses: Warehouse[];
     locations: Location[];
     selectedWarehouse: Warehouse;
+    warehousePopoverOpen: boolean;
+    setWarehousePopoverOpen: (open: boolean) => void;
+    locationPopoverOpen: boolean;
+    setLocationPopoverOpen: (open: boolean) => void;
     onWarehouseSelect: (warehouse: Warehouse) => void;
     selectedLocation: Location;
     onLocationSelect: (location: Location) => void;
     errors: any;
 }) {
-    const [warehousePopoverOpen, setWarehousePopoverOpen] = useState(false);
-    const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
     return (
         <div className={cn('grid grid-cols-2 gap-4 rounded-md border p-4', errors.location && 'border-red-500')}>
             <div>

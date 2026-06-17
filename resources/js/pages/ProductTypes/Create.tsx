@@ -15,6 +15,7 @@ interface CreateProductTypeForm {
     name?: string;
     description?: string;
     type_code?: string;
+    disable_type_code?: boolean;
     has_scientific_name?: boolean;
     has_brand_name?: boolean;
 }
@@ -37,6 +38,7 @@ export default function Create() {
         name: '',
         description: '',
         type_code: '',
+        disable_type_code: false,
         has_scientific_name: false,
         has_brand_name: false,
     });
@@ -104,8 +106,17 @@ export default function Create() {
                             type="text"
                             placeholder="eg. RMP for Raw Material Product"
                             className="mt-1 block w-full"
-                            required
+                            disabled={data.disable_type_code}
                         />
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="disable_type_code"
+                                name="disable_type_code"
+                                checked={data.disable_type_code}
+                                onCheckedChange={(checked) => setData('disable_type_code', !!checked)}
+                            />
+                            <Label htmlFor="disable_type_code">Disable Type Code</Label>
+                        </div>
                         <InputError message={errors.type_code} />
                     </div>
                     <div className="grid gap-2">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\StockData;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
@@ -101,8 +102,9 @@ class ProductController extends Controller
             ]);
         }
         if ($request->with_begin_stock) {
-            $stockData = $request->safe()->only(
+            $stockData = StockData::fromArray($request->safe()->only(
                 [
+                    'unit',
                     'supplier_id',
                     'warehouse_id',
                     'location_id',
@@ -111,7 +113,7 @@ class ProductController extends Controller
                     'container_capacity',
                     'container_unit',
                 ]
-            );
+            ));
 
             $stock = $stockOperationService->createInitialStock($newProduct, $stockData);
             if (! $stock) {

@@ -8,11 +8,11 @@ class FinishedGoodsBatchPolicy implements BatchPolicyInterface
 {
     public function determineBatch(Product $product, ?int $requestedBatchId = null): ?int
     {
-        throw new \Exception('Not implemented');
+        return $requestedBatchId;
     }
 
-    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null): string
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate): string
     {
-        throw new \Exception('Not implemented');
+        return $proposedNumber;
     }
 }

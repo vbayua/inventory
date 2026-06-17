@@ -30,6 +30,19 @@ class StoreProductRequest extends FormRequest
                     return;
                 }
 
+                // If the selected product type is "finished goods", SKU prefix validation is skipped.
+                $productTypeId = request('product_type_id');
+                if ($productTypeId) {
+                    $isFinishedGoods = DB::table('product_types')
+                        ->where('id', $productTypeId)
+                        ->whereRaw('LOWER(name) = ?', ['finished goods'])
+                        ->exists();
+
+                    if ($isFinishedGoods) {
+                        return;
+                    }
+                }
+
                 // Grab all type codes (e.g. RMP, PP, PS...)
                 $typeCodes = DB::table('product_types')
                     ->whereNotNull('type_code')
@@ -51,6 +64,7 @@ class StoreProductRequest extends FormRequest
                     $fail('The SKU must start with a valid product type code.');
                 }
             },
+
             'unique:products,sku', 'string'],
             'unit' => ['required', 'string'],
             'is_active' => ['required', 'boolean'],

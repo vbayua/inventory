@@ -24,7 +24,7 @@ class UpdateProductTypeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'type_code' => ['required', 'exists:product_types,type_code', 'string'],
+            'type_code' => ['nullable', 'exists:product_types,type_code', 'string'],
             'batch_interval_days' => ['nullable', 'integer', 'min:0'],
             'default_location_id' => ['nullable', 'integer', 'exists:locations,id'],
         ];

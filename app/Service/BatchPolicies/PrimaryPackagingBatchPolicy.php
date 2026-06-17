@@ -4,6 +4,7 @@ namespace App\Service\BatchPolicies;
 
 use App\Models\Batch;
 use App\Models\Product;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class PrimaryPackagingBatchPolicy implements BatchPolicyInterface
@@ -15,75 +16,66 @@ class PrimaryPackagingBatchPolicy implements BatchPolicyInterface
 
     public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate): string
     {
-        $YEAR = date('y', $operationDate ? strtotime($operationDate) : time());
-        $YEAR_INDEX = 0;
-        $SKU_INDEX = 1;
-        $SEQUENCE_INDEX = 2;
-        $VARIANT_INDEX = 3;
+        $opDate = $operationDate ? Carbon::parse($operationDate) : Carbon::now();
+        $year = $opDate->format('y');
+        $basePrefix = "{$year}-{$product->sku}";
 
-        $BASE_PREFIX = "$YEAR-$product->sku";
-
-        $currentDefaultCount = null;
-        $baseSupplierId = null;
-
+        // Fetch existing batches for this product+year, most recent first
         $series = Batch::query()
             ->where('product_id', $product->id)
-            ->where('batch_number', 'like', $BASE_PREFIX.'%')
-            ->orderBy('id')
-            ->get(['batch_number', 'supplier_id']);
+            ->where('batch_number', 'like', "{$basePrefix}-%")
+            ->orderBy('id', 'desc')
+            ->get(['batch_number', 'created_at']);
 
-        foreach ($series as $row) {
+        // Parse valid YEAR-SKU-LOT-SEQ entries (LOT = second-to-last, SEQ = last)
+        $parsed = [];
+        foreach($series as $row) {
             $parts = explode('-', $row->batch_number);
-            if (\count($parts) === 2) {
-                $currentDefaultCount = 1;
-                $baseSupplierId = $row->supplier_id;
-            } elseif (\count($parts) === 3 && is_numeric($parts[$SEQUENCE_INDEX])) {
-                $count = (int) $parts[$SEQUENCE_INDEX];
-                if ($currentDefaultCount === null || $count >= $currentDefaultCount) {
-                    $currentDefaultCount = $count;
-                    $baseSupplierId = $row->supplier_id;
-                }
+            if(\count($parts) < 4) continue;
+            $seq = (int) \end($parts);
+            $lot = $parts[\count($parts) - 2];
+            if ($seq > 0 && ctype_alpha($lot))
+            {
+                $parsed[] = [
+                    'batch_number' => $row->batch_number,
+                    'lot' => $lot,
+                    'seq' => $seq,
+                    'created_at' => $row->created_at,
+                ];
             }
         }
 
-        if ($currentDefaultCount === null) {
-            return $BASE_PREFIX.'-1';
+        if(empty($parsed))
+        {
+            // No batches yet for this product+year -> first ever
+            return "{$basePrefix}-A-1";
         }
 
-        if ($supplierId === null) {
-            return $BASE_PREFIX.'-'.($currentDefaultCount + 1);
+        // Latest batch is first (ordered by id desc)
+        $latest = $parsed[0];
+        $lastSeq = $latest['seq'];
+        $daysDiff = $latest['created_at']->diffInDays($opDate);
+
+        if($daysDiff > 90)
+        {
+            return "{$basePrefix}-A-" . ($lastSeq + 1);
         }
 
-        if ($baseSupplierId !== null && (int) $supplierId === (int) $baseSupplierId) {
-            return $BASE_PREFIX.'-'.($currentDefaultCount + 1);
+        // Same 90-day window -> next LOT letter within this SEQUENCE
+        $lotsInCurrentSeq = array_filter($parsed, fn($p) => $p['seq'] === $lastSeq);
+        $nextLotNum = count($lotsInCurrentSeq) + 1;
+
+        return "{$basePrefix}-" . $this->toLetters($nextLotNum) . "-" . $lastSeq;
+    }
+
+    private function toLetters (int $n): string {
+        $letters = '';
+        while ($n > 0) {
+            $n--; // convert to 0-based
+            $letters = \chr(65 + ($n % 26)).$letters; // 65 = 'A'
+            $n = intdiv($n, 26);
         }
 
-        // Different supplier => variant of current default cycle
-        $variantPrefix = "$BASE_PREFIX-$currentDefaultCount-";
-
-        // Count existing variants in the current cycle
-        $existingVariants = 0;
-        foreach ($series as $row) {
-            if (Str::startsWith($row->batch_number, $variantPrefix)) {
-                $existingVariants++;
-            }
-        }
-
-        // Compute next variant number (1-based), then convert to alphabetic code:
-        // 1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, 28 -> AB, ...
-        $nextVariant = $existingVariants + 1;
-
-        $toLetters = function (int $n): string {
-            $letters = '';
-            while ($n > 0) {
-                $n--; // convert to 0-based
-                $letters = \chr(65 + ($n % 26)).$letters; // 65 = 'A'
-                $n = intdiv($n, 26);
-            }
-
-            return $letters;
-        };
-
-        return $variantPrefix.$toLetters($nextVariant);
+        return $letters;
     }
 }

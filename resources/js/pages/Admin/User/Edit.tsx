@@ -4,23 +4,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AppLayout from '@/layouts/app-layout';
+import { Role, User } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function Edit({ user }: { user: any }) {
+export default function Edit({ user }: { user: User }) {
     const { data, setData, put, reset, processing } = useForm({
         name: user.name,
         email: user.email,
         password: '',
         password_confirmation: '',
-        roles: user.roles.map((role: any) => role.name),
+        roles: user.roles?.map((role: Role) => role.name),
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log(data);
-        // put(`/admin/users/${user.id}`, {
-        //     onSuccess: () => reset('password', 'password_confirmation'),
-        // });
+        put(route('admin.users.update', { id: user.id }), {
+            onSuccess: () => {},
+            onError: (error) => {
+                console.error(error);
+            },
+        });
     };
     return (
         <AppLayout>
@@ -60,11 +64,13 @@ export default function Edit({ user }: { user: any }) {
                                 <Label>
                                     <input
                                         type="checkbox"
-                                        checked={data.roles.includes('admin')}
+                                        checked={data.roles?.includes('admin')}
                                         onChange={(e) => {
-                                            const roles = data.roles.includes('admin')
-                                                ? data.roles.filter((role) => role !== 'admin')
-                                                : [...data.roles, 'admin'];
+                                            const roles = data.roles?.includes('admin')
+                                                ? data.roles?.filter((role) => role !== 'admin')
+                                                : data.roles?.length
+                                                  ? [...data.roles, 'admin']
+                                                  : ['admin'];
                                             setData('roles', roles);
                                         }}
                                     />
@@ -73,11 +79,13 @@ export default function Edit({ user }: { user: any }) {
                                 <Label className="mt-2">
                                     <input
                                         type="checkbox"
-                                        checked={data.roles.includes('operator')}
+                                        checked={data.roles?.includes('operator')}
                                         onChange={(e) => {
-                                            const roles = data.roles.includes('operator')
-                                                ? data.roles.filter((role) => role !== 'operator')
-                                                : [...data.roles, 'operator'];
+                                            const roles = data.roles?.includes('operator')
+                                                ? data.roles?.filter((role) => role !== 'operator')
+                                                : data.roles?.length
+                                                  ? [...data.roles, 'operator']
+                                                  : ['operator'];
                                             setData('roles', roles);
                                         }}
                                     />

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductTypeRequest;
 use App\Http\Requests\UpdateProductTypeRequest;
+use App\Http\Requests\UpdateProductTypeSettingeRequest;
 use App\Models\Location;
 use App\Models\ProductType;
 use App\Rules\Permissions\Product\ProductPermissions;
@@ -35,12 +36,12 @@ class ProductTypeController extends Controller
     public function store(StoreProductTypeRequest $request)
     {
         $validated = $request->validated();
-
-        ProductType::create([
+        $data = [
             'name' => $validated['name'],
             'description' => $validated['description'],
             'type_code' => $validated['type_code'],
-        ]);
+        ];
+        ProductType::create($data);
 
         return redirect()->route('product-types.index')->with('success', 'Product Type created successfully.');
     }
@@ -64,10 +65,11 @@ class ProductTypeController extends Controller
         return redirect()->route('product-types.index')->with('success', 'Product Type updated successfully.');
     }
 
-    public function updateSettings(UpdateProductTypeRequest $request, ProductType $productType)
+    public function updateSettings(UpdateProductTypeSettingeRequest $request, ProductType $productType)
     {
         $validated = $request->validated();
         $productType->update([
+            'description' => $validated['description'],
             'batch_interval_days' => $validated['batch_interval_days'],
             'default_location_id' => $validated['default_location_id'],
         ]);

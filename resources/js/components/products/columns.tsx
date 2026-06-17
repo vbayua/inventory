@@ -27,6 +27,10 @@ const productTypeConfig = {
         color: 'bg-red-100 text-red-800',
         label: 'Packaging Contribute',
     },
+    default: {
+        color: 'bg-purple-100 text-purple-800',
+        label: 'Finished Goods',
+    },
 };
 export const columns: ColumnDef<Product>[] = [
     {
@@ -75,7 +79,7 @@ export const columns: ColumnDef<Product>[] = [
         },
         cell: ({ row }) => {
             const productType = row.original.product_type?.type_code;
-            const config = productTypeConfig[productType as keyof typeof productTypeConfig] || { color: 'bg-gray-200', label: 'Unknown' };
+            const config = productTypeConfig[productType as keyof typeof productTypeConfig] || productTypeConfig.default;
             return <span className={`${config.color} rounded px-2 py-1 text-gray-800`}>{config.label}</span>;
         },
     },
