@@ -195,9 +195,11 @@ export const columns: ColumnDef<OperationIndex>[] = [
             const operationType = operation.operation_type;
             const config = operationConfig[operationType as keyof typeof operationConfig];
             const prefix = config?.prefix || '';
+            const unit = row.original.unit;
+            const quantity = unit === 'pcs' ? Number(operation.quantity) : operation.quantity;
             return (
                 <span>
-                    {prefix} {operation.quantity}
+                    {prefix} {quantity}
                 </span>
             );
         },
