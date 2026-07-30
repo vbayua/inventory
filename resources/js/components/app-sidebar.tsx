@@ -24,6 +24,7 @@ import {
     CheckCheck,
     ChevronDown,
     ChevronRight,
+    ChevronUp,
     ClipboardCheck,
     ClipboardList,
     Cog,
@@ -39,26 +40,26 @@ import { useState } from 'react';
 const productNavItems: NavItem[] = [
     {
         title: 'Product Master',
-        href: '/products',
+        href: 'products.index',
         icon: Box,
         uri: 'product',
     },
 
     {
         title: 'Kategori Produk',
-        href: '/categories',
+        href: 'categories.index',
         icon: Boxes,
         uri: 'category',
     },
     {
         title: 'Data Unit',
-        href: '/units',
+        href: 'units.index',
         icon: Cog,
         uri: 'unit',
     },
     {
         title: 'Jenis Produk',
-        href: '/product-types',
+        href: 'product-types.index',
         icon: Box,
         uri: 'productType',
     },
@@ -67,13 +68,13 @@ const productNavItems: NavItem[] = [
 const warehouseNavItems: NavItem[] = [
     {
         title: 'Gudang',
-        href: '/warehouse',
+        href: 'warehouse.index',
         icon: Building2,
         uri: 'warehouse',
     },
     {
         title: 'Lokasi',
-        href: '/location',
+        href: 'location.index',
         icon: MapPin,
         uri: 'location',
     },
@@ -82,24 +83,24 @@ const warehouseNavItems: NavItem[] = [
 const stockNavItems: NavItem[] = [
     {
         title: 'Stock List',
-        href: '/stocks',
+        href: 'stocks.index',
         icon: ChartBar,
         uri: 'stock',
     },
     {
         title: 'Batch',
-        href: '/batches',
+        href: 'batch.index',
         icon: Boxes,
     },
     {
         title: 'Operasi Stock',
-        href: '/operations',
+        href: 'operations.index',
         icon: Cog,
         uri: 'operation',
     },
     {
         title: 'Adjustment Stock',
-        href: '/stock-adjustments',
+        href: 'stock-adjustments.index',
         icon: CheckCheck,
         uri: 'adjustment',
     },
@@ -108,13 +109,13 @@ const stockNavItems: NavItem[] = [
 const supplierNavItem: NavItem[] = [
     {
         title: 'Mitra / Perusahaan',
-        href: '/partners',
+        href: 'partners.index',
         icon: Building,
         uri: 'partner',
     },
     {
         title: 'Approved Supplier List',
-        href: '/suppliers',
+        href: 'supplier.index',
         icon: Building,
         uri: 'supplier',
     },
@@ -123,13 +124,13 @@ const supplierNavItem: NavItem[] = [
 const qcNavItems: NavItem[] = [
     {
         title: 'QC Inspections',
-        href: '/qc/inspections',
+        href: 'qc.inspections.index',
         icon: ClipboardCheck,
         uri: 'qc_inspection',
     },
     {
         title: 'QC Checklists',
-        href: '/qc/checklists',
+        href: 'qc.checklists.index',
         icon: ClipboardList,
         uri: 'qc_checklist',
     },
@@ -138,13 +139,13 @@ const qcNavItems: NavItem[] = [
 const purchaseOrderNavItems: NavItem[] = [
     {
         title: 'Purchase Orders',
-        href: '/purchase-orders',
+        href: 'purchase-orders.index',
         icon: Box,
         uri: 'purchase_orders',
     },
     {
         title: 'Receive Orders',
-        href: '/receive-orders',
+        href: 'receive-orders.index',
         icon: Box,
         uri: 'receive_orders',
     },
@@ -153,51 +154,51 @@ const purchaseOrderNavItems: NavItem[] = [
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: 'dashboard.index',
         icon: ChartBar,
         uri: 'dashboard',
     },
     {
         title: 'Data Produk',
-        href: '/products',
+        href: 'products.index',
         icon: Box,
         items: productNavItems,
         uri: 'product',
     },
     {
         title: 'Data Gudang',
-        href: '/warehouse',
+        href: 'warehouse.index',
         icon: Building2,
         items: warehouseNavItems,
         uri: 'warehouse',
     },
     {
         title: 'Data Stock',
-        href: '/stocks',
+        href: 'stocks.index',
         icon: ChartBar,
         items: stockNavItems,
         uri: 'stock',
     },
     {
         title: 'Data Supplier',
-        href: '/suppliers',
+        href: 'suppliers.index',
         icon: Building,
         items: supplierNavItem,
         uri: 'supplier',
     },
     {
         title: 'Purchasing',
-        href: '/purchase-orders',
+        href: 'purchase-orders.index',
         icon: Box,
         items: purchaseOrderNavItems,
         uri: 'purchase-orders',
     },
     {
         title: 'Quality Control',
-        href: '/qc/inspections',
+        href: 'qc.inspections.index',
         icon: ShieldCheck,
         items: qcNavItems,
-        uri: 'qc',
+        uri: 'qc_inspection',
     },
 ];
 
@@ -207,9 +208,8 @@ export function AppSidebar() {
     const viewPermissions: Record<string, boolean> = page.props.auth?.viewPermissions ?? {};
     const permissions = Object.keys(viewPermissions).filter((key) => viewPermissions[key] === true);
     // const cleanUrl = page.url.startsWith('/') ? page.url.slice(1) : page.url;
-    console.log(permissions);
     const filteredNavItems = mainNavItems.filter(
-        (item) => !item.items || item.items.length === 0 || item.items.some((subItem) => !subItem.uri || permissions.includes(subItem.uri)),
+        (item) => permissions.includes(item.uri!),
     );
 
     const subItemIsActive = (item: NavItem[]): boolean => {
@@ -221,7 +221,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem className="flex w-full items-center align-middle">
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href={route('dashboard')} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -230,39 +230,37 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="gap-0">
-                {mainNavItems.map((item) => (
+            <SidebarContent className="gap-0 pr-4">
+                {filteredNavItems.map((item) => (
                     <SidebarMenu key={item.title} className="">
                         {item.items && item.items.length > 0 && (
                             <Collapsible
                                 key={item.title.toLowerCase().replace(' ', '-')}
                                 title={item.title}
                                 className="group/collapsible"
-                                defaultOpen={subItemIsActive(item.items!)}
+                                defaultOpen={true}
                             >
                                 <SidebarGroup className="px-0">
                                 <SidebarGroupLabel asChild className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                                     <CollapsibleTrigger>
-                                        <div className="flex items-center text-sm">
-                                            <span className="flex-auto">{item.icon && <Icon iconNode={item.icon} className="mr-3 h-4 w-4" />}</span>
+                                        <div className="flex items-center font-bold">
+                                            <span className="flex-auto">{item.icon && <Icon iconNode={item.icon} className="mr-2 w-4" />}</span>
                                             {item.title}
                                         </div>
-                                        <ChevronDown className="ml-auto transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180" />
+                                        <ChevronUp className="ml-auto transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180" />
                                     </CollapsibleTrigger>
                                 </SidebarGroupLabel>
                                     <CollapsibleContent>
-                                        <SidebarGroupContent className="mt-2 space-y-2 ml-4 border-l-3 bg-gray-100">
+                                        <SidebarGroupContent className="mt-2 space-y-2 ml-4 border-l-3">
                                         {item.items?.map((subItem) => (
                                             <SidebarMenuItem
-                                                key={subItem.title.toLowerCase().replace(' ', '-')}
-                                                className="px-4"
+                                                key={subItem.title}
+                                                className="pr-4 pl-1.5"
                                             >
                                                 <SidebarMenuButton asChild isActive={subItemIsActive([subItem])}>
-                                                    <div className="flex items-center text-sm">
-                                                        <Link href={subItem.href} className='flex-auto'>
+                                                        <Link href={route(subItem.href)} className='flex-auto text-xs' prefetch={false}>
                                                             {subItem.title}
                                                         </Link>
-                                                    </div>
                                                 </SidebarMenuButton>
                                             </SidebarMenuItem>
                                         ))}
@@ -274,8 +272,8 @@ export function AppSidebar() {
                         )}
 
                         {item.items === undefined && <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={item.isActive}>
-                                <Link href={item.href}>{item.title}</Link>
+                            <SidebarMenuButton asChild isActive={item.isActive} >
+                                <Link href={route(item.href)} prefetch={false}>{item.title}</Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>}
                     </SidebarMenu>
