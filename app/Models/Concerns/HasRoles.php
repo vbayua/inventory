@@ -16,7 +16,7 @@ trait HasRoles
     public function hasRole(string|Role $role): bool
     {
         $name = $role instanceof Role ? $role->name : $role;
-        return $this->roles->contains(fn ($r) => $r->name === $name);
+        return $this->roles()->contains(fn ($r) => $r->name === $name);
     }
 
     public function assignRole(string $role): static
