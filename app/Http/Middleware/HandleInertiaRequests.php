@@ -46,20 +46,6 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
-                'viewPermissions' => $userIsLoggedIn ? [
-                    'product' => $request->user()->hasPermission('product.viewAny') ?? false,
-                    'warehouse' => $request->user()->hasPermission('warehouse.viewAny') ?? false,
-                    'location' => $request->user()->hasPermission('location.viewAny') ?? false,
-                    'stock' => $request->user()->hasPermission('stock.viewAny') ?? false,
-                    'operation' => $request->user()->hasPermission('operation.viewAny') ?? false,
-                    'supplier' => $request->user()->hasPermission('supplier.viewAny') ?? false,
-                    'partner' => $request->user()->hasPermission('partner.viewAny') ?? false,
-                    'purchase_orders' => $request->user()->hasPermission('purchase_order.viewAny') ?? false,
-                    'receive_orders' => $request->user()->hasPermission('receive_order.viewAny') ?? false,
-                    'user-roles' => $request->user()->hasPermission('user.viewAny') ?? false,
-                    'qc_inspection' => $request->user()->hasPermission('qc_inspection.viewAny') ?? false,
-                    'qc_checklist' => $request->user()->hasPermission('qc_checklist.viewAny') ?? false,
-                ] : [],
             ],
             'uri' => $request->route()?->uri,
             'ziggy' => fn (): array => [

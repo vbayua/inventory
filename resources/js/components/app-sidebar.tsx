@@ -35,33 +35,33 @@ import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Icon } from './ui/icon';
 import { Separator } from './ui/separator';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const productNavItems: NavItem[] = [
     {
         title: 'Product Master',
         href: 'products.index',
         icon: Box,
-        uri: 'product',
+        uri: 'products',
     },
 
     {
         title: 'Kategori Produk',
         href: 'categories.index',
         icon: Boxes,
-        uri: 'category',
+        uri: 'categories',
     },
     {
         title: 'Data Unit',
         href: 'units.index',
         icon: Cog,
-        uri: 'unit',
+        uri: 'units',
     },
     {
         title: 'Jenis Produk',
         href: 'product-types.index',
         icon: Box,
-        uri: 'productType',
+        uri: 'product-types',
     },
 ];
 
@@ -85,24 +85,25 @@ const stockNavItems: NavItem[] = [
         title: 'Stock List',
         href: 'stocks.index',
         icon: ChartBar,
-        uri: 'stock',
+        uri: 'stocks',
     },
     {
         title: 'Batch',
         href: 'batch.index',
         icon: Boxes,
+        uri: 'batches',
     },
     {
         title: 'Operasi Stock',
         href: 'operations.index',
         icon: Cog,
-        uri: 'operation',
+        uri: 'operations',
     },
     {
         title: 'Adjustment Stock',
         href: 'stock-adjustments.index',
         icon: CheckCheck,
-        uri: 'adjustment',
+        uri: 'stock-adjustments',
     },
 ];
 
@@ -111,13 +112,13 @@ const supplierNavItem: NavItem[] = [
         title: 'Mitra / Perusahaan',
         href: 'partners.index',
         icon: Building,
-        uri: 'partner',
+        uri: 'partners',
     },
     {
         title: 'Approved Supplier List',
         href: 'supplier.index',
         icon: Building,
-        uri: 'supplier',
+        uri: 'suppliers',
     },
 ];
 
@@ -126,13 +127,13 @@ const qcNavItems: NavItem[] = [
         title: 'QC Inspections',
         href: 'qc.inspections.index',
         icon: ClipboardCheck,
-        uri: 'qc_inspection',
+        uri: 'qc/inspections',
     },
     {
         title: 'QC Checklists',
         href: 'qc.checklists.index',
         icon: ClipboardList,
-        uri: 'qc_checklist',
+        uri: 'qc/checklists',
     },
 ];
 
@@ -141,20 +142,20 @@ const purchaseOrderNavItems: NavItem[] = [
         title: 'Purchase Orders',
         href: 'purchase-orders.index',
         icon: Box,
-        uri: 'purchase_orders',
+        uri: 'purchase-orders',
     },
     {
         title: 'Receive Orders',
         href: 'receive-orders.index',
         icon: Box,
-        uri: 'receive_orders',
+        uri: 'receive-orders',
     },
 ];
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: 'dashboard.index',
+        href: 'dashboard',
         icon: ChartBar,
         uri: 'dashboard',
     },
@@ -207,14 +208,11 @@ export function AppSidebar() {
     const { state } = useSidebar();
     const viewPermissions: Record<string, boolean> = page.props.auth?.viewPermissions ?? {};
     const permissions = Object.keys(viewPermissions).filter((key) => viewPermissions[key] === true);
-    // const cleanUrl = page.url.startsWith('/') ? page.url.slice(1) : page.url;
-    const filteredNavItems = mainNavItems.filter(
-        (item) => permissions.includes(item.uri!),
-    );
 
     const subItemIsActive = (item: NavItem[]): boolean => {
-        return item.some((subItem) => page.url.includes(subItem.href))
+        return item.some((subItem) => page.props.uri === subItem.uri)
     };
+
     return (
         <Sidebar collapsible="offcanvas" variant="inset" className="w-64 shrink-0">
             <SidebarHeader>
@@ -231,11 +229,11 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="gap-0 pr-4">
-                {filteredNavItems.map((item) => (
-                    <SidebarMenu key={item.title} className="">
+                {mainNavItems.map((item) => (
+                    <SidebarMenu key={item.uri} className="">
                         {item.items && item.items.length > 0 && (
                             <Collapsible
-                                key={item.title.toLowerCase().replace(' ', '-')}
+                                key={item.uri}
                                 title={item.title}
                                 className="group/collapsible"
                                 defaultOpen={true}
@@ -254,7 +252,7 @@ export function AppSidebar() {
                                         <SidebarGroupContent className="mt-2 space-y-2 ml-4 border-l-3">
                                         {item.items?.map((subItem) => (
                                             <SidebarMenuItem
-                                                key={subItem.title}
+                                                key={subItem.uri}
                                                 className="pr-4 pl-1.5"
                                             >
                                                 <SidebarMenuButton asChild isActive={subItemIsActive([subItem])}>
