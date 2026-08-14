@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Stock;
 use App\Models\StockAdjustment;
 use App\Models\Unit;
+use App\Service\BatchAssignmentService;
 use App\Service\StockCalculatorService as UnitConverter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -20,9 +21,9 @@ use InvalidArgumentException;
 
 class StockOperationService
 {
-    protected $unitConverter;
+    protected UnitConverter $unitConverter;
 
-    protected $batchService;
+    protected BatchAssignmentService $batchService;
 
     protected const string INITIAL = 'initial';
 
@@ -57,28 +58,39 @@ class StockOperationService
     public function createInitialStock(Product|int $product, StockData $stockData)
     {
         return DB::transaction(function () use ($product, $stockData) {
-            $supplierId = $stockData['supplier_id'] ?? null;
-            $batchId = $stockData['batch_id'] ?? null;
+            $supplierId = $stockData['supplier_id'];
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
-            $batch = $batchId ? $this->batchService->determineBatch(
-                $product,
-                (int) $batchId,
-                self::INITIAL,
-                $stockData['date'] ?? null,
-                $supplierId,
-                $stockData['quantity']
-            ) : $this->batchService->determineBatch(
-                product: $product,
-                operationType: self::INITIAL,
-                operationDate: $stockData['date'] ?? null,
-                supplierId: $supplierId,
-                minQty:$stockData['minimum_quantity']
-            );
+            if(!$stockData['supplier_id']) throw new \InvalidArgumentException('Supplier ID is required for batch assignment');
+
+            if($stockData['batch_id'])
+            {
+
+                $batch = $this->batchService->determineBatch(
+                    product: $product,
+                    requestedBatchId: (int) $stockData['batch_id'],
+                    operationType: self::INITIAL,
+                    operationDate: $stockData['date'],
+                    supplierId: $supplierId,
+                    minQty: $stockData['quantity']
+                );
+            }
+            else
+            {
+                // Create new batch
+                $batch = $this->batchService->determineBatch(
+                    product: $product,
+                    operationType: self::INITIAL,
+                    operationDate: $stockData['date'],
+                    supplierId: $supplierId,
+                    minQty:$stockData['minimum_quantity']
+                );
+            }
+
 
             $stockData = $stockData->with(['batch_id' => (int) $batch]);
 
-            $operation = $this->createOperation(
+            $this->createOperation(
                 self::INITIAL,
                 $product,
                 $stockData,
@@ -189,24 +201,33 @@ class StockOperationService
 
             // ── Initial stock: no existing stock record for this batch ────────
             // Determine (or create) the appropriate batch before recording stock.
-            $batchId    = $stockData['batch_id'] ?? null;
-            $supplierId = $stockData['supplier_id'] ?? null;
+            $supplierId = $stockData['supplier_id'];
+            if(!$stockData['supplier_id']) throw new \InvalidArgumentException('Supplier ID is required for initial stock batch assignment');
 
-            $resolvedBatchId = $batchId
-                ? $this->batchService->determineBatch(
-                    $product,
-                    (int) $batchId,
-                    self::INBOUND,
-                    $stockData['date'] ?? null,
-                    $supplierId,
-                )
-                : $this->batchService->determineBatch(
+            if($stockData['batch_id'])
+            {
+
+                $resolvedBatchId = $this->batchService->determineBatch(
+                    product: $product,
+                    requestedBatchId: (int) $stockData['batch_id'],
+                    operationType: self::INBOUND,
+                    operationDate: $stockData['date'],
+                    supplierId: $supplierId,
+                    minQty: $stockData['quantity']
+                );
+            }
+            else
+            {
+                // Create new batch
+                $resolvedBatchId = $this->batchService->determineBatch(
                     product: $product,
                     operationType: self::INBOUND,
-                    operationDate: $stockData['date'] ?? null,
+                    operationDate: $stockData['date'],
                     supplierId: $supplierId,
-                    minQty: (int) ($stockData['minimum_quantity'] ?? 0),
+                    minQty:$stockData['minimum_quantity']
                 );
+            }
+
 
             $stockData = $stockData->with(['batch_id' => (int) $resolvedBatchId]);
 
