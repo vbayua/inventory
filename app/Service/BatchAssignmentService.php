@@ -35,9 +35,9 @@ class BatchAssignmentService
             return app($this->defaultPolicy);
         }
 
-        if ($product->productType->name === 'Finished Goods') {
-            return app(Arr::get($this->policies, 'finished_goods', $this->defaultPolicy));
-        }
+        // if ($product->productType->name === 'Finished Goods') {
+        //     return app(Arr::get($this->policies, 'finished_goods', $this->defaultPolicy));
+        // }
 
         $typeCode = optional($product->productType)->type_code;
         switch($typeCode) {
@@ -52,6 +52,9 @@ class BatchAssignmentService
                 break;
             case 'PT':
                 $policyClass = Arr::get($this->policies, 'packaging_tertiary', $this->defaultPolicy);
+                break;
+            case 'FG':
+                $policyClass = Arr::get($this->policies, 'finished_goods', $this->defaultPolicy);
                 break;
             default:
                 throw ValidationException::withMessages([
@@ -87,25 +90,19 @@ class BatchAssignmentService
         ?string $expiryDate = null
         ): ?int
     {
-        if ($product instanceof Product) {
-            // Load ProductType, Batch, Operation relationship
-            $product->load(['productType', 'batches', 'operations']);
-        }
-        else {
-            // Query ProductType, Batch, Operation relationship
-            $product = Product::with(['productType', 'batches', 'operations'])->findOrFail((int) $product);
-        }
-
-        // Check if supplier exist
-        $supplierExists = $supplierId ? DB::table('products_suppliers')
-            ->where('product_id', $product->id)
-            ->where('supplier_id', $supplierId)
-            ->exists()
-            : false;
+        // Define product
+        $product = $product instanceof Product
+        ? $product->load(['productType', 'batches', 'operations'])
+        : Product::with(['productType', 'batches', 'operations'])->findOrFail((int) $product);
 
         $policy = $this->resolvePolicy($product);
 
-        if ($operationType === 'inbound' && ! $supplierExists && ! $requestedBatchId) {
+        $supplier = DB::table('products_suppliers')
+            ->where('product_id', $product->id)
+            ->where('supplier_id', $supplierId);
+
+        if ($operationType === 'inbound'
+        && ! $supplier->exists() && ! $requestedBatchId) {
             throw ValidationException::withMessages([
                 'supplier_id' => "Supplier does not exist or not associated",
             ]);
