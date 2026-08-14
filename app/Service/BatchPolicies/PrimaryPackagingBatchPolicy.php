@@ -5,7 +5,6 @@ namespace App\Service\BatchPolicies;
 use App\Models\Batch;
 use App\Models\Product;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 class PrimaryPackagingBatchPolicy implements BatchPolicyInterface
 {
@@ -26,6 +25,12 @@ class PrimaryPackagingBatchPolicy implements BatchPolicyInterface
             ->where('batch_number', 'like', "{$basePrefix}-%")
             ->orderBy('id', 'desc')
             ->get(['batch_number', 'created_at']);
+
+        $lastSeries = end($series);
+        if($lastSeries && Carbon::parse($lastSeries->created_at)->format('Y-m-d') === $opDate->format('Y-m-d'))
+        {
+            throw new \InvalidArgumentException('Batch number already exists for today');
+        }
 
         // Parse valid YEAR-SKU-LOT-SEQ entries (LOT = second-to-last, SEQ = last)
         $parsed = [];
