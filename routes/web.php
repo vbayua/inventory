@@ -67,6 +67,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroy'])->name('admin.users.destroy');
     });
 
+    Route::prefix('roles')->name('role.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\RoleController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\RoleController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\RoleController::class, 'store'])->name('store');
+        Route::get('/{role}', [\App\Http\Controllers\RoleController::class, 'show'])->name('show');
+        Route::get('/{role}/edit', [\App\Http\Controllers\RoleController::class, 'edit'])->name('edit');
+        Route::put('/{role}', [\App\Http\Controllers\RoleController::class, 'update'])->name('update');
+        Route::get('/{role}/permissions', [\App\Http\Controllers\RoleController::class, 'editPermission'])->name('edit.permissions');
+        Route::put('/{role}/permissions', [\App\Http\Controllers\RoleController::class, 'updatePermission'])->name('update.permissions');
+        Route::delete('/{role}', [\App\Http\Controllers\RoleController::class, 'destroy'])->name('destroy');
+    });
+
     Route::prefix('purchase-orders')->group(function () {
         Route::get('/', [\App\Http\Controllers\PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
         Route::get('/create', [\App\Http\Controllers\PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
@@ -109,6 +121,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{inspection}/start', [\App\Http\Controllers\QcInspectionController::class, 'start'])->name('start');
         Route::post('/{inspection}/approve', [\App\Http\Controllers\QcInspectionController::class, 'approve'])->name('approve');
         Route::post('/{inspection}/submit', [\App\Http\Controllers\QcInspectionController::class, 'submit'])->name('submit');
+    });
+
+    Route::prefix('production-plan')->name('production-plan.')->group(function () {
+        Route::get('/', function () {
+            return "Production Plan Index";
+        })->name('index');
+        Route::get('/{plan}', function () {
+            return "Production Plan Show";
+        })->name('show');
+        Route::get('/{plan}/edit', function () {
+            return "Production Plan Edit";
+        })->name('edit');
+        Route::post('/{plan}', function () {
+            return "Production Plan Update";
+        })->name('update');
+        Route::delete('/{plan}', function () {
+            return "Production Plan Delete";
+        })->name('destroy');
     });
 });
 
