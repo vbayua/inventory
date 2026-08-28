@@ -304,3 +304,15 @@ export interface QcApproval {
     qc_inspection?: QcInspection;
     approver?: User;
 }
+
+export interface RolePermission {
+    id: number;
+    role_id: number;
+    permission_id: number;
+}
+
+export interface Permission {
+    id: number;
+    name: string;
+    description?: string;
+}
