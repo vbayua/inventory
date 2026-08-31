@@ -20,6 +20,8 @@ import { DataTablePagination } from '../data-table-pagination';
 import { DataTableViewOptions } from '../data-table-view-options';
 import { PaginationIndex } from '../ui/pagination-index';
 import { DataTableToolbar } from './data-table-toolbar';
+import { Input } from '../ui/input';
+import { Field } from '../ui/field';
 // import { DataTablePagination } from "../data-table-pagination"
 // import { Input } from "../ui/input"
 
@@ -61,13 +63,30 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
     });
     return (
         <div>
-            <div className="mb-4 flex items-center justify-between overflow-x-auto">
-                <DataTableToolbar table={table} />
+            <div className="mb-4 flex items-center justify-end overflow-x-auto">
                 <div className="flex items-center space-x-2">
                     <DataTableViewOptions table={table} />
                 </div>
             </div>
-            <div className="grid w-full [&>div]:max-h-120 [&>div]:rounded [&>div]:border gap-4">
+            <div className="grid w-full [&>div]:max-h-120 [&>div]:rounded gap-4">
+                <div className="flex flex-col gap-4 md:flex-row sm:justify-between">
+                    <div>
+                    <Field>
+                        <Input
+                            placeholder="Search"
+                            value={(table.getState().globalFilter as string) ?? ''}
+                            onChange={(event) => table.setGlobalFilter(event.target.value)}
+                            className="w-2xl max-w-4xl sm:w-full"
+                            id="global-filter"
+                            aria-label="Global Filter"
+                            autoComplete="off"
+                        />
+                    </Field>
+                    </div>
+                    <div>
+                        <DataTableToolbar table={table} />
+                    </div>
+                </div>
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

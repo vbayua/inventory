@@ -63,16 +63,16 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                 {/*<DataTableToolbar table={table} />*/}
                 <DataTableViewOptions table={table} />
             </div>
-            <div className="grid w-full gap-4 overflow-x-auto [&>div]:max-h-120 [&>div]:rounded">
-                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
+            <div className="grid w-full gap-4 grid-cols-1 overflow-x-auto [&>div]:max-h-120 [&>div]:rounded">
+                <div className="flex flex-col gap-4 md:flex-row sm:justify-between">
                     <div>
                         <h2 className="sr-only">QC Inspection List</h2>
                         <Field>
                             <Input
-                                placeholder="search"
+                                placeholder="Search"
                                 value={(table.getState().globalFilter ?? '') as string}
                                 onChange={(e) => table.setGlobalFilter(e.target.value)}
-                                className="h-8 w-2xl max-w-3xl sm:w-full"
+                                className="w-2xl max-w-3xl sm:w-full"
                                 id="global-filter"
                                 aria-label="global filter"
                                 autoComplete="off"

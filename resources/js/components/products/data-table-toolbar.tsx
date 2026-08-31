@@ -42,14 +42,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                <span className="text-muted-foreground text-sm">Cari: </span>
-                <Input
-                    placeholder="Nama Produk atau Kode Item"
-                    value={(table.getState().globalFilter as string) ?? ''}
-                    onChange={(event) => table.setGlobalFilter(event.target.value)}
-                    className="focus:border-primary h-12 w-full max-w-sm focus:ring-0"
-                />
-                <span className="text-muted-foreground text-sm">Filter: </span>
                 {productTypeColumn && productTypeFilterOptions && (
                     <DataTableFacetedFilter column={productTypeColumn} title="Jenis Produk" options={productTypeFilterOptions} />
                 )}
