@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Str;
 use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
@@ -39,13 +40,24 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
         $userIsLoggedIn = $request->user() !== null;
+        $user = $request->user();
 
+        $viewPermissions = $user?->permissions()->filter(
+            fn ($permission): bool => \Illuminate\Support\Str::endsWith($permission->name, '.viewAny')
+        )
+        ->mapWithKeys(
+            fn($permission): array => [
+                \Illuminate\Support\Str::beforeLast($permission->name, '.') => true
+            ]
+        )
+        ->all() ?? [];
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'viewPermissions' => $viewPermissions,
             ],
             'uri' => $request->route()?->uri,
             'ziggy' => fn (): array => [

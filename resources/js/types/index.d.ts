@@ -23,6 +23,7 @@ export interface NavItem {
     isActive?: boolean;
     items?: SubItems[];
     uri?: string | undefined;
+    permission?: string;
 }
 export interface MainNavItem {
     title: string;
@@ -37,6 +38,7 @@ export interface SubItems {
     icon?: LucideIcon | null;
     isActive?: boolean;
     uri?: string;
+    permission?: string;
 }
 
 export interface SharedData {
