@@ -42,15 +42,10 @@ class HandleInertiaRequests extends Middleware
         $userIsLoggedIn = $request->user() !== null;
         $user = $request->user();
 
-        $viewPermissions = $user?->permissions()->filter(
-            fn ($permission): bool => \Illuminate\Support\Str::endsWith($permission->name, '.viewAny')
-        )
-        ->mapWithKeys(
-            fn($permission): array => [
-                \Illuminate\Support\Str::beforeLast($permission->name, '.') => true
-            ]
-        )
-        ->all() ?? [];
+        $viewPermissions = $user?->cachedPermissionNames()
+            ->filter(fn ($permission): bool => \Illuminate\Support\Str::endsWith($permission, '.viewAny'))
+            ->mapWithKeys(fn ($permission): array => [\Illuminate\Support\Str::beforeLast($permission, '.') => true])
+            ->all() ?? [];
         return [
             ...parent::share($request),
             'name' => config('app.name'),

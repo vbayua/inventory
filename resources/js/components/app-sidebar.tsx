@@ -226,7 +226,6 @@ export function AppSidebar() {
     const canView = (permission?: string): boolean => {
         return permission == undefined || viewPermissions[permission] === true;
     }
-    console.log(page);
     const subItemIsActive = (item: NavItem[]): boolean => {
         return item.some((subItem) => page.props.uri === subItem.uri)
     };
