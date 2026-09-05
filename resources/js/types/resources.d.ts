@@ -26,7 +26,7 @@ export interface Product {
     brand_name?: string;
     scientific_name?: string;
     sku: string;
-    unit: Unit;
+    unit: Unit | string;
     price?: number;
     category_id?: number;
     product_type_id?: number;
@@ -315,4 +315,21 @@ export interface Permission {
     id: number;
     name: string;
     description?: string;
+}
+
+export interface Production {
+    id: number;
+    plan_number: string;
+    product_id: number;
+    target_quantity?: number;
+    bom_id: number;
+    status: 'pending' | 'ordered' | 'in_progress' | 'completed' | 'cancelled';
+    ordered_at?: string;
+    in_progress_at?: string;
+    completed_at?: string;
+    cancelled_at?: string;
+    output_batch_id?: number;
+    created_at?: string;
+    updated_at?: string;
+    product?: Product;
 }

@@ -5,7 +5,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import AppLayout from "@/layouts/app-layout";
 import { BreadcrumbItem } from "@/types";
 import { Link } from "@inertiajs/react";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, EditIcon } from "lucide-react";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -30,21 +30,28 @@ export default function Show() {
                 <div className="mb-6 p-4">
                     <h2>Bill of Materials</h2>
                 </div>
-                <div className="max-w-2/4 border rounded-lg">
+                <div className="max-w-2/4 max-h-dvh border rounded-lg overflow-y-auto overflow-x-hidden">
                     <Item variant={"outline"}>
                         <ItemMedia>
                             <Badge variant={"outline"}>200/200</Badge>
-                        </ItemMedia>                       <ItemContent>
-                         <ItemTitle>2010231-4-Parfume </ItemTitle>
-                         <ItemDescription>Description</ItemDescription>
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle>2010231-4-Parfume </ItemTitle>
+                            <ItemDescription>Description</ItemDescription>
                        </ItemContent>
+                        <ItemActions>
+                           <Button variant={"outline"} size="sm">
+                               <EditIcon className="w-4"/>
+                           </Button>
+                       </ItemActions>
                     </Item>
                     <Item variant={"outline"}>
                         <ItemMedia>
                             <Badge variant={"outline"}>200/200</Badge>
-                        </ItemMedia>                       <ItemContent>
-                         <ItemTitle>2010231-4-Parfume </ItemTitle>
-                         <ItemDescription>Description</ItemDescription>
+                        </ItemMedia>
+                        <ItemContent>
+                            <ItemTitle>2010231-4-Parfume </ItemTitle>
+                            <ItemDescription>Description</ItemDescription>
                        </ItemContent>
                      </Item>
 
@@ -53,9 +60,135 @@ export default function Show() {
                             <Badge variant={"outline"}>200/200</Badge>
                         </ItemMedia>
                         <ItemContent>
-                          <ItemTitle>2010231-4-Parfume </ItemTitle>
-                          <ItemDescription>Description</ItemDescription>
+                            <ItemTitle>2010231-4-Parfume </ItemTitle>
+                            <ItemDescription>Description</ItemDescription>
                         </ItemContent>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
+                      </Item>
+                      <Item variant={"outline"}>
+                          <ItemMedia>
+                              <Badge variant={"outline"}>200/200</Badge>
+                          </ItemMedia>
+                          <ItemContent>
+                              <ItemTitle>2010231-4-Parfume </ItemTitle>
+                              <ItemDescription>Description</ItemDescription>
+                         </ItemContent>
+                          <ItemActions>
+                             <Button variant={"outline"} size="sm">
+                                 <EditIcon className="w-4"/>
+                             </Button>
+                         </ItemActions>
                       </Item>
                 </div>
             </ContainerLayout>
