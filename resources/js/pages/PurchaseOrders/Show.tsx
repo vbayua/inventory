@@ -418,7 +418,10 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                             </TableHeader>
                                             <TableBody>
                                                 {receiveOrders.map((receiveOrder) => (
-                                                    <TableRow key={receiveOrder.id}>
+                                                    <TableRow key={receiveOrder.id} onClick={(e) => {
+                                                        e.preventDefault()
+                                                        router.visit(`/receive-orders/${receiveOrder.id}`);
+                                                    }}>
                                                         <TableCell>{receiveOrder.receive_number}</TableCell>
                                                         <TableCell>{receiveOrder.reference_number ?? '-'}</TableCell>
                                                         <TableCell>{receiveOrder.receive_date}</TableCell>
