@@ -64,7 +64,7 @@ class PurchaseOrderController extends Controller
         $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'supplier:id,partner_id', 'supplier.partner:id,name', 'user:id,name');
 
         $receiveOrders = $purchaseOrder->receive_orders()->latest()->get();
-        $receiveOrders->load('user:id,name');
+        $receiveOrders->load('user:id,name', 'receiveOrderItems:id');
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
@@ -78,7 +78,7 @@ class PurchaseOrderController extends Controller
         return redirect()->back()->with('success', 'Purchase order updated successfully.');
     }
 
-    public function receive(PurchaseOrder $purchaseOrder): Response
+    public function receive(PurchaseOrder $purchaseOrder, Request $request): Response
     {
         $purchaseOrder->load(
             'items:id,purchase_order_id,price,quantity,product_id',
@@ -86,11 +86,13 @@ class PurchaseOrderController extends Controller
             'items.product.productType:id,default_location_id',
             'items.product.productType.defaultLocation:id,name',
             'supplier',
-            'items.receiveOrderItems'
         );
 
+        $receiveAll = $request->input('receive_all', false);
+
         $purchaseOrder->items->each(function ($item) {
-            $item->quantity_received = $item->receiveOrderItems->sum('quantity_received');
+            $item->quantity_received = $item->getQuantityReceivedAttribute();
+            $item->location_id = $item->product->productType->defaultLocation->id;
         });
 
         // Filter batches based on the product IDs in the purchase order items
@@ -108,14 +110,15 @@ class PurchaseOrderController extends Controller
     {
         $receiveOrder = array_merge($request->validated(), ['user_id' => Auth::id()]);
 
-
-        DB::transaction(function () use ($purchaseOrder, $receiveOrder, $stockOperationService) {
+        $userId = Auth::id();
+        DB::beginTransaction();
+        try {
             $newReceiveOrder = $purchaseOrder->receive_orders()->create([
                 'receive_number' => $receiveOrder['receive_order_number'],
                 'reference_number' => $receiveOrder['reference_number'] ?? null,
                 'receive_date' => Carbon::parse($receiveOrder['receive_date']),
                 'notes' => $receiveOrder['notes'] ?? null,
-                'user_id' => $receiveOrder['user_id'] ?? null,
+                'user_id' => $userId,
             ]);
 
             foreach ($receiveOrder['items'] as $item) {
@@ -141,9 +144,9 @@ class PurchaseOrderController extends Controller
 
                 // Create a QC inspection record for this receive order item
                 QcInspection::create([
-                    'receive_order_id'      => $newReceiveOrder->id,
+                    'receive_order_id' => $newReceiveOrder->id,
                     'receive_order_item_id' => $newReceiveOrderItem->id,
-                    'status'                => 'pending',
+                    'status' => 'pending',
                 ]);
 
                 if ($purchaseOrderItem->quantity_received >= $purchaseOrderItem->quantity) {
@@ -163,10 +166,14 @@ class PurchaseOrderController extends Controller
             } elseif ($anyReceived) {
                 $purchaseOrder->update(['status' => 'partially_received']);
             }
+        }
+        catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors($e->getMessage());
+        }
 
-        });
+        DB::commit();
 
-
-        return redirect()->route('purchase-orders.show', $purchaseOrder)->with('success', 'Items received successfully.');
+        return redirect()->route('receive-orders.show', $newReceiveOrder)->with('success', 'Items received successfully.');
     }
 }

@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { PurchaseOrder, ReceiveOrder } from '@/types/resources';
+import { PurchaseOrder, ReceiveOrder, ReceiveOrderItem } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, File, Mail, MapPin, PencilIcon, PenIcon, PhoneCall, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -51,11 +51,13 @@ const statusConfig = (status: string) => {
 export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: PurchaseOrder; receiveOrders: ReceiveOrder[] }) {
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}`;
 
-    // console.log(purchaseOrder);
-    console.log(receiveOrders.length);
-
+    const [receiveItems, setReceiveItems] = useState<ReceiveOrderItem[]>([
+        { id: 1, receive_order_id: 1, product_id: 1, quantity_received: 1 },
+        { id: 2, receive_order_id: 2, product_id: 2, quantity_received: 2 },
+    ]);
     const [activeTab, setActiveTab] = useState<'overview' | 'log_history'>('overview');
     const [hasLoadedReceiveOps, setHasLoadedReceiveOps] = useState(false);
+
 
     useEffect(() => {
         if ((activeTab === 'overview' || activeTab === 'log_history') && !hasLoadedReceiveOps) {
@@ -232,6 +234,9 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                         currency: 'IDR',
                                                         minimumFractionDigits: 0,
                                                     })}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="default" className="bg-blue-800 text-foreground border-blue-100" size="sm">Receive</Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -411,6 +416,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                 <TableRow>
                                                     <TableHead>Receive Number</TableHead>
                                                     <TableHead>Reference</TableHead>
+                                                    <TableHead>Product Count</TableHead>
                                                     <TableHead>Date</TableHead>
                                                     <TableHead>Notes</TableHead>
                                                     <TableHead>Received By</TableHead>
@@ -418,12 +424,12 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                             </TableHeader>
                                             <TableBody>
                                                 {receiveOrders.map((receiveOrder) => (
-                                                    <TableRow key={receiveOrder.id} onClick={(e) => {
-                                                        e.preventDefault()
+                                                    <TableRow key={receiveOrder.id} onClick={() => {
                                                         router.visit(`/receive-orders/${receiveOrder.id}`);
                                                     }}>
                                                         <TableCell>{receiveOrder.receive_number}</TableCell>
                                                         <TableCell>{receiveOrder.reference_number ?? '-'}</TableCell>
+                                                        <TableCell>{receiveOrder.receive}</TableCell>
                                                         <TableCell>{receiveOrder.receive_date}</TableCell>
                                                         <TableCell>{receiveOrder.notes ?? '-'}</TableCell>
                                                         <TableCell>{receiveOrder.user?.name ?? '-'}</TableCell>
