@@ -33,9 +33,10 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     links?: any[];
     clientSide?: boolean;
+    onRowClick?: (item: TData) => void;
 }
 
-export function DataTable<TData, TValue>({ columns, data, links, clientSide = false }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, links, clientSide = false, onRowClick }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -116,7 +117,14 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="cursor-pointer">
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && 'selected'}
+                                    className={onRowClick ? 'cursor-pointer' : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                                    onKeyDown={onRowClick ? (e) => e.key === 'Enter' && onRowClick(row.original) : undefined}
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                     ))}

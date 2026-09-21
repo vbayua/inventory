@@ -1,4 +1,5 @@
 import ContainerLayout from '@/components/container-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -9,7 +10,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Item, ItemContent } from '@/components/ui/item';
+import { Item, ItemActions, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,30 +33,25 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const statusConfig = (status: string) => {
-    switch (status) {
-        case 'pending':
-            return { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' };
-        case 'partially_received':
-            return { color: 'bg-green-100 text-green-800', label: 'Partially Received' };
-        case 'received':
-            return { color: 'bg-blue-100 text-blue-800', label: 'Received' };
-        case 'completed':
-            return { color: 'bg-blue-100 text-blue-800', label: 'Completed' };
-        case 'cancelled':
-            return { color: 'bg-red-100 text-red-800', label: 'Cancelled' };
-        default:
-            return { color: 'gray', label: 'Unknown' };
-    }
+const statusConfig = {
+    pending:
+        { variant: 'outline', color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+    partially_received:
+        { variant: 'secondary', color: 'bg-blue-600/20 border-blue-100 border-dashed', label: 'Partial' },
+    received:
+        { variant: 'secondary', color: 'bg-blue-800 border-blue-100 text-blue-100', label: 'Received' },
+    completed:
+        { variant: 'default', color: 'bg-green-800 border-green-100 text-green-100', label: 'Closed' },
+    cancelled:
+        { variant: 'destructive', color: 'bg-red-100 text-red-800', label: 'Cancelled' },
+} as const;
+const badge = (status: keyof typeof statusConfig) => {
+    return <Badge variant={statusConfig[status].variant} className={statusConfig[status].color}>{statusConfig[status].label}</Badge>;
 };
 
 export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: PurchaseOrder; receiveOrders: ReceiveOrder[] }) {
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}`;
 
-    const [receiveItems, setReceiveItems] = useState<ReceiveOrderItem[]>([
-        { id: 1, receive_order_id: 1, product_id: 1, quantity_received: 1 },
-        { id: 2, receive_order_id: 2, product_id: 2, quantity_received: 2 },
-    ]);
     const [activeTab, setActiveTab] = useState<'overview' | 'log_history'>('overview');
     const [hasLoadedReceiveOps, setHasLoadedReceiveOps] = useState(false);
 
@@ -142,7 +139,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                 </Link>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
-                                                <Link href={route('purchase-orders.receive', { id: purchaseOrder.id })}>
+                                                <Link href={route('purchase-orders.receive', { purchase_order: purchaseOrder.id, receive_all: true })}>
                                                     <ArrowLeft className="mr-2 h-4 w-4" />
                                                     Create Receive Order
                                                 </Link>
@@ -191,9 +188,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground text-sm">Status</p>
-                                    <p className={`rounded px-2 py-1 ${statusConfig(purchaseOrder.status).color}`}>
-                                        {statusConfig(purchaseOrder.status).label}
-                                    </p>
+                                    {badge(purchaseOrder.status as keyof typeof statusConfig)}
                                 </div>
                             </div>
                         </CardContent>
@@ -202,7 +197,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                     <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <Card className="col-span-2">
                             <CardHeader>
-                                <CardTitle>Order Items</CardTitle>
+                                <CardTitle>Items</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <Table>
@@ -210,14 +205,14 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                         <TableRow>
                                             <TableHead>Product</TableHead>
                                             <TableHead className="text-right">Price</TableHead>
-                                            <TableHead>Quantity Ordered</TableHead>
+                                            <TableHead className="text-center">Order Qty</TableHead>
                                             <TableHead className="text-right">Subtotal</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {purchaseOrder.items?.map((item) => (
                                             <TableRow key={item.id}>
-                                                <TableCell>
+                                                <TableCell className="md:text-xl">
                                                     {item.product?.name} <span className="text-muted-foreground">({item.product?.sku})</span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
@@ -227,16 +222,13 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                         minimumFractionDigits: 0,
                                                     })}
                                                 </TableCell>
-                                                <TableCell>x {item.quantity}</TableCell>
+                                                <TableCell className="text-center md:text-xl">x {item.quantity}</TableCell>
                                                 <TableCell className="text-right">
                                                     {(item.quantity * item.price).toLocaleString('id-ID', {
                                                         style: 'currency',
                                                         currency: 'IDR',
                                                         minimumFractionDigits: 0,
                                                     })}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="default" className="bg-blue-800 text-foreground border-blue-100" size="sm">Receive</Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -299,10 +291,8 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
-                    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="col-span-2 space-y-6">
-                            <Card>
+                            <Card className="h-full">
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <CardTitle>Notes</CardTitle>
@@ -336,30 +326,8 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 </CardContent>
                             </Card>
                         </div>
-                        <div>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Audit</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        <div>
-                                            <p className="text-muted-foreground text-sm">Created By</p>
-                                            <p className="text-lg font-medium">{purchaseOrder.user?.name || '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground text-sm">Last Updated</p>
-                                            <p className="text-lg font-medium">{new Date(purchaseOrder.updated_at ?? '').toLocaleString('id-ID')}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground text-sm">Created At</p>
-                                            <p className="text-lg font-medium">{new Date(purchaseOrder.created_at ?? '').toLocaleString('id-ID')}</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
                     </div>
+                    <Separator />
                     <div>
                         <Card>
                             <CardHeader>
@@ -383,26 +351,25 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                     ) : (
                                                         <div>
                                                             {recentReceiveOrders?.map((order) => (
-                                                                <Link href={route('receive-orders.show', order.id)}>
                                                                     <Item
                                                                         key={order.id}
                                                                         variant={'outline'}
                                                                         size="sm"
                                                                         className="hover:bg-accent/50 mb-4 last:mb-0"
+                                                                        asChild
                                                                     >
-                                                                        <ItemContent>
-                                                                            <div className="flex items-center justify-between">
-                                                                                <p>{order.receive_number}</p>
-                                                                                <div>
-                                                                                    <p>
-                                                                                        {order.user ? `Received by ${order.user?.name} ` : ''}
+                                                                        <Link href={route('receive-orders.show', order.id)}>
+                                                                            <ItemContent>
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <p>{order.receive_number}</p>
+                                                                                    <p className="text-muted-foreground">
+                                                                                        {order.user ? `by ${order.user?.name} ` : ''}
                                                                                         {formatRelativeTime(order.receive_date)}
                                                                                     </p>
                                                                                 </div>
-                                                                            </div>
-                                                                        </ItemContent>
+                                                                            </ItemContent>
+                                                                        </Link>
                                                                     </Item>
-                                                                </Link>
                                                             ))}
                                                         </div>
                                                     )}
@@ -429,7 +396,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                                     }}>
                                                         <TableCell>{receiveOrder.receive_number}</TableCell>
                                                         <TableCell>{receiveOrder.reference_number ?? '-'}</TableCell>
-                                                        <TableCell>{receiveOrder.receive}</TableCell>
+                                                        <TableCell>{receiveOrder.receive_order_items_sum_quantity_received ?? 0}</TableCell>
                                                         <TableCell>{receiveOrder.receive_date}</TableCell>
                                                         <TableCell>{receiveOrder.notes ?? '-'}</TableCell>
                                                         <TableCell>{receiveOrder.user?.name ?? '-'}</TableCell>
@@ -439,6 +406,27 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                         </Table>
                                     </TabsContent>
                                 </Tabs>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Audit</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-muted-foreground text-sm">Created By</p>
+                                        <p className="text-lg font-medium">{purchaseOrder.user?.name || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-sm">Last Updated</p>
+                                        <p className="text-lg font-medium">{new Date(purchaseOrder.updated_at ?? '').toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-sm">Created At</p>
+                                        <p className="text-lg font-medium">{new Date(purchaseOrder.created_at ?? '').toLocaleString('id-ID')}</p>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>

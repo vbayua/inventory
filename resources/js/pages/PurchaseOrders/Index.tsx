@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 
 import { SharedData, type BreadcrumbItem } from '@/types';
 import { PurchaseOrder } from '@/types/resources';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,7 +27,7 @@ export default function Index({ purchaseOrders }: { purchaseOrders: PurchaseOrde
                     </div>
                 </div>
                 <div>
-                    <DataTable columns={columns} data={purchaseOrders} clientSide={true} />
+                    <DataTable columns={columns} data={purchaseOrders} clientSide={true} onRowClick={(item) => router.visit(`/purchase-orders/${item.id}`)} />
                 </div>
             </ContainerLayout>
         </AppLayout>

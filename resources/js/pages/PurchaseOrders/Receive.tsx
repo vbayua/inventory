@@ -16,7 +16,7 @@ import { BreadcrumbItem } from '@/types';
 import { Batch, Location, PurchaseOrder, PurchaseOrderItem } from '@/types/resources';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, ChevronDownIcon } from 'lucide-react';
-import { SubmitEventHandler, useRef, useState } from 'react';
+import { SubmitEventHandler, useEffect, useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -29,7 +29,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Receive({ purchaseOrder, locations, batches }: { purchaseOrder: PurchaseOrder; locations: Location[]; batches: Batch[] }) {
+export default function Receive({ purchaseOrder, locations, batches, receiveAll }: { purchaseOrder: PurchaseOrder; locations: Location[]; batches: Batch[]; receiveAll: boolean }) {
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}/receive`;
     const { data, setData, post, processing, errors } = useForm({
         purchase_order_id: purchaseOrder.id,
@@ -56,6 +56,16 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
     };
 
     const [selectedItems, setSelectedItems] = useState<PurchaseOrderItem[]>([]);
+
+    useEffect(() => {
+        if (receiveAll) {
+            const poItems = purchaseOrder.items?.map((item) => {
+                return { ...item, quantity_received: item.quantity }
+            })
+            setSelectedItems(poItems || []);
+            setData('items', poItems || []);
+        }
+    }, [receiveAll, purchaseOrder.items, setData]);
 
     const addItem = (item: PurchaseOrderItem) => {
         const newItem = { ...item };
@@ -111,7 +121,6 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
     const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
     const [receiveDatePopoverOpen, setReceiveDatePopoverOpen] = useState(false);
     const [openDialogIndex, setOpenDialogIndex] = useState<number | null>(null);
-    console.log(data.items)
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -210,13 +219,14 @@ export default function Receive({ purchaseOrder, locations, batches }: { purchas
                                                             type="number"
                                                             min={0}
                                                             max={item.quantity}
-                                                            defaultValue={item.quantity_received ?? 0}
+                                                            defaultValue={data.items.find(i => i.id === item.id)?.quantity_received ?? 0}
                                                             className="max-w-24 text-xl text-center p-2"
                                                             onChange={(e) => {
                                                                 const qty = parseInt(e.target.value);
                                                                 handleQuantityChange(item.id, qty);
                                                             }} />
                                                             : <span className="text-xl">{item.quantity_received}</span>}
+                                                    <InputError message={errors[`items.${index}.quantity_received`]} />
                                                 </TableCell>
                                                     <TableCell>
                                                         {selectedItems.find(i => i.id === item.id)

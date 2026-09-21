@@ -61,10 +61,18 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'supplier:id,partner_id', 'supplier.partner:id,name', 'user:id,name');
+        $purchaseOrder->load([
+            'items' => fn($query) => $query->withSum('receiveOrderItems:quantity_received as received_quantity', 'quantity_received'),
+            'items.product:id,name,sku,unit',
+            'supplier:id,partner_id',
+            'supplier.partner:id,name',
+            'user:id,name'
+        ]);
 
         $receiveOrders = $purchaseOrder->receive_orders()->latest()->get();
-        $receiveOrders->load('user:id,name', 'receiveOrderItems:id');
+        $receiveOrders->load('user:id,name' );
+        $receiveOrders->load('receiveOrderItems');
+        $receiveOrders->loadSum('receiveOrderItems:quantity_received', 'quantity_received');
 
         return Inertia::render('PurchaseOrders/Show', [
             'purchaseOrder' => $purchaseOrder,
@@ -88,7 +96,7 @@ class PurchaseOrderController extends Controller
             'supplier',
         );
 
-        $receiveAll = $request->input('receive_all', false);
+        $receiveAll = $request->boolean('receive_all', false);
 
         $purchaseOrder->items->each(function ($item) {
             $item->quantity_received = $item->getQuantityReceivedAttribute();
@@ -103,6 +111,7 @@ class PurchaseOrderController extends Controller
             'purchaseOrder' => $purchaseOrder,
             'locations' => Location::with('warehouse:id,name')->get(),
             'batches' => $batches,
+            'receiveAll' => $receiveAll
         ]);
     }
 

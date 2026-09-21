@@ -4,40 +4,28 @@ import { PurchaseOrder } from '@/types/resources';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Eye } from 'lucide-react';
+import { Badge } from '../ui/badge';
 
-const statusConfig = (status: string) => {
-    switch (status) {
-        case 'pending':
-            return { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' };
-        case 'partially_received':
-            return { color: 'bg-green-100 text-green-800', label: 'Partially Received' };
-        case 'received':
-            return { color: 'bg-blue-100 text-blue-800', label: 'Received' };
-        case 'cancelled':
-            return { color: 'bg-red-100 text-red-800', label: 'Cancelled' };
-        default:
-            return { color: 'gray', label: 'Unknown' };
-    }
-};
+const statusConfig = {
+    pending:
+        { variant: 'outline', color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+    partially_received:
+        { variant: 'secondary', color: 'bg-blue-600/20 border-blue-100 border-dashed', label: 'Partial' },
+    received:
+        { variant: 'secondary', color: 'bg-blue-800 border-blue-100 text-blue-100', label: 'Received' },
+    completed:
+        { variant: 'default', color: 'bg-green-800 border-green-100 text-green-100', label: 'Closed' },
+    cancelled:
+        { variant: 'destructive', color: 'bg-red-100 text-red-800', label: 'Cancelled' },
+} as const;
 
+const badge = (status: keyof typeof statusConfig) => {
+    return <Badge variant={statusConfig[status].variant} className={`capitalize ${statusConfig[status].color}`}>
+        <span className="capitalize">{statusConfig[status].label}</span>
+    </Badge>
+}
+console.log(statusConfig['pending' as keyof typeof statusConfig].color)
 export const columns: ColumnDef<PurchaseOrder>[] = [
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            const purchaseOrder = row.original;
-            const viewPurchaseOrder = route('purchase-orders.show', { id: purchaseOrder.id });
-            return (
-                <div className="flex items-center">
-                    <Button variant="ghost" className="h-8 w-8 p-0" asChild>
-                        <Link href={viewPurchaseOrder} className="text-primary text-lg font-medium">
-                            <span className="sr-only">View PO</span>
-                            <Eye className="h-4 w-4" />
-                        </Link>
-                    </Button>
-                </div>
-            );
-        },
-    },
     {
         id: 'po_number',
         accessorKey: 'po_number',
@@ -95,9 +83,7 @@ export const columns: ColumnDef<PurchaseOrder>[] = [
         accessorKey: 'status',
         header: 'Status',
         cell: ({ cell }) => {
-            const status = cell.getValue() as string;
-            const config = statusConfig(status);
-            return <span className={`inline-block rounded px-2 py-1 ${config.color}`}>{config.label}</span>;
+            return badge(cell.getValue() as keyof typeof statusConfig);
         },
     },
 ];
