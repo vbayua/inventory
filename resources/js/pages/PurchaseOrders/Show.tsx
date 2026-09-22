@@ -100,6 +100,19 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
             );
         }
     };
+
+    const cancelPurchaseOrder = () => {
+        router.put(
+            route('purchase-orders.update', { id: purchaseOrder.id }),
+            { action: 'cancel' },
+            {
+                onSuccess: () => {
+                    router.reload({ only: ['purchase-orders'] });
+                },
+            },
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`PO - ${purchaseOrder.po_number}`} />
@@ -133,12 +146,6 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                         {/*<DropdownMenuLabel>Order Action</DropdownMenuLabel>*/}
                                         <DropdownMenuGroup>
                                             <DropdownMenuItem asChild>
-                                                <Link href={route('purchase-orders.edit', purchaseOrder.id)}>
-                                                    <PencilIcon className="mr-2 h-4 w-4" />
-                                                    Edit Order
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
                                                 <Link href={route('purchase-orders.receive', { purchase_order: purchaseOrder.id, receive_all: true })}>
                                                     <ArrowLeft className="mr-2 h-4 w-4" />
                                                     Create Receive Order
@@ -153,9 +160,11 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                             {/* Add more actions here if needed */}
                                         </DropdownMenuGroup>
                                         <DropdownMenuSeparator />
-                                        {receiveOrders && receiveOrders.length === 0 && (
+                                        {purchaseOrder.status !== 'cancelled' && receiveOrders && receiveOrders.length === 0 && (
                                             <DropdownMenuGroup>
-                                                <DropdownMenuItem variant={'destructive'}>Cancel Order</DropdownMenuItem>
+                                                <DropdownMenuItem variant={'destructive'} asChild>
+                                                    <Button variant={'link'} onClick={cancelPurchaseOrder} className="w-full">Cancel Order</Button>
+                                                </DropdownMenuItem>
                                             </DropdownMenuGroup>
                                         )}
                                     </DropdownMenuContent>

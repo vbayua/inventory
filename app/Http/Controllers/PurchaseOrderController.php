@@ -62,7 +62,7 @@ class PurchaseOrderController extends Controller
     public function show(PurchaseOrder $purchaseOrder)
     {
         $purchaseOrder->load([
-            'items' => fn($query) => $query->withSum('receiveOrderItems:quantity_received as received_quantity', 'quantity_received'),
+            'items',
             'items.product:id,name,sku,unit',
             'supplier:id,partner_id',
             'supplier.partner:id,name',
@@ -82,7 +82,9 @@ class PurchaseOrderController extends Controller
 
     public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->update($request->validated());
+        $purchaseOrder->update([
+            'status' => 'cancelled',
+        ]);
         return redirect()->back()->with('success', 'Purchase order updated successfully.');
     }
 

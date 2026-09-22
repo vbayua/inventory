@@ -43,9 +43,7 @@ class OperationController extends Controller
             'location:id,name,warehouse_id',
             'location.warehouse:id,name'
         ])->get();
-        $products = \App\Models\Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
-        // // // Ensure products are unique by ID only the products
-        // $stock = $stock->unique('batch_id')->values();
+        $products = Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
 
         $batches = \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
 
@@ -102,6 +100,7 @@ class OperationController extends Controller
             $validatedData['operationType'],
             $validatedData['date']
         );
+
         $stockData = Stock::with(['product'])->where('product_id', $validatedData['product'])
             ->where('location_id', $validatedData['location'])
             ->when($validatedData['batch'], function ($query) use ($validatedData) {
@@ -165,20 +164,7 @@ class OperationController extends Controller
                 $validatedData['remarks']
             );
         } elseif ($operationType === 'transfer') {
-            // $stockData['source_location_id'] = $validatedData['source_location'];
-            // $stockData['destination_location_id'] = $validatedData['destination_location'];
-            // $operationService->createTransferOperation(
-            //     $stockData->product,
-            //     $stockData,
-            //     $operationQuantity,
-            //     $validatedData['unit'],
-            //     $validatedData['remarks'] ?? '',
-            //     $validatedData['date'],
-            // );
-
-
-            // Call high-level transfer stock operation
-            $test = $operationService->createTransferOperation(
+            $operationService->createTransferOperation(
                 $stockData->product,
                 $stockData->batch_id,
                 $validatedData['source_location'],

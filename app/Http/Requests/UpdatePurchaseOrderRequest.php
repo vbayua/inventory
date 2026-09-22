@@ -23,6 +23,7 @@ class UpdatePurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'action' => 'required|string',
             'notes' => 'nullable|string',
         ];
     }
