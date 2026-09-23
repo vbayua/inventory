@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 
 import { SharedData, type BreadcrumbItem } from '@/types';
 import { ReceiveOrder } from '@/types/resources';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,14 +19,14 @@ export default function Index({ receiveOrders }: { receiveOrders: ReceiveOrder[]
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Receive Orders" />
             <ContainerLayout className="p-0">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                     <div>
                         <h1 className="mb-4 text-2xl font-bold">Receive Orders</h1>
                         <p className="text-muted-foreground mb-6 text-sm">List of receive orders.</p>
                     </div>
                 </div>
                 <div>
-                    <DataTable columns={columns} data={receiveOrders} clientSide={true} />
+                    <DataTable columns={columns} data={receiveOrders} clientSide={true} onRowClick={(item) => router.visit(`/receive-orders/${item.id}`)} />
                 </div>
             </ContainerLayout>
         </AppLayout>

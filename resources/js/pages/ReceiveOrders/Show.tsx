@@ -1,4 +1,5 @@
 import ContainerLayout from '@/components/container-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -45,6 +46,26 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
         setReceiveOrderNotes(e.target.value);
     };
 
+    const supplierDetail = receiveOrder.purchase_order?.supplier;
+    const statusConfig = {
+        pending:
+            { variant: 'outline', style: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+        partially_received:
+            { variant: 'secondary', style: 'bg-blue-600/20 border-blue-100 border-dashed', label: 'Partial' },
+        received:
+            { variant: 'secondary', style: 'bg-blue-800 border-blue-100 text-blue-100', label: 'Received' },
+        completed:
+            { variant: 'default', style: 'bg-green-800 border-green-100 text-green-100', label: 'Closed' },
+        cancelled:
+            { variant: 'destructive', style: 'bg-red-100 text-red-800', label: 'Cancelled' },
+    } as const;
+
+    const purchaseStatusBadge = (status: keyof typeof statusConfig) => {
+        return <Badge variant="outline" className={`text-xl ${statusConfig[status].style}`}>
+            {statusConfig[status].label}
+        </Badge>
+    }
+
     const handleSaveReceiveOrderNotes = () => {
         if (receiveOrderNotes !== receiveOrder.notes) {
             router.put(
@@ -61,6 +82,7 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
             );
         }
     };
+
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -119,29 +141,31 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                         <CardContent>
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex-1">
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="grid grid-cols-1 gap-y-5 sm:grid-cols-2">
                                         <div>
-                                            <span className="text-sm font-medium">Receive Number</span>
-                                            <p className="mt-1 text-sm">{receiveOrder.receive_number}</p>
+                                            <span className="text-sm font-semibold">Receive Number</span>
+                                            <p className="mt-1 text-xl">{receiveOrder.receive_number}</p>
                                         </div>
                                         <div>
-                                            <span className="text-sm font-medium">Supplier</span>
-                                            <p className="mt-1 text-sm">{receiveOrder.purchase_order?.supplier?.partner?.name}</p>
+                                            <span className="text-sm font-semibold">Receive Date</span>
+                                            <p className="mt-1 text-xl">{format(receiveOrder.receive_date, 'LLL dd, y')}</p>
                                         </div>
                                         <div>
-                                            <span className="text-sm font-medium">Receive Date</span>
-                                            <p className="mt-1 text-sm">{format(receiveOrder.receive_date, 'LLL dd, y')}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-sm font-medium">Purchase Order</span>
-                                            <div className="mt-1 space-x-1 text-sm">
+                                            <span className="text-sm font-semibold">PO Number</span>
+                                            <div className="mt-1 space-x-1 text-xl">
                                                 <Link
                                                     href={route('purchase-orders.show', { purchase_order: receiveOrder.purchase_order_id })}
                                                     className="flex items-center hover:cursor-pointer hover:underline"
                                                 >
-                                                    <span className="mx-1">{receiveOrder.purchase_order?.po_number}</span>
+                                                    <span className="mr-1">{receiveOrder.purchase_order?.po_number}</span>
                                                     <Link2Icon className="inline-block h-4 w-4" />
                                                 </Link>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span className="text-sm font-semibold">PO Status</span>
+                                            <div className="mt-1 text-xl">
+                                                {purchaseStatusBadge(receiveOrder.purchase_order?.status as keyof typeof statusConfig)}
                                             </div>
                                         </div>
                                     </div>
@@ -160,7 +184,7 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Product</TableHead>
-                                            <TableHead className="text-right">Received Qty</TableHead>
+                                            <TableHead className="text-center">Received Qty</TableHead>
                                             <TableHead>Location</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -172,9 +196,9 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                                                     router.get(route('receive-orders.item', { receive_order: receiveOrder.id, item: item.id }));
                                                 }}
                                             >
-                                                <TableCell>{item.purchase_order_item?.product?.name}</TableCell>
-                                                <TableCell className="text-right">{item.quantity_received}</TableCell>
-                                                <TableCell>{item.location?.name}</TableCell>
+                                                <TableCell className="text-xl">{item.purchase_order_item?.product?.name}</TableCell>
+                                                <TableCell className="text-xl text-center">{item.quantity_received}</TableCell>
+                                                <TableCell className="text-lg">{item.location?.name}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -190,16 +214,15 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                                     <div className="flex items-center gap-2">
                                         <User className="mr-2 inline-block h-4 w-4" />
                                         <div>
-                                            <p className="text-muted-foreground text-sm">{receiveOrder.purchase_order?.supplier?.partner?.name}</p>
-                                            {/*<p className="text-lg font-medium">{receiveOrder.supplier?.partner?.name}</p>*/}
+                                            <p className="text-foreground text-md">{supplierDetail?.partner?.name}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <PhoneCall className="mr-2 inline-block h-4 w-4" />
                                         <div>
-                                            <p className="text-muted-foreground text-sm">
-                                                {receiveOrder.purchase_order?.supplier?.phone_number ?? '-'}
+                                            <p className="text-foreground text-sm">
+                                                {supplierDetail?.phone_number ? <a href={`tel:${supplierDetail?.phone_number}`}>{supplierDetail?.phone_number}</a> : '-'}
                                             </p>
                                         </div>
                                     </div>
@@ -207,14 +230,14 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                                     <div className="flex items-center gap-2">
                                         <Mail className="mr-2 inline-block h-4 w-4" />
                                         <div>
-                                            <p className="text-muted-foreground text-sm">{receiveOrder.purchase_order?.supplier?.email ?? '-'}</p>
+                                            <p className="text-foreground text-sm">{supplierDetail?.email ?? '-'}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <MapPin className="mr-2 inline-block h-4 w-4" />
                                         <div>
-                                            <p className="text-muted-foreground text-sm">{receiveOrder.purchase_order?.supplier?.address ?? '-'}</p>
+                                            <p className="text-foreground text-sm">{supplierDetail?.address ?? '-'}</p>
                                             {/*<p className="text-lg font-medium">{receiveOrder.supplier?.address || '-'}</p>*/}
                                         </div>
                                     </div>

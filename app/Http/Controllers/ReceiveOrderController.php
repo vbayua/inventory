@@ -23,6 +23,7 @@ class ReceiveOrderController extends Controller
             'purchaseOrder:id,po_number,supplier_id',
             'purchaseOrder.supplier:id,partner_id',
             'purchaseOrder.supplier.partner:id,name',
+            'user:id,name'
         )->latest()->get();
         return Inertia::render('ReceiveOrders/Index', [
             'receiveOrders' => $receiveOrders,
@@ -49,10 +50,10 @@ class ReceiveOrderController extends Controller
             'receiveOrderItems.purchaseOrderItem.product:id,name'
         );
         $receive_order->load(
-            'purchaseOrder:id,po_number,supplier_id',
-            'purchaseOrder.supplier.partner'
+            'purchaseOrder:id,po_number,status,supplier_id',
+            'purchaseOrder.supplier.partner',
+            'user:id,name'
         );
-        // dd($receive_order);
         return Inertia::render('ReceiveOrders/Show', [
             'receiveOrder' => $receive_order,
         ]);
