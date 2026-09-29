@@ -11,7 +11,7 @@ import { CheckIcon, Icon } from "lucide-react";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: "Production Plan",
+        title: "Production",
         href: "/production",
     }
 ];
@@ -22,7 +22,7 @@ const data = [
         product_id: 1,
         target_quantity: 1000,
         bom_id: 1,
-        status: 'pending',
+        status: 'draft',
         ordered_at: "2024-01-01",
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
@@ -39,7 +39,7 @@ const data = [
         product_id: 2,
         target_quantity: 1000,
         bom_id: 2,
-        status: 'pending',
+        status: 'completed',
         ordered_at: "2024-01-01",
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
@@ -56,7 +56,7 @@ const data = [
         product_id: 3,
         target_quantity: 1000,
         bom_id: 3,
-        status: 'pending',
+        status: 'released',
         ordered_at: "2024-01-01",
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
@@ -73,7 +73,7 @@ const data = [
         product_id: 4,
         target_quantity: 1000,
         bom_id: 4,
-        status: 'pending',
+        status: 'in_progress',
         ordered_at: "2024-01-01",
         created_at: "2024-01-01",
         updated_at: "2024-01-01",
@@ -90,7 +90,9 @@ export default function Index() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Production Plan"/>
             <ContainerLayout>
-
+                <div>
+                    <h1 className="mb-4 text-2xl font-bold">Production Plan</h1>
+                </div>
                 <div>
                     <DataTable columns={columns} data={data} clientSide={true} onRowClick={(production) => router.visit(`/production/${production.id}`)} />
                 </div>

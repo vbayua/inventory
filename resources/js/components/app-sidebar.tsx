@@ -69,6 +69,16 @@ const productNavItems: NavItem[] = [
     },
 ];
 
+const productionNavItems: NavItem[] = [
+    {
+        title: 'Production Plan',
+        href: 'production.index',
+        icon: Cog,
+        uri: 'production',
+        permission: 'production',
+    },
+];
+
 const warehouseNavItems: NavItem[] = [
     {
         title: 'Gudang',
@@ -174,6 +184,13 @@ const mainNavItems: NavItem[] = [
         href: 'dashboard',
         icon: ChartBar,
         uri: 'dashboard',
+    },
+    {
+        title: 'Production',
+        href: 'production',
+        icon: Cog,
+        items: productionNavItems,
+        uri: 'production',
     },
     {
         title: 'Data Produk',
