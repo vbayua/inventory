@@ -418,6 +418,15 @@ class StockOperationService
                 $updatedSourceStock->delete();
             }
 
+            $operationIn->context()->create([
+               'operation_id' => $operationIn->id,
+               'notes' => $inRemarks,
+            ]);
+            $operationOut->context()->create([
+               'operation_id' => $operationOut->id,
+               'notes' => $outRemarks,
+            ]);
+
             return [
                 'transfer_out' => $operationOut,
                 'transfer_in' => $operationIn,

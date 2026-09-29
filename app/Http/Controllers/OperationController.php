@@ -193,14 +193,7 @@ class OperationController extends Controller
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
             );
-            $operation['transfer_in']->context()->create([
-               'operation_id' => $operation['transfer_in']->id,
-               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
-            ]);
-            $operation['transfer_out']->context()->create([
-               'operation_id' => $operation['transfer_out']->id,
-               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
-            ]);
+
         } else if($operationType === 'return') {
             if(!$stockData)
             {
@@ -239,10 +232,11 @@ class OperationController extends Controller
      */
     public function show(Operation $operation)
     {
-        $this->authorize('view', $operation);
 
+        $operation->load(['product', 'batch', 'location']);
+        $operation->load(['detail']);
         return Inertia('Operations/Show', [
-            'operation' => $operation->load(['product', 'batch', 'location']),
+            'operation' => $operation,
         ]);
     }
 
