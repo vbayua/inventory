@@ -8,6 +8,7 @@ use App\Http\Requests\RejectInspectionRequest;
 use App\Http\Requests\SubmitQcInspectionRequest;
 use App\Http\Requests\UpdateQcInspectionRequest;
 use App\Models\Batch;
+use App\Models\OperationDetail;
 use App\Models\QcApproval;
 use App\Models\QcChecklist;
 use App\Models\QcInspection;
@@ -113,7 +114,6 @@ class QcInspectionController extends Controller
         $isRawMaterial    = !$productType || $productType->type_code === 'RMP';
         $quantityReceived = (int) ($item?->quantity_received ?? 0);
 
-
         if ($isRawMaterial) {
             $request->validate([
                 'overall_result' => 'required|in:pass,reject',
@@ -147,7 +147,7 @@ class QcInspectionController extends Controller
             }
 
             if ($quantityRejected > 0 && empty(trim($data['rejection_reason'] ?? ''))) {
-                return back()->withErrors(['rejection_reason' => 'Rejection reason is required when items are rejected.']);
+                return back()->withErrors(['rejection_reason' => 'Rejection reason is empty.']);
             }
 
             if ($quantityPassed > 0 && $quantityRejected > 0) {
@@ -294,18 +294,6 @@ class QcInspectionController extends Controller
             return redirect()->back()->with('error', 'Inspection already approved.');
         }
 
-        // $approval = QcApproval::where('qc_inspection_id', $inspection->id)->first();
-
-        // if ($approval) {
-        //     if (!$inspection->approval_id) {
-        //         $inspection->approval_id = $approval->id;
-        //         $inspection->save();
-        //     }
-        //     $inspection->refresh();
-        //     // return redirect()->back()->with('success', 'Inspection approved successfully.');
-        // }
-
-
         $receiveOrderItem = $inspection->receiveOrderItem;
         $product = $receiveOrderItem->purchaseOrderItem->product;
         $unit = $product->unit;
@@ -323,26 +311,36 @@ class QcInspectionController extends Controller
             'unit' => $unit,
         ]);
 
-        // dd($quantity, $unit, $locationId, $batchId, $supplierId);
-
         DB::transaction(function () use ($inspection, $stockData, $product, $request) {
 
-            $stockOperation = app(StockOperationService::class);
+            $operationService = app(StockOperationService::class);
 
-            $stock = $stockOperation->createStockOperation(
+            $user = Auth::user();
+
+            $operation = $operationService->createStockOperation(
                 'inbound',
                 $product,
                 $stockData,
                 $stockData['quantity'],
                 $stockData['unit'],
-                'Approved by ' . Auth::user()->name
+                "Receive Stock of ". $product->name . " (" . $product->sku .") from " . $inspection->receiveOrder->receive_number . " with QC Inspection Approved " . "by " . $inspection->inspector->name,
             );
 
-            $approval = $inspection->approval->updateOrFail([
+            $inspection->operationContext()->create([
+                'operation_id' => $operation->id,
+                'notes' => "QCID " . $inspection->id . ": Receive Stock of ". $product->name . " (" . $product->sku .") from " . $inspection->receiveOrder->receive_number . " with QC Inspection Approved " . "by " . $inspection->inspector->name,
+            ]);
+
+            $inspection->approval->updateOrFail([
                 'qc_inspection_id' => $inspection->id,
                 'status' => 'approved',
                 'notes' => $request->approval_notes,
-                'approved_by' => Auth::id(),
+                'approved_by' => (int) $user->id,
+                'approved_at' => now(),
+            ]);
+
+            $inspection->updateOrFail([
+                'approved_by' => (int) $user->id,
                 'approved_at' => now(),
             ]);
         });

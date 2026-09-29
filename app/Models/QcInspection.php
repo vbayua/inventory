@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class QcInspection extends Model
 {
@@ -45,11 +46,16 @@ class QcInspection extends Model
 
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'approved_by', 'id');
     }
 
     public function approval(): HasOne
     {
-        return $this->hasOne(QcApproval::class, 'qc_inspection_id');
+        return $this->hasOne(QcApproval::class, 'qc_inspection_id', 'id');
+    }
+
+    public function operationContext(): MorphOne
+    {
+        return $this->morphOne(OperationDetail::class, 'context');
     }
 }
