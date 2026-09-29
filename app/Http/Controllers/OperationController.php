@@ -233,7 +233,7 @@ class OperationController extends Controller
     public function show(Operation $operation)
     {
 
-        $operation->load(['product', 'batch', 'location']);
+        $operation->load(['product', 'batch', 'location', 'user:id,name']);
         $operation->load(['detail']);
         return Inertia('Operations/Show', [
             'operation' => $operation,
