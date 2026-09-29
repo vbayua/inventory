@@ -173,6 +173,15 @@ export interface Operation {
     remarks: string;
     created_at: string;
     operation_date: string;
+    detail?: OperationDetail
+}
+
+export interface OperationDetail {
+    id: number;
+    operation_id: number;
+    context_type: string;
+    context_id: number;
+    notes?: string;
 }
 
 export interface PurchaseOrderItem {
@@ -187,6 +196,7 @@ export interface PurchaseOrderItem {
     created_at?: string;
     updated_at?: string;
     quantity_received?: number;
+    receive_order_items_sum_quantity_received?: number;
 }
 
 export interface PurchaseOrder {
@@ -218,6 +228,7 @@ export interface ReceiveOrder {
     receive_order_items?: ReceiveOrderItem[];
     user_id?: number;
     user?: User;
+    receive_order_items_sum_quantity_received?: number;
 }
 
 export interface ReceiveOrderItem {
@@ -232,6 +243,7 @@ export interface ReceiveOrderItem {
     location?: Location;
     notes?: string;
     qc_inspection?: QcInspection;
+    receive_order_items_sum_quantity_received?: number;
 }
 
 export interface QcChecklistItem {
@@ -319,11 +331,11 @@ export interface Permission {
 
 export interface Production {
     id: number;
-    plan_number: string;
+    order_number: string;
     product_id: number;
     target_quantity?: number;
     bom_id: number;
-    status: 'pending' | 'ordered' | 'in_progress' | 'completed' | 'cancelled';
+    status: 'draft' | 'released' | 'in_progress' | 'completed' | 'cancelled';
     ordered_at?: string;
     in_progress_at?: string;
     completed_at?: string;
@@ -332,4 +344,17 @@ export interface Production {
     created_at?: string;
     updated_at?: string;
     product?: Product;
+}
+
+export interface ProductionMaterial {
+    id: number;
+    production_plan_id: number;
+    product_id: number;
+    quantity_required: number;
+    quantity_consumed: number;
+    scrap_percentage?: number;
+    production: Production;
+    product: Product;
+    created_at?: string;
+    updated_at?: string;
 }
