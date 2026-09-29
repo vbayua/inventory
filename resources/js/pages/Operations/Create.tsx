@@ -23,6 +23,7 @@ import OperationTypeSelect from './page-components/Create/OperationTypeSelect';
 import OutboundSection from './page-components/Create/OutboundSection';
 import ProductSelectDialog from './page-components/Create/ProductSelectDialog';
 import TransferSection from './page-components/Create/TransferSection';
+import ContainerFormLayout from '@/components/container-form-layout';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -81,7 +82,7 @@ export default function Create({
         batches,
         units,
         stockQuery: stock.data,
-        operationType: operationType || 'outbound',
+        operationType: operationType ? operationType : 'outbound',
     });
 
     const operationTypes = [
@@ -91,7 +92,7 @@ export default function Create({
         { value: 'return', label: 'Pengembalian Stock' },
     ];
 
-    const [operationTypeData, setOperationType] = useState<OperationType>(operationType || 'outbound');
+    const [operationTypeData, setOperationType] = useState<OperationType>('outbound');
 
     const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();
@@ -112,12 +113,12 @@ export default function Create({
 
     const toggleOperationType = (value: string) => {
         setOperationType(value as OperationType);
-        form.setData('operationType', operationTypeData);
-        form.handleLocationChange({} as Location);
+        form.setData('operationType', value as OperationType);
+        form.resetLocation();
+        form.resetWarehouse();
         form.setData('quantity', 0);
         form.setData('date', '');
         form.setData('remarks', '');
-        form.handleWarehouseChange({} as Warehouse);
     };
 
     const handleProductSelect = (product: Product) => {
@@ -127,7 +128,6 @@ export default function Create({
     const [productDialogOpen, setProductDialogOpen] = useState(false);
     const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
     const [datePopoverOpen, setDatePopoverOpen] = useState(false);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
@@ -144,7 +144,7 @@ export default function Create({
 
                     {/*END OF ADJUSTMENT SECTION*/}
 
-                    <div className="space-y-4">
+                    <ContainerFormLayout>
                         <div
                             className={cn(
                                 'grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2',
@@ -200,7 +200,7 @@ export default function Create({
                                                 getLabel={(item) => item.batch_number}
                                                 onSelect={(item) => {
                                                     form.handleBatchChange(item);
-                                                    form.handleLocationChange({} as Location);
+                                                    form.resetLocation();
                                                     setBatchPopoverOpen(false);
                                                 }}
                                                 placeholder="Cari batch..."
@@ -313,10 +313,12 @@ export default function Create({
                                 className={cn('w-full', form.errors.remarks && 'text-muted-foreground border-red-500')}
                             />
                         </div>
+                    </ContainerFormLayout>
+                    <div className="flex justify-center w-full">
+                        <Button variant="default" type="submit" className="w-full sm:w-auto">
+                            Buat Operasi Stok
+                        </Button>
                     </div>
-                    <Button variant="default" type="submit" className="w-full sm:w-auto">
-                        Buat Operasi Stok
-                    </Button>
                 </form>
             </ContainerLayout>
         </AppLayout>
