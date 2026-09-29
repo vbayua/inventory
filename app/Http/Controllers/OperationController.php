@@ -94,6 +94,8 @@ class OperationController extends Controller
 
         $validatedData = $request->validated();
 
+        $operationType = $validatedData['operationType'];
+
         $validatedData['batch'] = $batchAssignmentService->determineBatch(
             $validatedData['product'],
             $validatedData['batch'],
@@ -101,8 +103,13 @@ class OperationController extends Controller
             $validatedData['date']
         );
 
-        $stockData = Stock::with(['product'])->where('product_id', $validatedData['product'])
-            ->where('location_id', $validatedData['location'])
+        $stockLocationId = $operationType === 'transfer'
+            ? $validatedData['source_location']
+            : $validatedData['location'];
+
+        $stockData = Stock::with(['product'])
+            ->where('product_id', $validatedData['product'])
+            ->where('location_id', $stockLocationId)
             ->when($validatedData['batch'], function ($query) use ($validatedData) {
                 return $query->where('batch_id', $validatedData['batch']);
             })
@@ -114,7 +121,6 @@ class OperationController extends Controller
         }
 
         $operationQuantity = $validatedData['quantity'];
-        $operationType = $validatedData['operationType'];
 
         if ($operationType === 'inbound') {
             if (! $stockData) {
@@ -133,7 +139,7 @@ class OperationController extends Controller
                 ]);
             }
 
-            $operationService->createStockOperation(
+            $operation = $operationService->createStockOperation(
                 'inbound',
                 $validatedData['product'],
                 $stockData,
@@ -143,9 +149,14 @@ class OperationController extends Controller
                 $validatedData['date'],
                 $validatedData['with_container'] ?? false,
             );
+
+            $operation->context()->create([
+               'operation_id' => $operation->id,
+               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+            ]);
         } elseif ($operationType === 'outbound') {
             // For outbound operations, we decrement the stock
-            $operationService->createStockOperation(
+            $operation = $operationService->createStockOperation(
                 'outbound',
                 $validatedData['product'],
                 $stockData,
@@ -155,16 +166,24 @@ class OperationController extends Controller
                 $validatedData['date'],
                 $validatedData['with_container'] ?? false,
             );
+            $operation->context()->create([
+               'operation_id' => $operation->id,
+               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+            ]);
         } elseif ($operationType === 'adjustment') {
-            $operationService->adjustStockOperation(
+            $operation = $operationService->adjustStockOperation(
                 $stockData,
                 $operationQuantity,
                 $validatedData['unit'],
                 $validatedData['adjustmentType'],
                 $validatedData['remarks']
             );
+            $operation->context()->create([
+               'operation_id' => $operation->id,
+               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+            ]);
         } elseif ($operationType === 'transfer') {
-            $operationService->createTransferOperation(
+            $operation = $operationService->createTransferOperation(
                 $stockData->product,
                 $stockData->batch_id,
                 $validatedData['source_location'],
@@ -174,6 +193,14 @@ class OperationController extends Controller
                 $validatedData['remarks'] ?? '',
                 $validatedData['date'],
             );
+            $operation['transfer_in']->context()->create([
+               'operation_id' => $operation['transfer_in']->id,
+               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+            ]);
+            $operation['transfer_out']->context()->create([
+               'operation_id' => $operation['transfer_out']->id,
+               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+            ]);
         } else if($operationType === 'return') {
             if(!$stockData)
             {
