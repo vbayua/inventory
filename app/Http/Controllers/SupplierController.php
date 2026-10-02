@@ -101,7 +101,7 @@ class SupplierController extends Controller
 
         $supplier->products()->syncWithoutDetaching($productIds);
 
-        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added to'.$supplier->name);
+        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added');
     }
 
     /**

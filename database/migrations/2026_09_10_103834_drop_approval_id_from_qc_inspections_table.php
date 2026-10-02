@@ -9,15 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('qc_inspections', function (Blueprint $table): void {
-            $table->dropColumn('approval_id');        });
+            $table->dropColumn('approval_id');
+        });
     }
 
     public function down(): void
     {
         Schema::table('qc_inspections', function (Blueprint $table): void {
             $table->foreignId('approval_id')
-                ->nullable()
-                ->constrained('approvals');
+                ->nullable();
         });
     }
 };
