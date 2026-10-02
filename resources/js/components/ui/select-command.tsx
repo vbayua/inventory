@@ -23,6 +23,31 @@ function defaultId(item: any, index: number): string | number {
     if (item?.id != null) return String(item.id);
     return index;
 }
+
+/**
+ * Best-effort search text when no `getSearchValue`/`getLabel` is provided.
+ * Combines common identifying fields (name, label, title, sku, code) so
+ * search still works for items rendered via `renderItem` with custom shapes.
+ *
+ * @param item Arbitrary list item.
+ */
+function defaultSearchValue(item: any): string {
+    if (item == null) return '';
+    if (typeof item === 'string' || typeof item === 'number') return String(item);
+
+    const textFields: (keyof any)[] = ['name', 'label', 'title', 'sku', 'code'];
+    const parts = textFields.map((field) => item[field]).filter((value) => value != null).map(String);
+
+    if (parts.length > 0) {
+        return parts.join(' ');
+    }
+
+    // Fallback: join every primitive property so substring search still has something to match.
+    return Object.values(item)
+        .filter((value) => typeof value === 'string' || typeof value === 'number')
+        .join(' ');
+}
+
 export default function SelectCommand<T>({
     lists,
     defaultValue,
@@ -38,11 +63,15 @@ export default function SelectCommand<T>({
     const resolveKey = (item: any, index: number) => (getKey ? getKey(item, index) : getId ? getId(item) : defaultId(item, index));
 
     const resolveLabel = (item: any) => (getLabel ? getLabel(item) : defaultLabel(item));
-    const resolveSearchValue = (item: any) => (getSearchValue ? getSearchValue(item) : resolveLabel(item));
+    const resolveSearchValue = (item: any) => (getSearchValue ? getSearchValue(item) : getLabel ? getLabel(item) : defaultSearchValue(item));
 
     const defaultKey = defaultValue ? resolveKey(defaultValue as any, 0) : undefined;
     return (
-        <Command>
+        <Command
+            filter={(value, search) => {
+                return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+            }}
+        >
             <CommandInput placeholder={placeholder} />
             <CommandList>
                 <CommandEmpty>
