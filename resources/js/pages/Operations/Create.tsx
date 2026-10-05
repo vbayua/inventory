@@ -24,6 +24,7 @@ import OutboundSection from './page-components/Create/OutboundSection';
 import ProductSelectDialog from './page-components/Create/ProductSelectDialog';
 import TransferSection from './page-components/Create/TransferSection';
 import ContainerFormLayout from '@/components/container-form-layout';
+import ReturnSection from './page-components/Create/ReturnSection';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -239,7 +240,7 @@ export default function Create({
                         {/*END OF INBOUND SECTION*/}
 
                         {/*RETURN SECTION*/}
-                        {/*{operationTypeData === 'return' && <ReturnSection form={form} warehouses={warehouses} />}*/}
+                        {operationTypeData === 'return' && <ReturnSection form={form} warehouses={warehouses} />}
                         {/*END OF RETURN SECTION*/}
 
                         {/* Adjust Qty Section */}

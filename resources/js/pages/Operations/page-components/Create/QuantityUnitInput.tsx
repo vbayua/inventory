@@ -7,6 +7,7 @@ import SelectCommand from '@/components/ui/select-command';
 import { cn } from '@/lib/utils';
 import { Stock, Unit } from '@/types/resources';
 import { ChevronsUpDown, HashIcon } from 'lucide-react';
+import { useState } from 'react';
 
 export default function QuantityUnitInput({
     data,
@@ -18,10 +19,12 @@ export default function QuantityUnitInput({
     data: any;
     setData: any;
     units: Unit[];
-    currentStock: Stock;
+    currentStock: Stock | 0;
     errors: any;
 }) {
-    // console.log(data);
+    const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
+    const selectedUnitName: string | undefined = data.unit || (currentStock ? currentStock.unit : undefined);
+
     return (
         <div className={cn('grid grid-cols-2 gap-4 rounded-md border p-4', (errors.quantity || errors.unit) && 'border-red-500')}>
             <Label className="flex items-center gap-2">
@@ -40,7 +43,7 @@ export default function QuantityUnitInput({
                         step={0.01}
                         disabled={!data.batch}
                     />
-                    <Popover>
+                    <Popover open={unitPopoverOpen} onOpenChange={setUnitPopoverOpen}>
                         <PopoverTrigger asChild>
                             <Button
                                 variant="outline"
@@ -48,19 +51,20 @@ export default function QuantityUnitInput({
                                 disabled={!data.batch}
                                 size={'sm'}
                             >
-                                {currentStock.unit ? currentStock.unit : 'Pilih unit'}
+                                {selectedUnitName ?? 'Pilih unit'}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="p-0" align="start">
                             <SelectCommand
                                 lists={units}
-                                defaultValue={currentStock.unit ? units.find((unit) => unit.name === currentStock.unit) : undefined}
+                                defaultValue={units.find((unit) => unit.name === selectedUnitName)}
                                 getKey={(item) => item.name}
                                 getId={(item) => item.name}
                                 getLabel={(item) => item.name}
                                 onSelect={(item) => {
                                     setData('unit', item.name);
+                                    setUnitPopoverOpen(false);
                                 }}
                                 placeholder="Pilih unit"
                                 renderItem={(item) => <span>{item.name}</span>}
@@ -71,7 +75,7 @@ export default function QuantityUnitInput({
             </div>
             {currentStock && (
                 <p className="text-muted-foreground mt-1 text-sm">
-                    {currentStock && `In stock: ${Number(currentStock.quantity)} ${currentStock.unit}`}
+                    {`In stock: ${Number(currentStock.quantity)} ${currentStock.unit}`}
                 </p>
             )}
         </div>
