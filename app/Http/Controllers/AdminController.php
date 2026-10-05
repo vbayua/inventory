@@ -50,16 +50,17 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'roles' => 'required|array',
-            'roles.*' => 'exists:roles,name',
+            'password_confirmation' => 'required',
+            'role_id' => 'required|exists:roles,id',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'roles' => $request->roles,
         ]);
+
+        $user->roles()->sync([$request->role_id]);
 
         event(new Registered($user));
 
