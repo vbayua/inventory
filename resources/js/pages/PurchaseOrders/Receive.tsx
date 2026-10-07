@@ -55,42 +55,35 @@ export default function Receive({ purchaseOrder, locations, batches, receiveAll 
         });
     };
 
-    const [selectedItems, setSelectedItems] = useState<PurchaseOrderItem[]>([]);
-
     useEffect(() => {
         if (receiveAll) {
             const poItems = purchaseOrder.items?.map((item) => {
-                return { ...item, quantity_received: item.quantity }
+                return { ...item, quantity_received: (item.quantity - item.quantity_received) }
             })
-            setSelectedItems(poItems || []);
             setData('items', poItems || []);
         }
     }, [receiveAll, purchaseOrder.items, setData]);
 
     const addItem = (item: PurchaseOrderItem) => {
-        const newItem = { ...item };
-        setSelectedItems([...selectedItems, newItem]);
-        setData('items', [...selectedItems, newItem]);
+        const newItem = { ...item, quantity_received: 0 };
+        setData('items', [...data.items, newItem]);
     }
 
     const removeItem = (item: PurchaseOrderItem) => {
         const updatedItems = data.items.filter(i => i.id !== item.id);
-        setSelectedItems(updatedItems);
         setData('items', updatedItems);
     }
 
     const clearSelectedItems = () => {
-        setSelectedItems([]);
         setData('items', []);
     }
 
     const addAllItems = (items: PurchaseOrderItem[]) => {
-        setSelectedItems(items);
         setData('items', items);
     }
 
     const toggleAllCheckbox = () => {
-        if (selectedItems.length === data.items.length && selectedItems.length > 0 && data.items.length > 0) {
+        if (data.items.length === (purchaseOrder.items?.length ?? 0) && data.items.length > 0) {
             clearSelectedItems();
         } else {
             addAllItems(purchaseOrder.items ?? []);
@@ -117,7 +110,7 @@ export default function Receive({ purchaseOrder, locations, batches, receiveAll 
 
     const inputRefs = useRef([]);
 
-    const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
+    const [openLocationIndex, setOpenLocationIndex] = useState<number | null>(null);
     const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
     const [receiveDatePopoverOpen, setReceiveDatePopoverOpen] = useState(false);
     const [openDialogIndex, setOpenDialogIndex] = useState<number | null>(null);
@@ -207,31 +200,35 @@ export default function Receive({ purchaseOrder, locations, batches, receiveAll 
                                         </TableHeader>
                                         <TableBody>
                                             {purchaseOrder.items?.map((item, index) => (
-                                            <TableRow key={item.id} className={item.quantity_received ? 'bg-green-600' : ''}>
-                                                    <TableCell><Checkbox className="border border-blue-100" checked={selectedItems.some(i => i.id === item.id)} onCheckedChange={(checked) => {
+                                            <TableRow key={item.id} className={item.quantity_received === item.quantity ? 'bg-green-600' : ''}>
+                                                    <TableCell><Checkbox className="border border-blue-100" checked={data.items.some(i => i.id === item.id)} onCheckedChange={(checked) => {
                                                         toggleSelectedItem(item, checked)
                                                 }} /></TableCell>
                                                 <TableCell className="text-xl">{item.product?.name}</TableCell>
                                                 <TableCell className="text-xl text-center">{item.quantity}</TableCell>
                                                 <TableCell className="flex justify-center">
-                                                    {selectedItems.some(i => i.id === item.id) ?
+                                                    {data.items.some(i => i.id === item.id) ?
                                                         <Input
                                                             type="number"
                                                             min={0}
                                                             max={item.quantity}
-                                                            defaultValue={data.items.find(i => i.id === item.id)?.quantity_received ?? 0}
+                                                            value={data.items.find(i => i.id === item.id)?.quantity_received ?? 0}
                                                             className="max-w-24 text-xl text-center p-2"
                                                             onChange={(e) => {
                                                                 const qty = parseInt(e.target.value);
-                                                                handleQuantityChange(item.id, qty);
+                                                                setData(prevData => ({
+                                                                    ...prevData,
+                                                                    items: prevData.items.map(i => i.id === item.id ? { ...i, quantity_received: qty } : i)
+                                                                }))
                                                             }} />
-                                                            : <span className="text-xl">{item.quantity_received}</span>}
+                                                            : <span className="text-xl">{item.quantity_received ?? 0}</span>}
+
                                                     <InputError message={errors[`items.${index}.quantity_received`]} />
                                                 </TableCell>
                                                     <TableCell>
-                                                        {selectedItems.find(i => i.id === item.id)
+                                                        {data.items.find(i => i.id === item.id)
                                                             ?
-                                                            <Popover open={locationPopoverOpen} onOpenChange={setLocationPopoverOpen} defaultOpen={false}>
+                                                            <Popover open={openLocationIndex === index} onOpenChange={(open) => setOpenLocationIndex(open ? index : null)}>
                                                                 <PopoverTrigger asChild>
                                                                     <Button
                                                                         variant="outline"
@@ -239,7 +236,9 @@ export default function Receive({ purchaseOrder, locations, batches, receiveAll 
                                                                         className="max-w-2xl justify-between text-left"
                                                                     >
                                                                         <span>
-                                                                            {locations.find((l) => l.id === item.location_id)?.name}
+                                                                            {data.items.find((i) => i.id === item.id)?.location_id
+                                                                                ? locations.find((l) => l.id === data.items.find((i) => i.id === item.id)?.location_id)?.name
+                                                                                : 'Select Location'}
                                                                         </span>
                                                                         <ChevronDownIcon className="size-4" />
                                                                     </Button>
@@ -249,7 +248,7 @@ export default function Receive({ purchaseOrder, locations, batches, receiveAll 
                                                                         lists={locations}
                                                                         getId={(l) => l.id}
                                                                         getKey={(l) => l.id}
-                                                                        getLabel={(l) => {
+                                                                        renderItem={(l) => {
                                                                             return (
                                                                                 <p className="flex flex-col items-start gap-0.5">
                                                                                     {l.name}
@@ -262,15 +261,16 @@ export default function Receive({ purchaseOrder, locations, batches, receiveAll 
                                                                         getSearchValue={(l) => l.name}
                                                                         onSelect={(l) => {
                                                                             setData((prevData) => {
-                                                                                const newItems = [...prevData.items];
-                                                                                newItems[index].location_id = l.id;
+                                                                                const newItems = prevData.items.map((i) =>
+                                                                                    i.id === item.id ? { ...i, location_id: l.id } : i,
+                                                                                );
                                                                                 return {
                                                                                     ...prevData,
                                                                                     items: newItems,
                                                                                 };
                                                                             });
 
-                                                                            setLocationPopoverOpen(false);
+                                                                            setOpenLocationIndex(null);
                                                                         }}
                                                                     />
                                                                 </PopoverContent>

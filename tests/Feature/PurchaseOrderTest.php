@@ -6,6 +6,8 @@ use App\Models\Operation;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\QcApproval;
+use App\Models\QcInspection;
 use App\Models\ReceiveOrder;
 use App\Models\ReceiveOrderItem;
 use App\Models\Stock;
@@ -315,6 +317,135 @@ describe('Purchase Order Management', function () {
                 $po->refresh();
                 expect($po->status)->toBe($status);
             }
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    // Closing and Cancelling
+    // -----------------------------------------------------------------------
+    describe('Closing Purchase Orders', function () {
+        test('cannot close purchase order without an approved qc inspection', function () {
+            $setup = createPurchaseOrderWithItems(itemCount: 1);
+            asAdmin()->post(route('purchase-orders.store'), $setup['poPayload']);
+            $po = PurchaseOrder::where('po_number', $setup['poPayload']['po_number'])->first();
+
+            asAdmin()->put(route('purchase-orders.close', $po))->assertSessionHasErrors();
+
+            expect($po->refresh()->status)->toBe('pending');
+        });
+
+        test('cannot close purchase order when qc inspection approval is not approved', function () {
+            $setup = createPurchaseOrderWithItems(itemCount: 1);
+            asAdmin()->post(route('purchase-orders.store'), $setup['poPayload']);
+            $po = PurchaseOrder::where('po_number', $setup['poPayload']['po_number'])->with('items')->first();
+
+            $receiveOrder = ReceiveOrder::create([
+                'purchase_order_id' => $po->id,
+                'receive_number' => 'RCV-9001',
+                'receive_date' => now()->toDateString(),
+            ]);
+            $receiveOrderItem = ReceiveOrderItem::create([
+                'receive_order_id' => $receiveOrder->id,
+                'purchase_order_item_id' => $po->items->first()->id,
+                'quantity_received' => 10,
+            ]);
+            $inspection = QcInspection::create([
+                'receive_order_id' => $receiveOrder->id,
+                'receive_order_item_id' => $receiveOrderItem->id,
+                'status' => 'pass',
+            ]);
+            QcApproval::create([
+                'qc_inspection_id' => $inspection->id,
+                'status' => 'pending',
+            ]);
+
+            asAdmin()->put(route('purchase-orders.close', $po))->assertSessionHasErrors();
+
+            expect($po->refresh()->status)->not->toBe('completed');
+        });
+
+        test('can close purchase order with at least one approved qc inspection', function () {
+            $setup = createPurchaseOrderWithItems(itemCount: 1);
+            asAdmin()->post(route('purchase-orders.store'), $setup['poPayload']);
+            $po = PurchaseOrder::where('po_number', $setup['poPayload']['po_number'])->with('items')->first();
+
+            $receiveOrder = ReceiveOrder::create([
+                'purchase_order_id' => $po->id,
+                'receive_number' => 'RCV-9002',
+                'receive_date' => now()->toDateString(),
+            ]);
+            $receiveOrderItem = ReceiveOrderItem::create([
+                'receive_order_id' => $receiveOrder->id,
+                'purchase_order_item_id' => $po->items->first()->id,
+                'quantity_received' => 10,
+            ]);
+            $inspection = QcInspection::create([
+                'receive_order_id' => $receiveOrder->id,
+                'receive_order_item_id' => $receiveOrderItem->id,
+                'status' => 'pass',
+            ]);
+            QcApproval::create([
+                'qc_inspection_id' => $inspection->id,
+                'status' => 'approved',
+            ]);
+
+            asAdmin()->put(route('purchase-orders.close', $po))->assertSessionHasNoErrors();
+
+            expect($po->refresh()->status)->toBe('completed');
+        });
+    });
+
+    describe('Cancelling Purchase Orders', function () {
+        test('can cancel purchase order with no receive orders or qc inspections', function () {
+            $setup = createPurchaseOrderWithItems(itemCount: 1);
+            asAdmin()->post(route('purchase-orders.store'), $setup['poPayload']);
+            $po = PurchaseOrder::where('po_number', $setup['poPayload']['po_number'])->first();
+
+            asAdmin()->put(route('purchase-orders.cancel', $po))->assertSessionHasNoErrors();
+
+            expect($po->refresh()->status)->toBe('cancelled');
+        });
+
+        test('cannot cancel purchase order that has a receive order', function () {
+            $setup = createPurchaseOrderWithItems(itemCount: 1);
+            asAdmin()->post(route('purchase-orders.store'), $setup['poPayload']);
+            $po = PurchaseOrder::where('po_number', $setup['poPayload']['po_number'])->with('items')->first();
+
+            ReceiveOrder::create([
+                'purchase_order_id' => $po->id,
+                'receive_number' => 'RCV-9003',
+                'receive_date' => now()->toDateString(),
+            ]);
+
+            asAdmin()->put(route('purchase-orders.cancel', $po))->assertSessionHasErrors();
+
+            expect($po->refresh()->status)->not->toBe('cancelled');
+        });
+
+        test('cannot cancel purchase order that has a qc inspection', function () {
+            $setup = createPurchaseOrderWithItems(itemCount: 1);
+            asAdmin()->post(route('purchase-orders.store'), $setup['poPayload']);
+            $po = PurchaseOrder::where('po_number', $setup['poPayload']['po_number'])->with('items')->first();
+
+            $receiveOrder = ReceiveOrder::create([
+                'purchase_order_id' => $po->id,
+                'receive_number' => 'RCV-9004',
+                'receive_date' => now()->toDateString(),
+            ]);
+            $receiveOrderItem = ReceiveOrderItem::create([
+                'receive_order_id' => $receiveOrder->id,
+                'purchase_order_item_id' => $po->items->first()->id,
+                'quantity_received' => 10,
+            ]);
+            QcInspection::create([
+                'receive_order_id' => $receiveOrder->id,
+                'receive_order_item_id' => $receiveOrderItem->id,
+                'status' => 'pending',
+            ]);
+
+            asAdmin()->put(route('purchase-orders.cancel', $po))->assertSessionHasErrors();
+
+            expect($po->refresh()->status)->not->toBe('cancelled');
         });
     });
 

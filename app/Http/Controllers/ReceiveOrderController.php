@@ -6,7 +6,6 @@ use App\Models\ReceiveOrder;
 use App\Models\ReceiveOrderItem;
 use App\Rules\Permissions\ReceiveOrderPermissions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,6 +24,7 @@ class ReceiveOrderController extends Controller
             'purchaseOrder.supplier.partner:id,name',
             'user:id,name'
         )->latest()->get();
+
         return Inertia::render('ReceiveOrders/Index', [
             'receiveOrders' => $receiveOrders,
             'permissions' => $permissions,
@@ -54,6 +54,10 @@ class ReceiveOrderController extends Controller
             'purchaseOrder.supplier.partner',
             'user:id,name'
         );
+        $receive_order->load(
+            'qcInspections:id,receive_order_id,status'
+        );
+
         return Inertia::render('ReceiveOrders/Show', [
             'receiveOrder' => $receive_order,
         ]);
@@ -65,6 +69,7 @@ class ReceiveOrderController extends Controller
             'purchaseOrderItem.product:id,name',
             'location:id,name'
         );
+
         return Inertia::render('ReceiveOrders/Item', [
             'receive_order' => $receive_order,
             'item' => $item,
@@ -80,11 +85,11 @@ class ReceiveOrderController extends Controller
 
     public function update(Request $request, ReceiveOrder $receive_order)
     {
-       $receive_order->update($request->validate([
-           'notes' => 'nullable|string',
-       ]));
+        $receive_order->update($request->validate([
+            'notes' => 'nullable|string',
+        ]));
 
-       return redirect()->back()->with('success', 'Receive order updated successfully.');
+        return redirect()->back()->with('success', 'Receive order updated successfully.');
     }
 
     public function receive(ReceiveOrder $receive_order)

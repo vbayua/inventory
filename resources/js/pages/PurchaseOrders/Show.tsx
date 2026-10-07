@@ -1,6 +1,8 @@
 import ContainerLayout from '@/components/container-layout';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     DropdownMenu,
@@ -10,17 +12,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Item, ItemActions, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { PurchaseOrder, ReceiveOrder, ReceiveOrderItem } from '@/types/resources';
+import { PurchaseOrder, ReceiveOrder } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, File, Mail, MapPin, PencilIcon, PenIcon, PhoneCall, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowLeft, CheckIcon, File, FilePenIcon, Mail, MapPin, MoreHorizontalIcon, PenIcon, PhoneCall, User } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -51,17 +52,6 @@ const badge = (status: keyof typeof statusConfig) => {
 
 export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: PurchaseOrder; receiveOrders: ReceiveOrder[] }) {
     breadcrumbs[1].href = `/purchase-orders/${purchaseOrder.id}`;
-
-    const [activeTab, setActiveTab] = useState<'overview' | 'log_history'>('overview');
-    const [hasLoadedReceiveOps, setHasLoadedReceiveOps] = useState(false);
-
-
-    useEffect(() => {
-        if ((activeTab === 'overview' || activeTab === 'log_history') && !hasLoadedReceiveOps) {
-            router.reload({ only: ['receive-orders'] });
-            setHasLoadedReceiveOps(true);
-        }
-    }, [activeTab, hasLoadedReceiveOps]);
     const formatRelativeTime = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -74,9 +64,7 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
         if (diffDays < 7) return `${diffDays}d ago`;
         return `${diffDays}d ago`;
     };
-
-    const recentReceiveOrders = hasLoadedReceiveOps ? (receiveOrders ?? [])?.slice(0, 5) : [];
-
+    console.log(receiveOrders)
     const [purchaseOrderNotes, setPurchaseOrderNotes] = useState(purchaseOrder.notes ?? '');
 
     const [editNoteOpen, setEditNoteOpen] = useState(false);
@@ -103,15 +91,35 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
 
     const cancelPurchaseOrder = () => {
         router.put(
-            route('purchase-orders.update', { id: purchaseOrder.id }),
-            { action: 'cancel' },
+            route('purchase-orders.cancel', purchaseOrder.id),
+            {},
             {
                 onSuccess: () => {
                     router.reload({ only: ['purchase-orders'] });
                 },
+                onError: (errors) => {
+                    toast.error(errors.message);
+                },
+            }
+        );
+    };
+
+    const closePurchaseOrder = () => {
+        router.put(
+            route('purchase-orders.close', { id: purchaseOrder.id }),
+            {},
+            {
+                onSuccess: () => {
+                    router.reload({ only: ['purchase-orders'] });
+                },
+                onError: (errors) => {
+                    toast.error(errors.message);
+                    console.log(errors);
+                },
             },
         );
     };
+
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -136,39 +144,55 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 <CardDescription>Detail information about the purchase order.</CardDescription>
                             </div>
                             <div className="mt-4 flex items-center space-x-2 md:mt-0">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            Actions
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start">
-                                        {/*<DropdownMenuLabel>Order Action</DropdownMenuLabel>*/}
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuItem asChild>
-                                                <Link href={route('purchase-orders.receive', { purchase_order: purchaseOrder.id, receive_all: true })}>
-                                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                                    Create Receive Order
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <a href={route('purchase-orders.show', purchaseOrder.id)} target="_blank" rel="noopener noreferrer">
-                                                    <File className="mr-2 h-4 w-4" />
-                                                    Export as PDF
-                                                </a>
-                                            </DropdownMenuItem>
-                                            {/* Add more actions here if needed */}
-                                        </DropdownMenuGroup>
-                                        <DropdownMenuSeparator />
-                                        {purchaseOrder.status !== 'cancelled' && receiveOrders && receiveOrders.length === 0 && (
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem variant={'destructive'} asChild>
-                                                    <Button variant={'link'} onClick={cancelPurchaseOrder} className="w-full">Cancel Order</Button>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <ButtonGroup>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={route('purchase-orders.receive', { purchase_order: purchaseOrder.id, receive_all: true })}>
+                                            <FilePenIcon />
+                                            Create Receive Order
+                                        </Link>
+                                    </Button>
+                                    <ButtonGroup>
+                                        {purchaseOrder.status !== 'completed' &&
+                                            <Button variant="outline" size="sm" onClick={closePurchaseOrder}>
+                                            <CheckIcon />
+                                            Mark as Complete
+                                            </Button>
+                                        }
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" size="sm">
+                                                    <MoreHorizontalIcon />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="start">
+                                                {/*<DropdownMenuLabel>Order Action</DropdownMenuLabel>*/}
+                                                <DropdownMenuGroup>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={route('purchase-orders.receive', { purchase_order: purchaseOrder.id, receive_all: true })}>
+                                                            <ArrowLeft className="mr-2 h-4 w-4" />
+                                                            Create Receive Order
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <a href={route('purchase-orders.show', purchaseOrder.id)} target="_blank" rel="noopener noreferrer">
+                                                            <File className="mr-2 h-4 w-4" />
+                                                            Export as PDF
+                                                        </a>
+                                                    </DropdownMenuItem>
+                                                    {/* Add more actions here if needed */}
+                                                </DropdownMenuGroup>
+                                                <DropdownMenuSeparator />
+                                                {purchaseOrder.status !== 'cancelled' && receiveOrders && receiveOrders.length === 0 && (
+                                                    <DropdownMenuGroup>
+                                                        <DropdownMenuItem variant={'destructive'} asChild>
+                                                            <Button variant={'link'} onClick={cancelPurchaseOrder} className="w-full">Cancel Order</Button>
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuGroup>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </ButtonGroup>
+                                </ButtonGroup>
                             </div>
                         </CardHeader>
                     </Card>
@@ -343,78 +367,28 @@ export default function Show({ purchaseOrder, receiveOrders }: { purchaseOrder: 
                                 <CardTitle>Receive Orders</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Tabs onValueChange={(value) => setActiveTab(value as 'overview' | 'log_history')} value={activeTab}>
-                                    <TabsList>
-                                        <TabsTrigger value="overview">Overview</TabsTrigger>
-                                        <TabsTrigger value="log_history">History</TabsTrigger>
-                                    </TabsList>
-                                    <TabsContent value="overview">
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                            <Card className="md:col-span-3">
-                                                <CardHeader>
-                                                    <CardTitle>Recently Received</CardTitle>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    {hasLoadedReceiveOps === false || recentReceiveOrders?.length === 0 ? (
-                                                        <p className="text-muted-foreground">No received orders yet.</p>
-                                                    ) : (
-                                                        <div>
-                                                            {recentReceiveOrders?.map((order) => (
-                                                                    <Item
-                                                                        key={order.id}
-                                                                        variant={'outline'}
-                                                                        size="sm"
-                                                                        className="hover:bg-accent/50 mb-4 last:mb-0"
-                                                                        asChild
-                                                                    >
-                                                                        <Link href={route('receive-orders.show', order.id)}>
-                                                                            <ItemContent>
-                                                                                <div className="flex items-center justify-between">
-                                                                                    <p>{order.receive_number}</p>
-                                                                                    <p className="text-muted-foreground">
-                                                                                        {order.user ? `by ${order.user?.name} ` : ''}
-                                                                                        {formatRelativeTime(order.receive_date)}
-                                                                                    </p>
-                                                                                </div>
-                                                                            </ItemContent>
-                                                                        </Link>
-                                                                    </Item>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </CardContent>
-                                            </Card>
-                                        </div>
-                                    </TabsContent>
-                                    <TabsContent value="log_history">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Receive Number</TableHead>
-                                                    <TableHead>Reference</TableHead>
-                                                    <TableHead>Product Count</TableHead>
-                                                    <TableHead>Date</TableHead>
-                                                    <TableHead>Notes</TableHead>
-                                                    <TableHead>Received By</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {receiveOrders.map((receiveOrder) => (
-                                                    <TableRow key={receiveOrder.id} onClick={() => {
-                                                        router.visit(`/receive-orders/${receiveOrder.id}`);
-                                                    }}>
-                                                        <TableCell>{receiveOrder.receive_number}</TableCell>
-                                                        <TableCell>{receiveOrder.reference_number ?? '-'}</TableCell>
-                                                        <TableCell>{receiveOrder.receive_order_items_sum_quantity_received ?? 0}</TableCell>
-                                                        <TableCell>{receiveOrder.receive_date}</TableCell>
-                                                        <TableCell>{receiveOrder.notes ?? '-'}</TableCell>
-                                                        <TableCell>{receiveOrder.user?.name ?? '-'}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TabsContent>
-                                </Tabs>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Receive Number</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Notes</TableHead>
+                                            <TableHead>Received By</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {receiveOrders.map((receiveOrder) => (
+                                            <TableRow key={receiveOrder.id} onClick={() => {
+                                                router.visit(`/receive-orders/${receiveOrder.id}`);
+                                            }}>
+                                                <TableCell>{receiveOrder.receive_number}</TableCell>
+                                                <TableCell>{receiveOrder.receive_date}</TableCell>
+                                                <TableCell>{receiveOrder.notes ?? '-'}</TableCell>
+                                                <TableCell>{receiveOrder.user?.name ?? '-'}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </CardContent>
                         </Card>
                         <Card>

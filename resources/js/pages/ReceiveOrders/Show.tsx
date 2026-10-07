@@ -175,7 +175,7 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                     </Card>
 
                     <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <Card className="col-span-2">
+                        <Card className="md:col-span-2">
                             <CardHeader>
                                 <CardTitle>Order Items</CardTitle>
                             </CardHeader>
@@ -242,6 +242,33 @@ export default function Show({ receiveOrder }: { receiveOrder: ReceiveOrder }) {
                                         </div>
                                     </div>
                                 </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="md:col-span-3">
+                            <CardHeader>
+                                <CardTitle>QC Inspections</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>ID</TableHead>
+                                            <TableHead className="text-center">Status</TableHead>
+                                            <TableHead></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {receiveOrder.qc_inspections?.map((inspection) => (
+                                            <TableRow key={inspection.id} onClick={() => {
+                                                router.visit(route('qc.inspections.show', inspection.id))
+                                            }}>
+                                                <TableCell className="text-xl">{inspection.id}</TableCell>
+                                                <TableCell className="text-xl text-center">{inspection.status}</TableCell>
+                                                <TableCell className="text-lg"></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </CardContent>
                         </Card>
                     </div>
