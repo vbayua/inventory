@@ -76,7 +76,7 @@ class OperationController extends Controller
         // : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate(10)->onEachSide(1);
         return Inertia('Operations/Create', [
             'stocks' => $stock,
-            'products' => $products,
+            'products' => Inertia::optional(fn() => $products),
             'batches' => $batches,
             'units' => $units,
             'warehouses' => $warehouse,
