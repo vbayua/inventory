@@ -28,12 +28,15 @@ import { PaginationIndex } from "../ui/pagination-index"
 import { DataTableViewOptions } from "../data-table-view-options"
 import { DataTablePagination } from "../data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
+import { Field } from "../ui/field"
+import { Input } from "../ui/input"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[],
     links?: any[],
     clientSide?: boolean
+    onRowClick?: (row: TData) => void
 }
 
 
@@ -41,7 +44,8 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     links,
-    clientSide = false
+    clientSide = false,
+    onRowClick,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([])
@@ -67,8 +71,23 @@ export function DataTable<TData, TValue>({
     })
     return (
         <div>
-            <div className="flex items-center py-4">
-                <DataTableToolbar table={table} />
+            <div className="flex flex-col gap-4 md:flex-row sm:justify-between">
+                <div>
+                <Field>
+                    <Input
+                        placeholder="Search"
+                        value={(table.getState().globalFilter as string) ?? ''}
+                        onChange={(event) => table.setGlobalFilter(event.target.value)}
+                        className="w-2xl max-w-4xl sm:w-full"
+                        id="global-filter"
+                        aria-label="Global Filter"
+                        autoComplete="off"
+                    />
+                </Field>
+                </div>
+                <div>
+                    <DataTableToolbar table={table} />
+                </div>
             </div>
             <div className="rounded-md border md:p-4 p-2">
                 <Table>
@@ -96,6 +115,15 @@ export function DataTable<TData, TValue>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
+                                    className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    onClick={() => onRowClick?.(row.original)}
+                                    onKeyDown={(event) => {
+                                        if (onRowClick && (event.key === 'Enter' || event.key === ' ')) {
+                                            event.preventDefault();
+                                            onRowClick(row.original);
+                                        }
+                                    }}
                                     data-state={row.getIsSelected() && "selected"}
                                 >
                                     {row.getVisibleCells().map((cell) => (
@@ -128,4 +156,3 @@ export function DataTable<TData, TValue>({
         </div>
     )
 }
-
