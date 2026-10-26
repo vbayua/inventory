@@ -29,7 +29,8 @@ class AuthorizationSeeder extends Seeder
             'user',
             'qc_checklist',
             'qc_inspection',
-            'production'
+            'production',
+            'bom',
         ];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 

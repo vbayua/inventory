@@ -15,77 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: "/production",
     }
 ];
-const data = [
-    {
-        id: 1,
-        plan_number: "Production Plan 1",
-        product_id: 1,
-        target_quantity: 1000,
-        bom_id: 1,
-        status: 'draft',
-        ordered_at: "2024-01-01",
-        created_at: "2024-01-01",
-        updated_at: "2024-01-01",
-        product: {
-            id: 1,
-            sku: "PP01",
-            name: "Product 1",
-            unit: "pcs",
-        }
-    },
-    {
-        id: 2,
-        plan_number: "Production Plan 2",
-        product_id: 2,
-        target_quantity: 1000,
-        bom_id: 2,
-        status: 'completed',
-        ordered_at: "2024-01-01",
-        created_at: "2024-01-01",
-        updated_at: "2024-01-01",
-        product: {
-            id: 2,
-            sku: "PP02",
-            name: "Product 2",
-            unit: "pcs",
-        }
-    },
-    {
-        id: 3,
-        plan_number: "Production Plan 3",
-        product_id: 3,
-        target_quantity: 1000,
-        bom_id: 3,
-        status: 'released',
-        ordered_at: "2024-01-01",
-        created_at: "2024-01-01",
-        updated_at: "2024-01-01",
-        product: {
-            id: 3,
-            sku: "PP03",
-            name: "Product 3",
-            unit: "pcs",
-        }
-    },
-    {
-        id: 4,
-        plan_number: "Production Plan 4",
-        product_id: 4,
-        target_quantity: 1000,
-        bom_id: 4,
-        status: 'in_progress',
-        ordered_at: "2024-01-01",
-        created_at: "2024-01-01",
-        updated_at: "2024-01-01",
-        product: {
-            id: 4,
-            sku: "PP04",
-            name: "Product 4",
-            unit: "pcs",
-        }
-    },
-] satisfies Production[];
-export default function Index() {
+export default function Index({productionOrders} : {productionOrders: Production[]}) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Production Plan"/>
@@ -94,7 +24,7 @@ export default function Index() {
                     <h1 className="mb-4 text-2xl font-bold">Production Plan</h1>
                 </div>
                 <div>
-                    <DataTable columns={columns} data={data} clientSide={true} onRowClick={(production) => router.visit(`/production/${production.id}`)} />
+                    <DataTable columns={columns} data={productionOrders} clientSide={true} onRowClick={(production) => router.visit(`/production/${production.id}`)} />
                 </div>
             </ContainerLayout>
         </AppLayout>

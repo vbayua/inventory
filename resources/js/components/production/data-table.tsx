@@ -39,7 +39,7 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
     const table = useReactTable({
-        data,
+        data: data ?? [],
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -127,7 +127,7 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     </TableBody>
                 </Table>
                 <div className="mb-4">
-                    {data.length > 0 && links && <PaginationIndex links={links} />}
+                    {data && data.length > 0 && links && <PaginationIndex links={links} />}
                     {clientSide && <DataTablePagination table={table} />}
                 </div>
             </div>

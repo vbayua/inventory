@@ -228,6 +228,7 @@ export interface ReceiveOrder {
     receive_order_items?: ReceiveOrderItem[];
     user_id?: number;
     user?: User;
+    qc_inspection?: QcInspection;
     receive_order_items_sum_quantity_received?: number;
 }
 
@@ -329,32 +330,102 @@ export interface Permission {
     description?: string;
 }
 
-export interface Production {
+export interface ProductionOrder {
     id: number;
     order_number: string;
     product_id: number;
-    target_quantity?: number;
+    target_quantity: number;
+    produced_quantity?: number;
     bom_id: number;
+    unit: string;
     status: 'draft' | 'released' | 'in_progress' | 'completed' | 'cancelled';
-    ordered_at?: string;
-    in_progress_at?: string;
+    start_date?: string;
+    end_date?: string;
+    released_at?: string;
+    released_by?: number;
+    started_at?: string;
+    started_by?: number;
     completed_at?: string;
+    completed_by?: number;
     cancelled_at?: string;
-    output_batch_id?: number;
+    cancelled_by?: number;
     created_at?: string;
     updated_at?: string;
+    notes?: string;
+    bom?: Bom;
     product?: Product;
+    materials?: ProductionOrderMaterial[];
 }
 
-export interface ProductionMaterial {
+export interface ProductionOrderMaterial {
     id: number;
-    production_plan_id: number;
+    production_order_id: number;
     product_id: number;
+    component_product_id: number;
+    quantity_per_unit: number; // copied from bom
     quantity_required: number;
-    quantity_consumed: number;
+    quantity_issued: number;
+    quantity_reserved: number;
     scrap_percentage?: number;
-    production: Production;
-    product: Product;
+    production?: ProductionOrder;
+    product?: Product;
+    component_product?: Product;
     created_at?: string;
     updated_at?: string;
+}
+
+export interface ProductionOrderIssue {
+    id: number;
+    uuid?: string;
+    production_order_id: number;
+    production_order_material_id: number;
+    batch_id: number;
+    type: string;
+    quantity: number;
+    operation_id: number;
+    suggested_batch_id: number;
+    is_override?: boolean;
+    note?: string;
+    created_at?: string;
+    user_id?: number;
+    updated_at?: string;
+    operation?: Operation;
+    user?: User;
+    production_order?: ProductionOrder;
+    production_order_material?: ProductionOrderMaterial;
+    batch?: Batch;
+    suggested_batch?: Batch;
+}
+
+export type BomStatus = 'draft' | 'active' | 'retired';
+
+export interface Bom {
+    id: number;
+    product_id: number;
+    version: number;
+    status: BomStatus;
+    active_product_id?: number;
+    notes?: string;
+    user_id?: number;
+    created_at?: string;
+    updated_at?: string;
+    user?: User;
+    product?: Product;
+    lines?: BomLines[];
+    active_product?: Product;
+    activated_at?: string;
+    activated_by?: number;
+    activated_user?: User;
+}
+
+export interface BomLines{
+    id: number;
+    bom_id: number;
+    component_product_id: number;
+    quantity_per_unit: number;
+    unit: string;
+    scrap_percentage?: number;
+    bom?: Bom;
+    component?: Product;
+    notes?: string;
 }

@@ -22,8 +22,6 @@ import {
     Building2,
     ChartBar,
     CheckCheck,
-    ChevronDown,
-    ChevronRight,
     ChevronUp,
     ClipboardCheck,
     ClipboardList,
@@ -34,8 +32,6 @@ import {
 import AppLogo from './app-logo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Icon } from './ui/icon';
-import { Separator } from './ui/separator';
-import { useRef, useState } from 'react';
 
 const productNavItems: NavItem[] = [
     {
@@ -77,6 +73,13 @@ const productionNavItems: NavItem[] = [
         uri: 'production',
         permission: 'production',
     },
+    {
+        title: 'BoM',
+        href: 'bom.index',
+        icon: Cog,
+        uri: 'bom',
+        permission: 'bom',
+    }
 ];
 
 const warehouseNavItems: NavItem[] = [

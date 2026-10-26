@@ -40,9 +40,9 @@ const badge = (status: keyof typeof badgeVariant) => {
 
 export const columns: ColumnDef<Production>[] = [
     {
-        accessorKey: 'plan_number',
+        accessorKey: 'order_number',
         header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Plan Number" />
+            return <DataTableColumnHeader column={column} title="Order Number" />
         },
         cell: ({ cell }) => {
             return <Item>

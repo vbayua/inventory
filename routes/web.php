@@ -2,9 +2,10 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BatchController;
+use App\Http\Controllers\BomController;
 use App\Http\Controllers\OperationController;
 use App\Http\Controllers\PartnerController;
-use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductionOrderController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\QcChecklistController;
 use App\Http\Controllers\QcInspectionController;
@@ -136,10 +137,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix('production')->name('production.')->group(function () {
-        Route::get('/', [ProductionController::class, 'index'])->name('index');
-        Route::get('/create', [ProductionController::class, 'create'])->name('create');
-        Route::get('/{production}', [ProductionController::class, 'show'])->name('show');
-        Route::get('/{production}/edit', [ProductionController::class, 'edit'])->name('edit');
+        Route::get('/', [ProductionOrderController::class, 'index'])->name('index');
+        Route::get('/create', [ProductionOrderController::class, 'create'])->name('create');
+        Route::post('/create', [ProductionOrderController::class, 'store'])->name('store');
+        Route::get('/{production}', [ProductionOrderController::class, 'show'])->name('show');
+        Route::get('/{production}/edit', [ProductionOrderController::class, 'edit'])->name('edit');
+        Route::get('/{production}/issue', [ProductionOrderController::class, 'issue'])->name('issue');
+        Route::put('/{production}/status', [ProductionOrderController::class, 'updateStatus'])->name('status.update');
+        Route::get('/{production}/issue/create/{material}', [ProductionOrderController::class, 'createIssue'])->name('issue.create');
+        Route::post('/{production}/issue/create/{material}', [ProductionOrderController::class, 'storeIssue'])->name('issue.store');
+    });
+
+    Route::prefix('bom')->name('bom.')->group(function () {
+        Route::get('/', [BomController::class, 'index'])->name('index');
+        Route::get('/create', [BomController::class, 'create'])->name('create');
+        Route::post('/create', [BomController::class, 'store'])->name('store');
+        Route::get('/{bom}', [BomController::class, 'show'])->name('show');
+        Route::get('/{bom}/edit', [BomController::class, 'edit'])->name('edit');
+        Route::post('/{bom}/create-production-order', [BomController::class, 'createProductionOrder'])->name('create-production-order');
+        Route::put('/{bom}/activate', [BomController::class, 'activateBom'])->name('activate');
+        Route::put('/{bom}/edit', [BomController::class, 'update'])->name('update');
+        Route::delete('/{bom}', [BomController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('production-plan')->name('production-plan.')->group(function () {
