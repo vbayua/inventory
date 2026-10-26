@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import React, { FormEventHandler, useRef } from 'react';
+import React, { FormEventHandler, SubmitEventHandler, useRef } from 'react';
 
 import ContainerFormLayout from '@/components/container-form-layout';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, ChevronsUpDown } from 'lucide-react';
+import SelectCommand from '@/components/ui/select-command';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,7 +46,7 @@ interface Supplier {
 type Product = { id: number; name: string; sku: string; suppliers: Supplier[] };
 export default function Create({ products, suppliers }: { products: Product[]; suppliers: Supplier[] }) {
     const batchNumber = useRef<HTMLInputElement>(null);
-    const { data, setData, post, reset, processing, errors } = useForm<Required<CreateBatchForm>>({
+    const { data, setData, post, reset, processing, errors, transform } = useForm<Required<CreateBatchForm>>({
         batch_number: '',
         product_id: '',
         supplier_id: '',
@@ -60,11 +61,16 @@ export default function Create({ products, suppliers }: { products: Product[]; s
     const [manufactureDatePopover, setManufactureDatePopoverOpen] = React.useState(false);
     const [expiryDatePopover, setExpiryDatePopoverOpen] = React.useState(false);
     const [operationDatePopover, setOperationDatePopoverOpen] = React.useState(false);
-    const createBatch: FormEventHandler = (e) => {
+    const createBatch: SubmitEventHandler = (e) => {
         e.preventDefault();
-        console.log('Creating batch with data:', data);
+        const toDateString = (date: Date | null) => (date ? format(date, 'yyyy-MM-dd') : null);
+        transform((formData) => ({
+            ...formData,
+            manufacture_date: toDateString(formData.manufacture_date),
+            expiry_date: toDateString(formData.expiry_date),
+            operation_date: toDateString(formData.operation_date),
+        }));
         post(route('batch.store'), {
-            forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
                 reset();
@@ -73,6 +79,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                 if (errors.batch_number) {
                     reset('batch_number');
                     batchNumber.current?.focus();
+                    console.error(errors.batch_number)
                 }
             },
         });
@@ -130,7 +137,19 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent align="center" className="p-1.5 sm:min-w-[425px]">
-                                <Command>
+                                <SelectCommand
+                                    lists={products}
+                                    getKey={(product) => product.id}
+                                    getId={(product) => product.id}
+                                    getLabel={(product) => `${product.sku} ${product.name}`}
+                                    onSelect={(product) => {
+                                        setData('product_id', product.id)
+                                        setData('batch_number', '')
+                                        setProductPopoverOpen(false)
+                                        batchNumber.current?.focus()
+                                    }}
+                                    />
+                                {/*<Command>
                                     <CommandInput placeholder="Cari product..." />
                                     <CommandList>
                                         <CommandEmpty>
@@ -157,7 +176,7 @@ export default function Create({ products, suppliers }: { products: Product[]; s
                                             ))}
                                         </CommandGroup>
                                     </CommandList>
-                                </Command>
+                                </Command>*/}
                             </PopoverContent>
                             <InputError message={errors.product_id} />
                         </Popover>
