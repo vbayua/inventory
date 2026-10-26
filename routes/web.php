@@ -158,6 +158,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{bom}/edit', [BomController::class, 'edit'])->name('edit');
         Route::post('/{bom}/create-production-order', [BomController::class, 'createProductionOrder'])->name('create-production-order');
         Route::put('/{bom}/activate', [BomController::class, 'activateBom'])->name('activate');
+        Route::put('/{bom}/retire', [BomController::class, 'retireBom'])->name('retire');
         Route::put('/{bom}/edit', [BomController::class, 'update'])->name('update');
         Route::delete('/{bom}', [BomController::class, 'destroy'])->name('destroy');
     });

@@ -69,6 +69,24 @@ class BomController extends Controller
         return redirect()->route('bom.show', $bom)->with('success', 'BOM activated successfully');
     }
 
+    public function retireBom(Bom $bom): RedirectResponse
+    {
+        DB::transaction(function () use ($bom) {
+            $bom = Bom::whereKey($bom->id)->lockForUpdate()->firstOrFail();
+
+            if(! $bom->status->canTransition(BomStatus::Retired)) {
+                throw ValidationException::withMessages(['status' => 'BOM cannot be retired']);
+            }
+
+            $bom->update([
+                'status' => BomStatus::Retired,
+            ]);
+        });
+
+        return redirect()->route('bom.show', $bom)->with('success', 'BOM retired successfully');
+    }
+
+
     public function create()
     {
         $finishedGoods = Product::whereHas('productType', function ($query) {

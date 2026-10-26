@@ -5,7 +5,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Head, Link, router, useForm } from "@inertiajs/react";
-import { DownloadIcon, MoreHorizontalIcon, SaveIcon, TrashIcon } from "lucide-react";
+import { ArchiveX, ArchiveXIcon, CheckIcon, DownloadIcon, MoreHorizontalIcon, PencilIcon, SaveIcon, TrashIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BreadcrumbItem } from "@/types";
 import { BomStatusBadge } from "@/components/boms/bom-status-badge";
@@ -16,6 +16,8 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import InputError from "@/components/input-error";
+import { toast } from "sonner";
+import ConfirmDialog from "@/components/confirm-dialog";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -29,16 +31,40 @@ export default function Show({ bom }: { bom: Bom }) {
         href: `/bom/${bom.id}`,
     }
 
-    const saveBoM = () => {
-        router.put(`/bom/${bom.id}`, { status: 'active' }, {
-            onSuccess: () => {
-
-            },
-            onError: (error) => {
-                console.error(error);
-            },
+    const activateBom = () => {
+        new Promise((resolve, reject) => {
+            router.put(route('bom.activate', { bom: bom.id }), { status: 'active' }, {
+                onSuccess: () => {
+                    toast.success('BoM is Active');
+                },
+                onError: (error) => {
+                    console.error(error);
+                    toast.error(error.status);
+                    reject();
+                },
+                onFinish: resolve
+            });
         });
     }
+
+
+    const retireBom = () => {
+        new Promise((resolve, reject) => {
+            router.put(route('bom.retire', { bom: bom.id }), { status: 'retired' }, {
+                onSuccess: () => {
+                    toast.success('BoM is Retired');
+                },
+                onError: (error) => {
+                    console.error(error);
+                    toast.error(error.status);
+                    reject();
+                },
+                onFinish: resolve
+            });
+        });
+    }
+
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -51,7 +77,7 @@ export default function Show({ bom }: { bom: Bom }) {
                             <div className="mt-6 md:mt-0">
                                 <ButtonGroup>
                                     <ButtonGroup>
-                                        <Button variant="outline">Edit</Button>
+                                        <Button variant="outline"><PencilIcon /> Edit</Button>
                                     </ButtonGroup>
                                     <ButtonGroup>
                                         <Button variant="outline" className="hover:bg-background!" asChild >
@@ -60,18 +86,32 @@ export default function Show({ bom }: { bom: Bom }) {
                                                 <BomStatusBadge status={bom.status} />
                                             </span>
                                         </Button>
-                                        <Button variant="outline" onClick={() => saveBoM()}><SaveIcon /> Save</Button>
+                                        {
+                                            bom.status === 'draft' &&
+                                            <ConfirmDialog
+                                                trigger={<Button variant="outline"><CheckIcon /></Button>}
+                                                title="Set as Active"
+                                                description="Are you sure you want to set this BoM as active?"
+                                                onConfirm={() => activateBom()}
+                                            />
+                                        }
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="outline"><MoreHorizontalIcon /></Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
-                                                <DropdownMenuItem variant="destructive" onClick={() => router.delete(`/bom/${bom.id}`)}>
-                                                    <TrashIcon className="mr-2 w-2.5" />
-                                                    Delete
+                                                <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
+                                                    <ArchiveXIcon />Archive
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                        <ConfirmDialog
+                                            open={confirmOpen}
+                                            onOpenChange={setConfirmOpen}
+                                            title="Archive"
+                                            description="Are you sure you want to archive this BoM?"
+                                            onConfirm={() => retireBom()}
+                                        />
                                     </ButtonGroup>
                                 </ButtonGroup>
                             </div>
