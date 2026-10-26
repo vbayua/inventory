@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\DTO\StockData;
 use App\Http\Requests\StoreOperationRequest;
 use App\Http\Requests\UpdateOperationRequest;
+use App\Models\Batch;
 use App\Models\Operation;
 use App\Models\Product;
 use App\Models\Stock;
+use App\Models\Unit;
 use App\Models\Warehouse;
 use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
@@ -41,13 +43,13 @@ class OperationController extends Controller
             'product.unit:name,base_unit',
             'batch:id,product_id,batch_number,expiry_date',
             'location:id,name,warehouse_id',
-            'location.warehouse:id,name'
+            'location.warehouse:id,name',
         ])->get();
         $products = Product::with(['unit'])->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
 
-        $batches = \App\Models\Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
+        $batches = Batch::all(['id', 'product_id', 'batch_number', 'expiry_date']);
 
-        $units = \App\Models\Unit::all(['name', 'unit_type', 'base_unit']);
+        $units = Unit::all(['name', 'unit_type', 'base_unit']);
         $warehouse = Warehouse::with(['locations'])->get();
         $locations = $warehouse->flatMap(fn ($w) => $w->locations)->unique('id')->values();
         $stockId = $request->get('stock_id');
@@ -59,7 +61,7 @@ class OperationController extends Controller
                 $query->when($request->has_stock, function ($query) {
                     $query->whereHas('stocks');
                 })
-                ->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%");
+                    ->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%");
             })
             ->when($request->has_stock, function ($query) {
                 $query->withWhereHas('stocks', function ($query) {
@@ -73,10 +75,11 @@ class OperationController extends Controller
             ->withQueryString();
 
         $products = $query;
+
         // : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate(10)->onEachSide(1);
         return Inertia('Operations/Create', [
             'stocks' => $stock,
-            'products' => Inertia::optional(fn() => $products),
+            'products' => Inertia::optional(fn () => $products),
             'batches' => $batches,
             'units' => $units,
             'warehouses' => $warehouse,
@@ -124,9 +127,11 @@ class OperationController extends Controller
 
         if ($operationType === 'inbound') {
             if (! $stockData) {
+                $supplierId = Batch::find($validatedData['batch'])->supplier_id;
                 $stockData = StockData::fromArray([
                     'location_id' => $validatedData['location'],
                     'batch_id' => $validatedData['batch'],
+                    'supplier_id' => $supplierId,
                     'quantity' => $operationQuantity,
                     'minimum_quantity' => 0,
                     'unit' => $validatedData['unit'],
@@ -151,8 +156,8 @@ class OperationController extends Controller
             );
 
             $operation->context()->create([
-               'operation_id' => $operation->id,
-               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+                'operation_id' => $operation->id,
+                'notes' => $validatedData['remarks'] ?? 'Stock Operation '.$operationType.' for '.$validatedData['product'],
             ]);
         } elseif ($operationType === 'outbound') {
             // For outbound operations, we decrement the stock
@@ -167,8 +172,8 @@ class OperationController extends Controller
                 $validatedData['with_container'] ?? false,
             );
             $operation->context()->create([
-               'operation_id' => $operation->id,
-               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+                'operation_id' => $operation->id,
+                'notes' => $validatedData['remarks'] ?? 'Stock Operation '.$operationType.' for '.$validatedData['product'],
             ]);
         } elseif ($operationType === 'adjustment') {
             $operation = $operationService->adjustStockOperation(
@@ -179,8 +184,8 @@ class OperationController extends Controller
                 $validatedData['remarks']
             );
             $operation->context()->create([
-               'operation_id' => $operation->id,
-               'notes' => $validatedData['remarks'] ?? "Stock Operation " . $operationType . " for " . $validatedData['product'],
+                'operation_id' => $operation->id,
+                'notes' => $validatedData['remarks'] ?? 'Stock Operation '.$operationType.' for '.$validatedData['product'],
             ]);
         } elseif ($operationType === 'transfer') {
             $operation = $operationService->createTransferOperation(
@@ -194,9 +199,8 @@ class OperationController extends Controller
                 $validatedData['date'],
             );
 
-        } else if($operationType === 'return') {
-            if(!$stockData)
-            {
+        } elseif ($operationType === 'return') {
+            if (! $stockData) {
                 $stockData = [
                     'location_id' => $validatedData['location'],
                     'batch_id' => $validatedData['batch'],
@@ -235,6 +239,7 @@ class OperationController extends Controller
 
         $operation->load(['product', 'batch', 'location', 'user:id,name']);
         $operation->load(['detail']);
+
         return Inertia('Operations/Show', [
             'operation' => $operation,
         ]);

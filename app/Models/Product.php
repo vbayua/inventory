@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Cache;
 
 class Product extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductFactory> */
+    /** @use HasFactory<ProductFactory> */
     use HasFactory;
 
     protected $guarded = ['id'];
@@ -59,6 +63,26 @@ class Product extends Model
             ->withTimestamps();
     }
 
+    public function productionOrders()
+    {
+        return $this->hasMany(ProductionOrder::class);
+    }
+
+    public function bom(): HasMany
+    {
+        return $this->hasMany(Bom::class);
+    }
+
+    public function activeBom(): HasOne
+    {
+        return $this->hasOne(Bom::class, 'active_product_id', 'id');
+    }
+
+    public function bomLines(): HasMany
+    {
+        return $this->hasMany(BomLine::class, 'component_product_id', 'id');
+    }
+
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit', 'name');
@@ -75,16 +99,18 @@ class Product extends Model
     }
 
     public function getUnitTypeAttribute()
-        {
-            $unit = $this->getRelationValue('unit'); // explicitly fetch relation
-            return $unit ? $unit->unit_type : null;
-        }
+    {
+        $unit = $this->getRelationValue('unit'); // explicitly fetch relation
 
-        public function getBaseUnitAttribute()
-        {
-            $unit = $this->getRelationValue('unit'); // explicitly fetch relation
-            return $unit ? $unit->base_unit : null;
-        }
+        return $unit ? $unit->unit_type : null;
+    }
+
+    public function getBaseUnitAttribute()
+    {
+        $unit = $this->getRelationValue('unit'); // explicitly fetch relation
+
+        return $unit ? $unit->base_unit : null;
+    }
 
     public function getAllStockQty()
     {
@@ -96,11 +122,11 @@ class Product extends Model
     public static function booted(): void
     {
         static::saved(function (Product $product) {
-            \Illuminate\Support\Facades\Cache::forget('products_index');
+            Cache::forget('products_index');
         });
 
         static::deleted(function (Product $product) {
-            \Illuminate\Support\Facades\Cache::forget('products_index');
+            Cache::forget('products_index');
         });
     }
 }

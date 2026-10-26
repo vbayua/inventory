@@ -71,6 +71,7 @@ export default function SelectCommand<T>({
             filter={(value, search) => {
                 return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
             }}
+            className="w-full"
         >
             <CommandInput placeholder={placeholder} />
             <CommandList>

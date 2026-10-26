@@ -41,16 +41,15 @@ class StockOperationService
     }
 
     public function createStockOperation(
-            string $operationType,
-            Product|int $product,
-            Stock|StockData $stockData,
-            float $quantity,
-            Unit|string $unit,
-            string $remarks = '',
-            $operationDate = null,
-            ?bool $withContainer = false
-        )
-    {
+        string $operationType,
+        Product|int $product,
+        Stock|StockData $stockData,
+        float $quantity,
+        Unit|string $unit,
+        string $remarks = '',
+        $operationDate = null,
+        ?bool $withContainer = false
+    ) {
         switch ($operationType) {
             case self::INBOUND:
                 return $this->createInboundOperation($product, $stockData, $quantity, $unit, $remarks, $operationDate);
@@ -69,11 +68,12 @@ class StockOperationService
             $supplierId = $stockData['supplier_id'];
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
-            if (! $stockData['supplier_id']) {
-                throw new InvalidArgumentException('Supplier ID is required for batch assignment');
-            }
-
             if ($stockData['batch_id']) {
+                $existingBatch = Batch::find($stockData['batch_id']);
+
+                if (! $supplierId && ! $existingBatch?->supplier_id) {
+                    throw new InvalidArgumentException('Supplier ID is required for batch assignment');
+                }
 
                 $batch = $this->batchService->determineBatch(
                     product: $product,
@@ -195,7 +195,7 @@ class StockOperationService
                     $operationDate
                 );
 
-                 $this->setStock(
+                $this->setStock(
                     $product,
                     $stockData,
                     $receiveQuantity,
@@ -247,7 +247,7 @@ class StockOperationService
                 $operationDate
             );
 
-             $this->setStock(
+            $this->setStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
@@ -419,12 +419,12 @@ class StockOperationService
             }
 
             $operationIn->context()->create([
-               'operation_id' => $operationIn->id,
-               'notes' => $inRemarks,
+                'operation_id' => $operationIn->id,
+                'notes' => $inRemarks,
             ]);
             $operationOut->context()->create([
-               'operation_id' => $operationOut->id,
-               'notes' => $outRemarks,
+                'operation_id' => $operationOut->id,
+                'notes' => $outRemarks,
             ]);
 
             return [
@@ -434,6 +434,18 @@ class StockOperationService
                 'destination' => $updatedDestinationStock,
             ];
         });
+    }
+
+    public function reserveStock(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
+    {
+
+        // TODO:
+        //         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
+        //             $product = $product instanceof Product ? $product : Product::findOrFail($product);
+        //             $stockData = $stockData instanceof StockData ? $stockData : StockData::fromStock($stockData);
+        //
+        //
+        //         });
     }
 
     public function createTransferOutOperation(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)

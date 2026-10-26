@@ -10,10 +10,10 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { Batch, Location, Product, Stock, Unit, Warehouse } from '@/types/resources';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { BoxesIcon, CalendarIcon, ChevronsUpDown, NotepadTextIcon, PackageIcon } from 'lucide-react';
-import { SubmitEventHandler, useState } from 'react';
+import { SubmitEventHandler, useEffect, useState } from 'react';
 
 import { ButtonGroup } from '@/components/ui/button-group';
 import useOperationForm from '@/hooks/use-operation-form';
@@ -25,6 +25,8 @@ import ProductSelectDialog from './page-components/Create/ProductSelectDialog';
 import TransferSection from './page-components/Create/TransferSection';
 import ContainerFormLayout from '@/components/container-form-layout';
 import ReturnSection from './page-components/Create/ReturnSection';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -129,23 +131,40 @@ export default function Create({
     const [productDialogOpen, setProductDialogOpen] = useState(false);
     const [batchPopoverOpen, setBatchPopoverOpen] = useState(false);
     const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+
+    useEffect(() => {
+        if(productDialogOpen && !products) {
+            router.reload({only: ['products']});
+        }
+    }, [products, productDialogOpen])
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
-            <ContainerLayout>
+            <ContainerFormLayout>
                 <form onSubmit={createOperation} className="mb-6 space-y-6">
-                    <h1 className="mb-12 text-2xl font-semibold">Operasi Stok</h1>
-                    <OperationTypeSelect
-                        operationTypes={operationTypes}
-                        selectedValue={operationTypeData}
-                        toggleOperationType={toggleOperationType}
-                    />
+                    <h1 className="mb-12 text-2xl font-semibold">Operasi Stok - {operationTypeData}</h1>
 
+                    <div>
+                        <Select onValueChange={toggleOperationType} value={operationTypeData}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Pilih jenis operasi (In, Out, Transfer)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    {operationTypes.map((type) => (
+                                        <SelectItem className="hover:bg-accent hover:text-accent-foreground" key={type.value} value={type.value}>
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </div>
                     {/*ADJUSTMENT SECTION*/}
 
                     {/*END OF ADJUSTMENT SECTION*/}
 
-                    <ContainerFormLayout>
                         <div
                             className={cn(
                                 'grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2',
@@ -158,14 +177,14 @@ export default function Create({
                                     Product
                                 </FieldLabel>
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
+                                    <Input
+                                        type="text"
                                         className={cn('w-full', form.errors.product && 'text-muted-foreground border-red-500')}
                                         onClick={() => setProductDialogOpen(true)}
-                                        type="button"
-                                    >
-                                        {form.selectedProduct ? `${form.selectedProduct?.sku} ${form.selectedProduct?.name}` : 'No Product Selected'}
-                                    </Button>
+                                        readOnly
+                                        value={form.selectedProduct ? `${form.selectedProduct?.sku} ${form.selectedProduct?.name}` : 'No Product Selected'}
+                                        />
+
                                 </div>
                                 <ProductSelectDialog
                                     products={products}
@@ -314,14 +333,13 @@ export default function Create({
                                 className={cn('w-full', form.errors.remarks && 'text-muted-foreground border-red-500')}
                             />
                         </div>
-                    </ContainerFormLayout>
                     <div className="flex justify-center w-full">
                         <Button variant="default" type="submit" className="w-full sm:w-auto">
                             Buat Operasi Stok
                         </Button>
                     </div>
                 </form>
-            </ContainerLayout>
+            </ContainerFormLayout>
         </AppLayout>
     );
 }

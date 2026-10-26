@@ -3,24 +3,16 @@
 use App\DTO\StockData;
 use App\Models\Batch;
 use App\Models\Location;
-use App\Models\Operation;
-use App\Models\Product;
 use App\Models\Stock;
-use App\Models\StockAdjustment;
-use App\Models\Supplier;
-use App\Models\Unit;
-use App\Models\User;
 use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
 use Database\Seeders\BlankStateSeeder;
 use Database\Seeders\SupplierSeeder;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
-use function PHPUnit\Framework\assertCount;
 use function PHPUnit\Framework\assertEquals;
 
 beforeEach(function () {
@@ -71,13 +63,62 @@ describe('Initial stock operations', function () {
             'quantity' => 100,
         ]);
     });
+
+    test('create initial stock without supplier_id throws when creating a new batch', function () {
+        $product = productWithSupplier();
+        $location = Location::factory()->create();
+
+        $stockData = StockData::fromArray([
+            'product_id' => $product->id,
+            'location_id' => $location->id,
+            'warehouse_id' => $location->warehouse_id,
+            'quantity' => 100,
+            'unit' => $product->unit,
+            'supplier_id' => null,
+            'batch_id' => null,
+            'minimum_quantity' => 10,
+        ]);
+
+        $this->service->createInitialStock($product, $stockData);
+    })->throws(InvalidArgumentException::class, 'Supplier ID is required for batch assignment');
+
+    test('create initial stock without supplier_id succeeds when existing batch already has a supplier', function () {
+        $product = productWithSupplier();
+        $supplier = $product->suppliers->first();
+        $location = Location::factory()->create();
+
+        $batch = Batch::factory()->create([
+            'product_id' => $product->id,
+            'supplier_id' => $supplier->id,
+        ]);
+
+        $stockData = StockData::fromArray([
+            'product_id' => $product->id,
+            'location_id' => $location->id,
+            'warehouse_id' => $location->warehouse_id,
+            'quantity' => 100,
+            'unit' => $product->unit,
+            'supplier_id' => null,
+            'batch_id' => $batch->id,
+            'minimum_quantity' => 10,
+        ]);
+
+        $this->service->createInitialStock($product, $stockData);
+
+        assertDatabaseHas('stocks', [
+            'product_id' => $product->id,
+            'location_id' => $location->id,
+            'batch_id' => $batch->id,
+            'quantity' => 100,
+        ]);
+    });
 });
 
 describe('inbound operations', function () {
     test('create inbound operation increments existing stock', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
 
         $supplier = $product->suppliers->first();
@@ -131,7 +172,7 @@ describe('Outbound operations', function () {
     test('create outbound operation decrements stock', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -182,7 +223,7 @@ describe('Outbound operations', function () {
     test('create outbound operation throws on insufficient stock', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -224,7 +265,7 @@ describe('Return operations', function () {
     test('create return operation creates stock when stock record is missing', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -284,7 +325,7 @@ describe('Stock adjustment operations', function () {
     test('adjust stock operation with addition creates adjustment and increments stock', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -332,7 +373,7 @@ describe('Stock adjustment operations', function () {
     test('adjust stock operation with subtraction decrements stock', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -378,12 +419,11 @@ describe('Stock adjustment operations', function () {
     });
 });
 
-
 describe('Transfer operations', function () {
     test('create transfer operation moves quantity and creates transfer in/out operations', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -440,7 +480,7 @@ describe('Transfer operations', function () {
     test('create transfer operation deletes source stock row when fully depleted', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
@@ -496,7 +536,7 @@ describe('Transfer operations', function () {
     test('create transfer operation throws when source has insufficient stock', function () {
         $product = productWithSupplier([
             'product_type_id' => 2,
-            'unit' => 'pcs'
+            'unit' => 'pcs',
         ]);
         $supplier = $product->suppliers->first();
         $location = Location::factory()->create();
