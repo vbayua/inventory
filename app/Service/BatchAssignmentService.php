@@ -6,12 +6,13 @@ use App\Models\Batch;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Service\BatchPolicies\BatchPolicyInterface;
+use App\Service\BatchPolicies\DefaultBatchPolicy;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 
 class BatchAssignmentService
 {
@@ -26,7 +27,7 @@ class BatchAssignmentService
     {
         $config = config('batch');
         $this->policies = $config['policies'] ?? [];
-        $this->defaultPolicy = $config['default'] ?? \App\Service\BatchPolicies\DefaultBatchPolicy::class;
+        $this->defaultPolicy = $config['default'] ?? DefaultBatchPolicy::class;
     }
 
     protected function resolvePolicy(Product $product): BatchPolicyInterface
@@ -40,7 +41,7 @@ class BatchAssignmentService
         // }
 
         $typeCode = optional($product->productType)->type_code;
-        switch($typeCode) {
+        switch ($typeCode) {
             case 'RMP':
                 $policyClass = Arr::get($this->policies, 'raw_material', $this->defaultPolicy);
                 break;
@@ -49,6 +50,9 @@ class BatchAssignmentService
                 break;
             case 'PS':
                 $policyClass = Arr::get($this->policies, 'packaging_secondary', $this->defaultPolicy);
+                break;
+            case 'PC':
+                $policyClass = Arr::get($this->policies, 'packaging_contribute', $this->defaultPolicy);
                 break;
             case 'PT':
                 $policyClass = Arr::get($this->policies, 'packaging_tertiary', $this->defaultPolicy);
@@ -68,6 +72,7 @@ class BatchAssignmentService
 
     /**
      * Determines the appropriate batch ID for a given product and operation context.
+     *
      * @param  Product|int  $product  The product instance or product ID.
      * @param  int|null  $requestedBatchId  Optional. The specific batch ID requested for the operation.
      * @param  string  $operationType  Optional. The type of operation ('inbound', 'initial', etc.). Defaults to 'inbound'.
@@ -75,10 +80,9 @@ class BatchAssignmentService
      * @param  int|null  $supplierId  Optional. The supplier ID to associate with the batch, if applicable.
      * @return int|null The determined batch ID, or null if no suitable batch is found.
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the product is not found.
-     * @throws \Illuminate\Validation\ValidationException If the supplier is not associated with the product.
+     * @throws ModelNotFoundException If the product is not found.
+     * @throws ValidationException If the supplier is not associated with the product.
      */
-
     public function determineBatch(
         Product|int $product,
         ?int $requestedBatchId = null,
@@ -88,8 +92,7 @@ class BatchAssignmentService
         ?int $minQty = 0,
         ?string $manufactureDate = null,
         ?string $expiryDate = null
-        ): ?int
-    {
+    ): ?int {
         // Define product
         $product = $product instanceof Product
         ? $product->load(['productType', 'batches', 'operations'])
@@ -104,7 +107,7 @@ class BatchAssignmentService
         if ($operationType === 'inbound'
         && ! $supplier->exists() && ! $requestedBatchId) {
             throw ValidationException::withMessages([
-                'supplier_id' => "Supplier does not exist or not associated",
+                'supplier_id' => 'Supplier does not exist or not associated',
             ]);
         }
 
@@ -145,7 +148,7 @@ class BatchAssignmentService
             throw ValidationException::withMessages(['expiryDate' => 'Expiry date must be after manufacture date']);
         }
 
-        if ($manufactureDate && !$expiryDate) {
+        if ($manufactureDate && ! $expiryDate) {
             $expiryDate = Carbon::parse($manufactureDate)->addDays($product->productType->defaultExpiryDate());
         }
 

@@ -14,7 +14,7 @@ class TertiaryPackagingBatchPolicy implements BatchPolicyInterface
         return $requestedBatchId;
     }
 
-    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId, ?string $operationDate): string
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate = null): string
     {
         $opDate = $operationDate ? Carbon::parse($operationDate) : Carbon::now();
         $year = $opDate->format('y');

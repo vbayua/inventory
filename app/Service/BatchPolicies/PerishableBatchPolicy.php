@@ -19,7 +19,7 @@ class PerishableBatchPolicy implements BatchPolicyInterface
         return $batch?->id;
     }
 
-    public function generateBatchNumber(Product $product, string $proposedNumber): string
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate = null): string
     {
         $base = 'P-'.$proposedNumber;
         $newNumber = $base;

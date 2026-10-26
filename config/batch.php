@@ -1,5 +1,13 @@
 <?php
 
+use App\Service\BatchPolicies\ContributePackagingBatchPolicy;
+use App\Service\BatchPolicies\DefaultBatchPolicy;
+use App\Service\BatchPolicies\FinishedGoodsBatchPolicy;
+use App\Service\BatchPolicies\PrimaryPackagingBatchPolicy;
+use App\Service\BatchPolicies\RawMaterialBatchPolicy;
+use App\Service\BatchPolicies\SecondaryPackagingBatchPolicy;
+use App\Service\BatchPolicies\TertiaryPackagingBatchPolicy;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -8,13 +16,14 @@ return [
     | Map product type codes to policy classes. A default policy is used when
     | a product type does not have a specific policy mapping.
     */
-    'default' => \App\Service\BatchPolicies\DefaultBatchPolicy::class,
+    'default' => DefaultBatchPolicy::class,
     'policies' => [
-        'raw_material' => \App\Service\BatchPolicies\RawMaterialBatchPolicy::class,
-        'packaging_primary' => \App\Service\BatchPolicies\PrimaryPackagingBatchPolicy::class,
-        'packaging_secondary' => \App\Service\BatchPolicies\SecondaryPackagingBatchPolicy::class,
-        'packaging_tertiary' => \App\Service\BatchPolicies\TertiaryPackagingBatchPolicy::class,
-        'finished_goods' => \App\Service\BatchPolicies\FinishedGoodsBatchPolicy::class,
+        'raw_material' => RawMaterialBatchPolicy::class,
+        'packaging_primary' => PrimaryPackagingBatchPolicy::class,
+        'packaging_secondary' => SecondaryPackagingBatchPolicy::class,
+        'packaging_contribute' => ContributePackagingBatchPolicy::class,
+        'packaging_tertiary' => TertiaryPackagingBatchPolicy::class,
+        'finished_goods' => FinishedGoodsBatchPolicy::class,
         // Add more product type codes and their corresponding policies here
     ],
 

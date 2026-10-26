@@ -13,7 +13,7 @@ class RawMaterialBatchPolicy implements BatchPolicyInterface
         return $requestedBatchId;
     }
 
-    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate): string
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate = null): string
     {
         $YEAR = date('y', $operationDate ? strtotime($operationDate) : time());
         $YEAR_INDEX = 0;
