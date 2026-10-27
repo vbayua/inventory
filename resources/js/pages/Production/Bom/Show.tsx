@@ -77,7 +77,9 @@ export default function Show({ bom }: { bom: Bom }) {
                             <div className="mt-6 md:mt-0">
                                 <ButtonGroup>
                                     <ButtonGroup>
-                                        <Button variant="outline"><PencilIcon /> Edit</Button>
+                                        <Button variant="outline" type="button" onClick={() => {
+                                            router.visit(route('bom.edit', { bom: bom.id }))
+                                        }}><PencilIcon /> Edit</Button>
                                     </ButtonGroup>
                                     <ButtonGroup>
                                         <Button variant="outline" className="hover:bg-background!" asChild >

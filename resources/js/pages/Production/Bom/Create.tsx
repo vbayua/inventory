@@ -1,3 +1,4 @@
+import ConfirmDialog from "@/components/confirm-dialog";
 import ContainerFormLayout from "@/components/container-form-layout";
 import InputError from "@/components/input-error";
 import { Button } from "@/components/ui/button";
@@ -36,17 +37,21 @@ export default function Create({finishedGoods, materials, units}: {finishedGoods
     const [finishedGoodsOpen, setFinishedGoodsOpen] = useState(false);
     const [itemsOpen, setItemsOpen] = useState(false);
     const [unitOpenIndex, setUnitOpenIndex] = useState<number|null>(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const filteredProducts = materials.filter((product) => !selectedProducts.find((p) => p.id === product.id));
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setConfirmOpen(true);
+    };
+
+    const submitForm = () => {
         console.log(data);
         post(route('bom.store'), {
             onSuccess: () => reset(),
             onError: (errors) => console.log(errors),
         });
     };
-
 
     const addItems = (product: Product) => {
         if (!selectedProducts.find((p) => p.id === product.id)) {
@@ -226,6 +231,14 @@ export default function Create({finishedGoods, materials, units}: {finishedGoods
                     <Button variant="default" type="submit" disabled={processing}>
                         {processing ? 'Saving...' : 'Save'}
                     </Button>
+                    <ConfirmDialog
+                        title="Confirm Save"
+                        description="Are you sure you want to save this BOM?"
+                        open={confirmOpen}
+                        onOpenChange={setConfirmOpen}
+                        onConfirm={submitForm}
+                        processing={processing}
+                    />
                 </form>
             </ContainerFormLayout>
         </AppLayout>

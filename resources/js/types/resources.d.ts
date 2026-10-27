@@ -429,5 +429,3 @@ export interface BomLines{
     component?: Product;
     notes?: string;
 }
-
-export interface

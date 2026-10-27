@@ -19,8 +19,8 @@ const badgeVariant = {
     },
 } as const satisfies Record<BomStatus, { label: string; variant: 'default' | 'outline'; style: string }>;
 
-export function BomStatusBadge({ status }: { status: BomStatus }) {
-    return <Badge variant={badgeVariant[status].variant} size="sm" className={`capitalize ${badgeVariant[status].style}`}>
+export function BomStatusBadge({ status, size }: { status: BomStatus; size?: 'sm' | 'default' }) {
+    return <Badge variant={badgeVariant[status].variant} size={size ?? 'sm'} className={`capitalize ${badgeVariant[status].style}`}>
         <span className="capitalize">{badgeVariant[status].label}</span>
     </Badge>
 }

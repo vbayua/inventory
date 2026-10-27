@@ -74,7 +74,7 @@ class BomController extends Controller
         DB::transaction(function () use ($bom) {
             $bom = Bom::whereKey($bom->id)->lockForUpdate()->firstOrFail();
 
-            if(! $bom->status->canTransition(BomStatus::Retired)) {
+            if (! $bom->status->canTransition(BomStatus::Retired)) {
                 throw ValidationException::withMessages(['status' => 'BOM cannot be retired']);
             }
 
@@ -85,7 +85,6 @@ class BomController extends Controller
 
         return redirect()->route('bom.show', $bom)->with('success', 'BOM retired successfully');
     }
-
 
     public function create()
     {
@@ -148,6 +147,99 @@ class BomController extends Controller
         }
 
         return redirect()->route('bom.index')->with('success', 'BOM created successfully');
+    }
+
+    public function edit(Bom $bom)
+    {
+        $finishedGoods = Product::whereHas('productType', function ($query) {
+            $query->where('type_code', 'FG');
+        })->get();
+        $materials = Product::with(['unit:name,base_unit,unit_type'])->whereHas('productType', function ($query) {
+            $query->whereNot('type_code', 'FG');
+        })->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->get();
+        $units = Unit::select('name', 'base_unit', 'unit_type')->get();
+
+        $bom->load(['product:id,name,sku']);
+
+        $bom->load(
+            [
+                'lines:id,bom_id,component_product_id,quantity_per_unit,unit',
+                'lines.component:id,name,sku,unit',
+            ]
+        );
+
+        return Inertia::render('Production/Bom/Edit',
+            [
+                'bom' => $bom,
+                'units' => $units,
+                'materials' => Inertia::optional(fn () => $materials),
+            ]);
+    }
+
+    public function update(Request $request, Bom $bom): RedirectResponse
+    {
+        if ($bom->status !== BomStatus::Draft) {
+            throw ValidationException::withMessages(['message' => 'Only draft BOMs can be edited.']);
+        }
+
+        $data = $request->validate([
+            'materials' => 'required|array|min:1',
+            'materials.*.component_product_id' => 'required|integer|distinct|exists:products,id',
+            'materials.*.quantity_per_unit' => 'required|integer',
+            'materials.*.unit' => 'nullable|string',
+        ]);
+
+        if ($this->bomLinesMatch($bom, $data['materials'])) {
+            return redirect()->route('bom.show', $bom)->with('info', 'No changes were made to the BOM.');
+        }
+
+        try {
+            DB::transaction(function () use ($data, $bom) {
+                $newBom = Bom::create([
+                    'product_id' => $bom->product_id,
+                    'version' => (Bom::where('product_id', $bom->product_id)->max('version') ?? 0) + 1,
+                    'status' => BomStatus::Draft,
+                ]);
+                foreach ($data['materials'] as $material) {
+                    $newBom->lines()->create([
+                        'component_product_id' => $material['component_product_id'],
+                        'quantity_per_unit' => $material['quantity_per_unit'],
+                        'unit' => $material['unit'],
+                    ]);
+                }
+                $bom->update(['status' => BomStatus::Retired]);
+            });
+        } catch (UniqueConstraintViolationException) {
+            return redirect()->back()->with('error', 'Another BOM version was saved for this product at the same time. Please try again.');
+        } catch (Throwable $e) {
+            report($e);
+
+            return redirect()->back()->with('error', 'The BOM could not be saved. Please try again.');
+        }
+
+        return redirect()->route('bom.show', $bom)->with('success', 'BOM updated successfully');
+    }
+
+    /**
+     * Determine whether the submitted materials are identical to the bom's current lines.
+     *
+     * @param  array<int, array{component_product_id: int, quantity_per_unit: int, unit: ?string}>  $materials
+     */
+    private function bomLinesMatch(Bom $bom, array $materials): bool
+    {
+        $normalize = fn (iterable $lines) => collect($lines)
+            ->map(fn (array $line) => [
+                'component_product_id' => (int) $line['component_product_id'],
+                'quantity_per_unit' => (int) $line['quantity_per_unit'],
+                'unit' => (string) ($line['unit'] ?? ''),
+            ])
+            ->sortBy('component_product_id')
+            ->values()
+            ->all();
+
+        $currentLines = $bom->lines()->get(['component_product_id', 'quantity_per_unit', 'unit'])->toArray();
+
+        return $normalize($currentLines) === $normalize($materials);
     }
 
     public function createProductionOrder(Request $request, Bom $bom, ProductionOrderService $productionOrderService): RedirectResponse

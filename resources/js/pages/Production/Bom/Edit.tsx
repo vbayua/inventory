@@ -1,20 +1,18 @@
-
+import ConfirmDialog from "@/components/confirm-dialog";
 import ContainerFormLayout from "@/components/container-form-layout";
-import InputError from "@/components/input-error";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
-import { Item, ItemContent } from "@/components/ui/item";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SelectCommand from "@/components/ui/select-command";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AppLayout from "@/layouts/app-layout";
 import { BreadcrumbItem } from "@/types";
-import { Bom, Product, Unit } from "@/types/resources";
+import { Bom, BomLines, Product, Unit } from "@/types/resources";
 import { Link, useForm } from "@inertiajs/react";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -22,57 +20,77 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: "/bom",
     },
 ];
-export default function Edit({finishedGood, materials, units}: {finishedGood: Bom; materials: Product[]; units: Unit[]}) {
-    breadcrumbs[1] = { title: finishedGood.product?.name ?? 'BoM', href: `/boms/${finishedGood.id}` };
-    breadcrumbs[2] = { title: "Edit", href: `/boms/${finishedGood.id}/edit` };
 
-    const {data, setData, post, reset, errors, processing} = useForm({
-        materials: finishedGood.lines?.map((m) => ({ product_id: m.component_product_id, quantity_per_unit: m.quantity_per_unit, unit: m.unit })) ?? []
+export default function Edit({ bom, materials, units }: { bom: Bom; materials: Product[]; units: Unit[] }) {
+    const initialLines: BomLines[] = bom.lines ?? [];
+
+    const { data, setData, put, reset, processing } = useForm({
+        materials: initialLines.map((line) => ({
+            component_product_id: line.component_product_id,
+            quantity_per_unit: Number(line.quantity_per_unit),
+            unit: line.unit,
+        })),
     });
 
-    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+    // Components are kept separate from form data so only primitive fields are submitted.
+    const [selectedComponents, setSelectedComponents] = useState<Product[]>(
+        initialLines.map((line) => line.component).filter((component): component is Product => component != null),
+    );
     const [itemsOpen, setItemsOpen] = useState(false);
-    const [unitOpenIndex, setUnitOpenIndex] = useState<number|null>(null);
-    const filteredProducts = materials.filter((product) => !selectedProducts.find((p) => p.id === product.id));
+    const [unitOpenIndex, setUnitOpenIndex] = useState<number | null>(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const filteredProducts = materials
+        ? materials.filter((product) => !selectedComponents.find((component) => component.id === product.id))
+        : [];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.SubmitEvent) => {
         e.preventDefault();
-        console.log(data);
-        post(route('bom.store'), {
-            onSuccess: () => reset(),
-            onError: (errors) => console.log(errors),
+        setConfirmOpen(true);
+    };
+
+    const submitForm = () => {
+        put(route('bom.update', {bom: bom.id}), {
+            onSuccess: () => {
+                console.log(bom);
+            },
+            onError: (error) => {
+                console.error(error);
+                toast.error(error.message);
+            },
         });
     };
 
-
     const addItems = (product: Product) => {
-        if (!selectedProducts.find((p) => p.id === product.id)) {
-            setSelectedProducts([...selectedProducts, product]);
-            const productUnit = units.find((u) => u.name === (typeof product.unit === 'string' ? product.unit : product.unit.name));
-            setData('materials', data.materials ? [...data.materials, { product_id: product.id, quantity_per_unit: 1, unit: productUnit!.name }] : []);
+        if (selectedComponents.find((component) => component.id === product.id)) {
+            return;
         }
+
+        const productUnit = units.find((u) => u.name === (typeof product.unit === 'string' ? product.unit : product.unit?.name));
+        setSelectedComponents([...selectedComponents, product]);
+        setData('materials', [
+            ...data.materials,
+            {
+                component_product_id: product.id,
+                quantity_per_unit: 1,
+                unit: productUnit?.name ?? '',
+            },
+        ]);
     };
 
-    const removeItem = (product: Product) => {
-        setSelectedProducts(selectedProducts.filter((p) => p.id !== product.id));
+    const removeItem = (componentProductId: number) => {
+        setSelectedComponents(selectedComponents.filter((component) => component.id !== componentProductId));
         setData(
             'materials',
-            data.materials.filter((item) => item.product_id !== product.id),
+            data.materials.filter((line) => line.component_product_id !== componentProductId),
         );
     };
-
-    const clearItems = () => {
-        setSelectedProducts([]);
-        setData('materials', []);
-    };
-
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <ContainerFormLayout>
                 <div className="mb-6 flex items-center justify-between">
                     <div className="">
-                        <h1 className="text-2xl mb-4 font-bold">Create Bill Of Material</h1>
+                        <h1 className="text-2xl mb-4 font-bold">Edit BoM - {bom.product?.name} v. {bom.version}</h1>
                         <p className="text-muted-foreground mb-6 text-sm"></p>
                     </div>
                     <div className="">
@@ -85,15 +103,22 @@ export default function Edit({finishedGood, materials, units}: {finishedGood: Bo
                 </div>
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
                     <div className="flex flex-col gap-2">
+                        <Label>Finished Good</Label>
+                        <Input
+                            id="finished_good"
+                            name="finished_good"
+                            value={`(${bom.product?.sku})${bom.product?.name}`}
+                            type="text"
+                            readOnly
+                        />
+                    </div>
+                    <div className="flex flex-col gap-2">
                         <Label>Materials</Label>
                         <div className="space-y-2">
                             <Label htmlFor="items">Product Items</Label>
                             <div className="overflow-y-auto rounded-md">
-                                {selectedProducts.length === 0 ? (
-                                    <div className="border-muted-foreground bg-muted-foreground/20 flex h-32 items-center justify-center rounded-md border p-4" onClick={(e) => {
-                                        e.preventDefault();
-                                        // setFocus to supplier
-                                    }}>
+                                {selectedComponents.length === 0 ? (
+                                    <div className="border-muted-foreground bg-muted-foreground/20 flex h-32 items-center justify-center rounded-md border p-4">
                                         <p className="text-muted-foreground text-center">No Materials</p>
                                     </div>
                                 ) : (
@@ -108,99 +133,95 @@ export default function Edit({finishedGood, materials, units}: {finishedGood: Bo
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {selectedProducts.map((product: Product, index) => (
-                                                    <TableRow key={product.id}>
-                                                        <TableCell>({product.sku}) {product.name}</TableCell>
-                                                        <TableCell>
-                                                            <Input
-                                                                type="number"
-                                                                defaultValue={data.materials.find((item) => item.product_id === product.id)?.quantity_per_unit || 1}
-                                                                onChange={(e) => {
-                                                                    const quantity = Number(e.target.value);
-                                                                    setData((prevData) => {
-                                                                        const newData = prevData.materials.map((item) =>
-                                                                            item.product_id === product.id ? { ...item, quantity_per_unit: quantity } : item
-                                                                        )
-                                                                        return { ...prevData, materials: newData };
-                                                                    })
-                                                                }}
-                                                                className="w-full"
-                                                            />
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Popover open={unitOpenIndex === index} onOpenChange={(open) => setUnitOpenIndex(open ? index : null)}>
-                                                                <PopoverTrigger>
-                                                                    <Input type="text" value={data.materials.find(i => i.product_id === product.id)?.unit ? units.find(u => u.name === data.materials.find(i => i.product_id === product.id)?.unit)?.name : ''} readOnly/>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent>
-                                                                    <SelectCommand
-                                                                        lists={units}
-                                                                        getLabel={(unit) => unit.name}
-                                                                        onSelect={(unit) => {
-                                                                            setData((prevData) => {
-                                                                                const newData = prevData.materials.map((item) =>
-                                                                                    item.product_id === product.id ? { ...item, unit: unit.name } : item
-                                                                                )
-                                                                                return { ...prevData, materials: newData };
-                                                                            })
-                                                                            setUnitOpenIndex(null);
-                                                                        }}
-                                                                    />
+                                                {selectedComponents.map((component: Product, index) => {
+                                                    const line = data.materials.find((item) => item.component_product_id === component.id);
 
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Button variant="destructive" size="icon" onClick={() => removeItem(product)}>
-                                                                <TrashIcon className="h-4 w-4" />
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
+                                                    return (
+                                                        <TableRow key={component.id}>
+                                                            <TableCell>({component.sku}) {component.name}</TableCell>
+                                                            <TableCell>
+                                                                <Input
+                                                                    type="number"
+                                                                    value={line?.quantity_per_unit ?? 1}
+                                                                    onChange={(e) => {
+                                                                        const quantity = Number(e.target.value);
+                                                                        setData('materials', data.materials.map((item) =>
+                                                                            item.component_product_id === component.id
+                                                                                ? { ...item, quantity_per_unit: quantity }
+                                                                                : item,
+                                                                        ));
+                                                                    }}
+                                                                    className="w-full"
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Popover open={unitOpenIndex === index} onOpenChange={(open) => setUnitOpenIndex(open ? index : null)}>
+                                                                    <PopoverTrigger>
+                                                                        <Input type="text" value={line?.unit ?? ''} readOnly />
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent>
+                                                                        <SelectCommand
+                                                                            lists={units}
+                                                                            getLabel={(unit) => unit.name}
+                                                                            onSelect={(unit) => {
+                                                                                setData('materials', data.materials.map((item) =>
+                                                                                    item.component_product_id === component.id
+                                                                                        ? { ...item, unit: unit.name }
+                                                                                        : item,
+                                                                                ));
+                                                                                setUnitOpenIndex(null);
+                                                                            }}
+                                                                        />
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Button variant="destructive" size="icon" onClick={() => removeItem(component.id)}>
+                                                                    <TrashIcon className="h-4 w-4" />
+                                                                </Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })}
                                             </TableBody>
                                         </Table>
                                     </div>
                                 )}
                             </div>
-                                <Popover open={itemsOpen} onOpenChange={setItemsOpen} defaultOpen={false}>
-                                    <div className="mt-6 flex w-full items-center justify-end md:mt-8">
-                                        <PopoverTrigger asChild>
-                                            <Button size={'sm'} className="">
-                                                <PlusIcon className="mr-2 h-4 w-4" />
-                                                Add Item
-                                            </Button>
-                                        </PopoverTrigger>
-                                    </div>
-                                    <PopoverContent className="w-full p-0" align="end">
-                                    <Command
-                                        filter={(value, search) => {
-                                            return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                            <Popover open={itemsOpen} onOpenChange={setItemsOpen} defaultOpen={false}>
+                                <div className="mt-6 flex w-full items-center justify-end md:mt-8">
+                                    <PopoverTrigger asChild>
+                                        <Button size={'sm'} className="">
+                                            <PlusIcon className="mr-2 h-4 w-4" />
+                                            Add Item
+                                        </Button>
+                                    </PopoverTrigger>
+                                </div>
+                                <PopoverContent className="w-full p-0" align="end">
+                                    <SelectCommand
+                                        lists={filteredProducts}
+                                        getKey={(product: Product) => product.id}
+                                        renderItem={(product: Product) => <>({product.sku}) {product.name}</>}
+                                        onSelect={(product: Product) => {
+                                            addItems(product);
+                                            setItemsOpen(false);
                                         }}
-                                    >
-                                            <CommandInput placeholder="Search products..." />
-                                            <CommandEmpty>No products found.</CommandEmpty>
-                                            <CommandList>
-                                                {filteredProducts.map((product: Product) => (
-                                                    <CommandItem
-                                                        key={product.id}
-                                                        value={`${product.name} (${product.sku})`}
-                                                        onSelect={() => {
-                                                            addItems(product);
-                                                            setItemsOpen(false);
-                                                        }}
-                                                    >
-                                                        {product.name} ({product.sku})
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                     <Button variant="default" type="submit" disabled={processing}>
                         {processing ? 'Saving...' : 'Save'}
                     </Button>
+                    <ConfirmDialog
+                        title="Confirm Save"
+                        description="Are you sure you want to save this BOM?"
+                        open={confirmOpen}
+                        onOpenChange={setConfirmOpen}
+                        onConfirm={submitForm}
+                        processing={processing}
+                    />
                 </form>
             </ContainerFormLayout>
         </AppLayout>

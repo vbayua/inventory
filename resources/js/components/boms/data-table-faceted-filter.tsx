@@ -16,6 +16,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
         label: string;
         value: string;
         icon?: React.ComponentType<{ className?: string }>;
+        className?: string;
     }[];
 }
 
@@ -32,19 +33,19 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title, options }
                     {selectedValues?.size > 0 && (
                         <>
                             <Separator orientation="vertical" className="mx-2 h-4" />
-                            <Badge variant="secondary" className="rounded-sm px-1 font-normal lg:hidden">
+                            <Badge variant="outline" className="rounded-sm px-1 font-normal lg:hidden">
                                 {selectedValues.size}
                             </Badge>
                             <div className="hidden space-x-1 lg:flex">
                                 {selectedValues.size > 2 ? (
-                                    <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                    <Badge variant="outline" className="rounded-sm px-1 font-normal">
                                         {selectedValues.size} selected
                                     </Badge>
                                 ) : (
                                     options
                                         .filter((option) => selectedValues.has(option.value))
                                         .map((option) => (
-                                            <Badge variant="secondary" key={option.value} className="rounded-sm px-1 font-normal">
+                                            <Badge variant="outline" key={option.value} className={cn('rounded-sm px-1 font-normal', option.className)}>
                                                 {option.label}
                                             </Badge>
                                         ))

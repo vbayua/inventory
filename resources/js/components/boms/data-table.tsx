@@ -37,6 +37,7 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+    const [globalFilter, setGlobalFilter] = React.useState('');
 
     const table = useReactTable({
         data,
@@ -47,6 +48,7 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFIlters,
         onColumnVisibilityChange: setColumnVisibility,
+        onGlobalFilterChange: setGlobalFilter,
         getFilteredRowModel: getFilteredRowModel(),
         getFacetedRowModel: getFacetedRowModel(),
         getFacetedUniqueValues: getFacetedUniqueValues(),
@@ -54,6 +56,7 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
             sorting,
             columnFilters,
             columnVisibility,
+            globalFilter,
         },
     });
     return (
@@ -66,17 +69,17 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
             <div className="grid w-full [&>div]:max-h-120 [&>div]:rounded gap-4">
                 <div className="flex flex-col gap-4 md:flex-row sm:justify-between">
                     <div>
-                    <Field>
-                        <Input
-                            placeholder="Search"
-                            value={(table.getState().globalFilter as string) ?? ''}
-                            onChange={(event) => table.setGlobalFilter(event.target.value)}
-                            className="w-2xl max-w-4xl sm:w-full"
-                            id="global-filter"
-                            aria-label="Global Filter"
-                            autoComplete="off"
-                        />
-                    </Field>
+                        <Field>
+                            <Input
+                                placeholder="Search"
+                                value={(table.getState().globalFilter as string) ?? ''}
+                                onChange={(event) => table.setGlobalFilter(event.target.value)}
+                                className="w-2xl max-w-4xl sm:w-full"
+                                id="global-filter"
+                                aria-label="Global Filter"
+                                autoComplete="off"
+                            />
+                        </Field>
                     </div>
                     <div>
                         <DataTableToolbar table={table} />

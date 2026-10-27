@@ -18,9 +18,28 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
     const isFiltered = table.getState().columnFilters.length > 0;
-
+    const statusOptions = [
+        {
+            label: 'Draft',
+            value: 'draft',
+            className: 'bg-amber-800 text-amber-100',
+        },
+        {
+            label: 'Active',
+            value: 'active',
+            className: 'bg-blue-800 text-blue-100',
+        },
+        {
+            label: 'Retired',
+            value: 'retired',
+            className: 'bg-red-800 text-red-100',
+        },
+    ]
     return (
         <div className="flex items-center justify-between">
+            <div className="flex flex-1 items-center space-x-2">
+                {table.getColumn('status') && <DataTableFacetedFilter title="Status" column={table.getColumn('status')} options={statusOptions} />}
+            </div>
             <div className="flex flex-1 items-center space-x-2">
                {isFiltered && (
                     <Button
