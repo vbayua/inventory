@@ -351,6 +351,7 @@ export interface ProductionOrder {
     completed_by?: number;
     cancelled_at?: string;
     cancelled_by?: number;
+    cancel_note?: string;
     created_at?: string;
     updated_at?: string;
     notes?: string;

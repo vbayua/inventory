@@ -1,16 +1,20 @@
+import ConfirmDialog from "@/components/confirm-dialog";
 import ContainerLayout from "@/components/container-layout";
+import InputError from "@/components/input-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AppLayout from "@/layouts/app-layout";
 import { BreadcrumbItem } from "@/types";
 import { ProductionMaterial, ProductionOrder } from "@/types/resources";
-import { Head, Link, router } from "@inertiajs/react";
-import { ArrowLeft, CheckIcon, DownloadIcon, EditIcon, MoreHorizontalIcon } from "lucide-react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
+import { ArrowLeft, CheckIcon, CircleSlashedIcon, CogIcon, DownloadIcon, EditIcon, FileInput, FileInputIcon, ListTreeIcon, MoreHorizontalIcon, PlayIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -59,51 +63,99 @@ const badge = (status: keyof typeof badgeVariant) => {
     </Badge>
 }
 
-const productionOrderAction = {
-    draft: {
-        label: 'Release Order',
-        variant: 'default',
-        style: 'bg-blue-800 text-blue-100',
-    },
-    released: {
-        label: 'Cancel Order',
-        variant: 'default',
-        style: 'bg-red-800 text-red-100 border border-red-100',
-    },
-    in_progress: {
-        label: 'Cancel Order',
-        variant: 'default',
-        style: 'bg-red-800 text-red-100 border border-red-100',
-    },
-    completed: {
-        label: 'Completed',
-        variant: 'default',
-        style: 'bg-green-800 text-green-100 border border-green-100',
-    },
-    cancelled: {
-        label: 'Cancelled',
-        variant: 'outline',
-        style: 'bg-red-800 text-red-100 border border-red-100',
-    },
-} as const
+type status = 'released' | 'in_progress' | 'completed' | 'cancelled';
 
-const handleProductionOrderStatus = (production: ProductionOrder) => {
-    router.put(route('production.status.update', { production: production.id }), { status: production.status },
-        {
-            onSuccess: () => {
-                toast.success('Production order status updated successfully');
-            },
-            onError: () => {
-                toast.error('Failed to update production order status');
-            },
-        }
-    )
-};
 
 export default function Show({production} : {production: ProductionOrder}) {
     console.log(production);
     const productionMaterial = production.materials ?? [];
     const canIssueStock = production.status === 'released' || production.status === 'in_progress';
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmAttributes, setConfirmAttributes] = useState({
+        title: '',
+        message: '',
+    });
+    const { data, put, errors, processing, disabled, setData } = useForm<{status: status | ''}>({
+        status: '',
+    })
+
+    const releaseOrder = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setData('status', 'released');
+        setConfirmAttributes({
+            title: 'Release Order',
+            message: 'Are you sure you want to release this order?',
+        });
+        setConfirmOpen(true);
+    };
+
+    const startOrder = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setData('status', 'in_progress');
+        setConfirmAttributes({
+            title: 'Start Order',
+            message: 'Are you sure you want to start this order?',
+        });
+        setConfirmOpen(true);
+    };
+
+    const completeOrder = (e:React.MouseEvent) => {
+       e.preventDefault();
+       setData('status', 'completed');
+       setConfirmAttributes({
+           title: 'Complete Order',
+           message: 'Are you sure you want to complete this order?',
+       });
+       setConfirmOpen(true);
+    };
+
+    const [cancelOpen, setCancelOpen] = useState(false);
+    const cancelForm = useForm<{ status: 'cancelled'; cancel_note: string }>({
+        status: 'cancelled',
+        cancel_note: '',
+    });
+
+    const cancelOrder = (e: React.MouseEvent) => {
+        e.preventDefault();
+        cancelForm.reset();
+        cancelForm.clearErrors();
+        setCancelOpen(true);
+    };
+
+    const handleConfirmCancel = () => {
+        return new Promise<void>((resolve, reject) => {
+            cancelForm.put(route('production.status.update', { production: production.id }), {
+                onSuccess: () => {
+                    toast.success('Production order cancelled successfully');
+                    resolve();
+                },
+                onError: (error) => {
+                    toast.error('Failed to cancel production order');
+                    reject(error);
+                },
+            });
+        });
+    };
+
+
+    const handleConfirmOrder = () => {
+        return new Promise<void>((resolve, reject) => {
+            put(route('production.status.update', { production: production.id }),
+                {
+                    onSuccess: () => {
+                        toast.success('Production order status updated successfully');
+                        resolve();
+                    },
+                    onError: (error) => {
+                        toast.error('Failed to update production order status');
+                        console.error(error);
+                        reject(error);
+                    },
+                }
+            )
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Production Order Detail" />
@@ -111,26 +163,86 @@ export default function Show({production} : {production: ProductionOrder}) {
                 <div className="grid grid-cols-1 gap-6">
                     <Card>
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
-                            <CardTitle>Production Order Detail - {`#123450`}</CardTitle>
+                            <div className="space-y-4">
+                                <CardTitle>Order Produksi - {production.order_number}</CardTitle>
+                                <CardDescription className="text-lg">({production.product?.sku}) {production.product?.name} - {production.bom_id}</CardDescription>
+                            </div>
                             <div className="mt-6 md:mt-0">
                                 <ButtonGroup>
                                     <ButtonGroup>
-                                        <Button
-                                            variant={productionOrderAction[production.status]?.variant}
-                                            type="button"
-                                            onClick={() => handleProductionOrderStatus(production)}
-                                            className={productionOrderAction[production.status]?.style}
-                                        >
-                                            {productionOrderAction[production.status]?.label}
-                                        </Button>
+                                        {badge(production.status)}
                                     </ButtonGroup>
                                     <ButtonGroup>
-                                        <Button variant="outline" asChild><Link href={route('production.issue', { production: production.id })} prefetch={false}>Issue Log</Link></Button>
+                                        <Button variant="outline" asChild></Button>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="outline"><MoreHorizontalIcon /></Button>
                                             </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                {production.status === 'draft' &&
+                                                    <DropdownMenuGroup>
+                                                    <DropdownMenuItem variant="default" onClick={(e) => releaseOrder(e)}>
+                                                        <FileInputIcon /> Release Order
+                                                    </DropdownMenuItem>
+                                                    </DropdownMenuGroup>
+                                                }
+                                                {production.status === 'released' &&
+                                                    <DropdownMenuGroup>
+                                                        <DropdownMenuItem variant="default" onClick={(e) => startOrder(e)}>
+                                                            <PlayIcon/>Start Production
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem variant="destructive" onClick={(e) => cancelOrder(e)}>
+                                                            <CircleSlashedIcon />Cancel Order
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuGroup>
+                                                }
+                                                {production.status === 'in_progress' &&
+                                                    <DropdownMenuGroup>
+                                                        <DropdownMenuItem variant="default" onClick={(e) => completeOrder(e)}>
+                                                            <CheckIcon />Mark as Complete
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem variant="destructive" onClick={(e) => cancelOrder(e)}>
+                                                            <CircleSlashedIcon />Cancel Order
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuGroup>
+                                                }
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem asChild><Link href={route('production.issue', { production: production.id })} prefetch={false}><ListTreeIcon/>Issue Log</Link></DropdownMenuItem>
+                                            </DropdownMenuContent>
                                         </DropdownMenu>
+                                        <ConfirmDialog
+                                            open={confirmOpen}
+                                            onOpenChange={setConfirmOpen}
+                                            title={confirmAttributes.title}
+                                            description={confirmAttributes.message}
+                                            processing={processing}
+                                            onConfirm={handleConfirmOrder}
+                                        />
+                                        <ConfirmDialog
+                                            open={cancelOpen}
+                                            onOpenChange={setCancelOpen}
+                                            title="Cancel Order"
+                                            description="Are you sure you want to cancel this order? This cannot be undone."
+                                            confirmLabel="Cancel Order"
+                                            cancelLabel="Back"
+                                            confirmVariant="destructive"
+                                            processing={cancelForm.processing}
+                                            onConfirm={handleConfirmCancel}
+                                        >
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="cancel_note">
+                                                    Notes <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Textarea
+                                                    id="cancel_note"
+                                                    value={cancelForm.data.cancel_note}
+                                                    onChange={(e) => cancelForm.setData('cancel_note', e.target.value)}
+                                                    placeholder="Reason for cancelling this order"
+                                                    rows={4}
+                                                />
+                                                <InputError message={cancelForm.errors.cancel_note} />
+                                            </div>
+                                        </ConfirmDialog>
                                     </ButtonGroup>
                                 </ButtonGroup>
                             </div>
