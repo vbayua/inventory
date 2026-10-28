@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductTypeRequest extends FormRequest
@@ -17,7 +18,7 @@ class StoreProductTypeRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -26,6 +27,7 @@ class StoreProductTypeRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'disable_type_code' => ['required', 'boolean'],
             'type_code' => ['required_if:disable_type_code,false', 'unique:product_types,type_code', 'nullable', 'string'],
+            'assemblable' => ['sometimes', 'boolean'],
         ];
     }
 }

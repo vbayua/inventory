@@ -38,8 +38,9 @@ class ProductTypeController extends Controller
         $validated = $request->validated();
         $data = [
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'type_code' => $validated['type_code'],
+            'assemblable' => $validated['assemblable'] ?? false,
         ];
         ProductType::create($data);
 
@@ -58,8 +59,9 @@ class ProductTypeController extends Controller
         $validated = $request->validated();
         $productType->update([
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? $productType->description,
             'type_code' => $validated['type_code'],
+            'assemblable' => $validated['assemblable'] ?? $productType->assemblable,
         ]);
 
         return redirect()->route('product-types.index')->with('success', 'Product Type updated successfully.');

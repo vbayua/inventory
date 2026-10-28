@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProductTypeRequest extends FormRequest
@@ -17,7 +18,7 @@ class UpdateProductTypeRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -27,6 +28,7 @@ class UpdateProductTypeRequest extends FormRequest
             'type_code' => ['nullable', 'exists:product_types,type_code', 'string'],
             'batch_interval_days' => ['nullable', 'integer', 'min:0'],
             'default_location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'assemblable' => ['sometimes', 'boolean'],
         ];
     }
 }

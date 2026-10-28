@@ -38,6 +38,8 @@ export interface Product {
     pivot?: SupplierProductsPivot;
     suppliers?: Supplier[];
     data?: Product[];
+    boms?: Bom[];
+    active_bom?: Bom;
 }
 
 export interface Partner {

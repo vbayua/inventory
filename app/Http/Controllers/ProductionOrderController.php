@@ -54,7 +54,14 @@ class ProductionOrderController extends Controller
 
     public function create()
     {
-        return Inertia::render('Production/Create');
+        $finishedGoods = Product::with([
+            'productType',
+            'activeBom.lines.component',
+        ])->whereHas('productType', function ($query) {
+            $query->where('assemblable', true);
+        })->get();
+
+        return Inertia::render('Production/Create', ['finishedGoods' => Inertia::optional(fn() => $finishedGoods)]);
     }
 
     public function store(Request $request, ProductionOrderService $productionOrderService): RedirectResponse
@@ -68,13 +75,14 @@ class ProductionOrderController extends Controller
             'bom_id' => ['required', Rule::exists('boms', 'id')->where('active_product_id', $request->integer('product_id'))],
             'target_quantity' => ['required', 'numeric', 'gt:0'],
             'notes' => ['nullable', 'string'],
-            'order_number' => ['nullable', 'string'],
+            'order_number' => ['required', 'string', 'unique:production_orders,order_number'],
         ], [
             'bom_id.required' => 'This product has no active BOM.',
             'bom_id.exists' => 'The selected BOM is not the product\'s active BOM.',
+            'order_number.unique' => 'This order number is already in use.',
         ]);
-
-        $productionOrder = $productionOrderService->createForProduct(Product::findOrFail($data['product_id']), $data);
+        $product = Product::findOrFail($data['product_id']);
+        $productionOrder = $productionOrderService->createForProduct($product, $data);
 
         return redirect()->route('production.show', $productionOrder)->with('success', 'Production order created successfully.');
     }

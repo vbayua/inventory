@@ -7,6 +7,7 @@ use App\Models\Bom;
 use App\Models\BomLine;
 use App\Models\Product;
 use App\Models\ProductionOrder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,9 +20,10 @@ class ProductionOrderService
      *
      * @param  array{bom_id?: int|string|null, target_quantity: float|int|string, notes?: string|null, order_number?: string|null}  $data
      */
-    public function createForProduct(Product $product, array $data): ProductionOrder
+    public function createForProduct(Product|Collection|int $product, ?array $data): ProductionOrder
     {
         return DB::transaction(function () use ($product, $data) {
+            $product = $product instanceof Product ? $product : Product::findOrFail($product);
             $bom = Bom::where('active_product_id', $product->id)->lockForUpdate()->first();
 
             if (! $bom) {

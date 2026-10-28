@@ -18,6 +18,7 @@ interface CreateProductTypeForm {
     disable_type_code?: boolean;
     has_scientific_name?: boolean;
     has_brand_name?: boolean;
+    assemblable?: boolean;
 }
 export default function Create() {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -41,6 +42,7 @@ export default function Create() {
         disable_type_code: false,
         has_scientific_name: false,
         has_brand_name: false,
+        assemblable: false,
     });
 
     const createProductType: FormEventHandler = (e) => {
@@ -162,6 +164,21 @@ export default function Create() {
                                 <p className="text-muted-foreground text-sm">
                                     Product types that require a brand name will have this option enabled. This is useful for products that are
                                     branded.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Checkbox
+                                id="assemblable"
+                                name="assemblable"
+                                checked={data.assemblable}
+                                onCheckedChange={(checked) => setData('assemblable', !!checked)}
+                                className="mt-1"
+                            />
+                            <div className="grid gap-2">
+                                <Label htmlFor="assemblable">Assemblable</Label>
+                                <p className="text-muted-foreground text-sm">
+                                    Products of this type are assembled from other products through a Bill of Materials.
                                 </p>
                             </div>
                         </div>
