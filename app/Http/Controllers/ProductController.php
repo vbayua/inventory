@@ -9,8 +9,10 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Partner;
 use App\Models\Product;
+use App\Models\ProductType;
 use App\Models\Supplier;
 use App\Models\Unit;
+use App\Models\Warehouse;
 use App\Rules\Permissions\Product\ProductPermissions;
 use App\Service\BatchAssignmentService;
 use App\Service\StockOperationService;
@@ -50,7 +52,7 @@ class ProductController extends Controller
     public function create()
     {
         // $this->authorize('create', Product::class);
-        $suppliers = Inertia::lazy(fn () => Cache::remember('suppliers_list', 300, fn () => \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
+        $suppliers = Inertia::lazy(fn () => Cache::remember('suppliers_list', 300, fn () => Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
         );
         // $suppliers = \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get();
         $partners = Inertia::lazy(function () {
@@ -58,12 +60,12 @@ class ProductController extends Controller
         });
 
         return Inertia::render('Products/Create', [
-            'categories' => \App\Models\Category::select('id', 'name')->get(),
+            'categories' => Category::select('id', 'name')->get(),
             'suppliers' => $suppliers,
-            'units' => \App\Models\Unit::select('name')->get(),
-            'product_types' => \App\Models\ProductType::select('id', 'name', 'type_code')->get(),
-            'warehouses' => \App\Models\Warehouse::select('id', 'name')->get(),
-            'locations' => \App\Models\Location::select('id', 'name', 'warehouse_id')->get(),
+            'units' => Unit::select('name')->get(),
+            'product_types' => ProductType::select('id', 'name', 'type_code')->get(),
+            'warehouses' => Warehouse::select('id', 'name')->get(),
+            'locations' => Location::select('id', 'name', 'warehouse_id')->get(),
             'partners' => $partners,
         ]);
     }
@@ -83,8 +85,8 @@ class ProductController extends Controller
         ]);
 
         // Check if product type is the same as the sku prefix
-        $productType = \App\Models\ProductType::find($request->product_type_id);
-        if ($productType && !str_starts_with($request->sku, $productType->type_code)) {
+        $productType = ProductType::find($request->product_type_id);
+        if ($productType && ! str_starts_with($request->sku, $productType->type_code)) {
             throw ValidationException::withMessages([
                 'sku' => "Item code must start with the product type code: $productType->type_code",
             ]);
@@ -164,6 +166,11 @@ class ProductController extends Controller
         );
         $units = Cache::remember('units_list', 3600, fn () => Unit::select('name')->get()
         );
+        $product->load([
+            'suppliers:id,partner_id',
+            'suppliers.partner:id,name',
+        ]);
+
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => $categories,
@@ -178,7 +185,15 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $product->update($request->validated());
+        DB::transaction(function () use ($request, $product) {
+            $product->update($request->safe()->except('suppliers'));
+
+            foreach ($request->validated('suppliers', []) as $supplier) {
+                $product->suppliers()->updateExistingPivot($supplier['id'], [
+                    'price' => $supplier['price'],
+                ]);
+            }
+        });
         Cache::forget('products_index');
 
         return redirect()->route('products.index')

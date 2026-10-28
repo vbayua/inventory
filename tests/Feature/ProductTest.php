@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\Product;
+use App\Models\Supplier;
 use Database\Seeders\BlankStateSeeder;
+use Illuminate\Support\Facades\DB;
+use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\assertDatabaseHas;
 
@@ -36,7 +39,7 @@ it('can register product without begin stock and suppliere', function () {
     assertDatabaseHas('products', ['name' => 'Test Product', 'sku' => 'RMP0001A']);
 });
 
-test('sku valid format', function() {
+test('sku valid format', function () {
     $productData = [
         'name' => 'Test Product',
         'sku' => 'RMP0001',
@@ -72,7 +75,7 @@ it('show validation exception when required fields are missing', function () {
     asAdmin()->post('/products', $productData)->assertSessionHasErrors('name');
 });
 
-it('show validation exception when sku is in incorrect format', function() {
+it('show validation exception when sku is in incorrect format', function () {
     $productData = [
         'name' => 'Test Product',
         'sku' => 'INVALIDSKU',
@@ -135,7 +138,7 @@ test('sku must start with invalid type code', function () {
 test('type code is not configured', function () {
 
     // First, we need to clear the product_types table to simulate no type codes configured
-    \Illuminate\Support\Facades\DB::table('product_types')->truncate();
+    DB::table('product_types')->truncate();
 
     $productData = [
         'name' => 'Test Product',
@@ -149,4 +152,45 @@ test('type code is not configured', function () {
     ];
 
     asAdmin()->post('/products', $productData)->assertSessionHasErrors('sku');
+});
+
+it('updates the default supplier price of a product', function () {
+    $product = productWithSupplier();
+    $supplier = $product->suppliers->first();
+
+    asAdmin()->put("/products/{$product->id}", [
+        'name' => $product->name,
+        'sku' => $product->sku,
+        'unit' => $product->unit,
+        'suppliers' => [['id' => $supplier->id, 'price' => 25000]],
+    ])->assertRedirect('/products');
+
+    assertDatabaseHas('products_suppliers', [
+        'product_id' => $product->id,
+        'supplier_id' => $supplier->id,
+        'price' => 25000,
+    ]);
+});
+
+it('rejects supplier prices for suppliers not linked to the product', function () {
+    $product = productWithSupplier();
+    $otherSupplier = Supplier::factory()->create();
+
+    asAdmin()->put("/products/{$product->id}", [
+        'name' => $product->name,
+        'sku' => $product->sku,
+        'unit' => $product->unit,
+        'suppliers' => [['id' => $otherSupplier->id, 'price' => 25000]],
+    ])->assertSessionHasErrors('suppliers.0.id');
+});
+
+it('passes the default supplier price to the purchase order form', function () {
+    $product = productWithSupplier();
+    $supplier = $product->suppliers->first();
+    $product->suppliers()->updateExistingPivot($supplier->id, ['price' => 25000]);
+
+    asAdmin()->get('/purchase-orders/create')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('suppliers.0.products.0.pivot.price', 25000)
+        );
 });

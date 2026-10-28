@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type Product } from '@/types';
@@ -32,6 +33,13 @@ type EditProductForm = {
     supplier_id?: string | null;
     brand_name?: string;
     scientific_name?: string;
+    suppliers?: SupplierPrice[];
+};
+
+type SupplierPrice = {
+    id: number;
+    name: string;
+    price: string | number;
 };
 
 type Category = {
@@ -40,14 +48,23 @@ type Category = {
 };
 
 type Supplier = {
-    id?: number;
-    name?: string;
+    id: number;
+    partner?: { name?: string };
+    pivot?: { price?: string | number };
 };
 
 type Unit = {
     name?: string;
 };
-export default function Edit({ product, units, productHasStock }: { product: Product; units: Unit[]; productHasStock: boolean }) {
+export default function Edit({
+    product,
+    units,
+    productHasStock,
+}: {
+    product: Product & { suppliers?: Supplier[] };
+    units: Unit[];
+    productHasStock: boolean;
+}) {
     const productName = useRef<HTMLInputElement>(null);
     const productSku = useRef<HTMLInputElement>(null);
     const productBrandName = useRef<HTMLInputElement>(null);
@@ -63,7 +80,19 @@ export default function Edit({ product, units, productHasStock }: { product: Pro
         supplier_id: String(product.supplier_id),
         brand_name: product.brand_name || '',
         scientific_name: product.scientific_name || '',
+        suppliers: (product.suppliers ?? []).map((supplier) => ({
+            id: supplier.id,
+            name: supplier.partner?.name ?? '-',
+            price: supplier.pivot?.price ?? 0,
+        })),
     });
+
+    const setSupplierPrice = (supplierId: number, price: string) => {
+        setData(
+            'suppliers',
+            data.suppliers.map((supplier) => (supplier.id === supplierId ? { ...supplier, price } : supplier)),
+        );
+    };
 
     const editProduct: FormEventHandler = (e) => {
         e.preventDefault();
@@ -194,6 +223,41 @@ export default function Edit({ product, units, productHasStock }: { product: Pro
                         </span>
                         <InputError message={errors.unit} />
                     </div>
+
+                    {data.suppliers.length > 0 && (
+                        <div className="grid gap-2">
+                            <Label>Harga Default Supplier (IDR)</Label>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Supplier</TableHead>
+                                            <TableHead>Harga</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {data.suppliers.map((supplier, index) => (
+                                            <TableRow key={supplier.id}>
+                                                <TableCell className="font-medium">{supplier.name}</TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        min={0}
+                                                        value={supplier.price}
+                                                        onChange={(e) => setSupplierPrice(supplier.id, e.target.value)}
+                                                    />
+                                                    <InputError message={errors[`suppliers.${index}.price` as keyof typeof errors]} />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                            <span className="text-muted-foreground text-sm">
+                                Harga ini dipakai sebagai harga default saat membuat Purchase Order.
+                            </span>
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-4">
                         <Button disabled={processing}>Edit Product</Button>
