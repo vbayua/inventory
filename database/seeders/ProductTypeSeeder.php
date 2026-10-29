@@ -12,39 +12,47 @@ class ProductTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\ProductType::create([
+        \App\Models\ProductType::firstOrCreate([
             'name' => 'Raw Material',
             'description' => 'Produk Bahan Kemas',
             'type_code' => 'RMP',
             'batch_interval_days' => 90, // Default batch interval for raw materials
         ]);
 
-        \App\Models\ProductType::create([
+        \App\Models\ProductType::firstOrCreate([
             'name' => 'Primary Packaging',
             'description' => 'Produk Bahan Kemas Primer',
             'type_code' => 'PP',
-            'batch_interval_days' => 0, // No batch interval for primary packaging
+            'batch_interval_days' => 90, // No batch interval for primary packaging
         ]);
 
-        \App\Models\ProductType::create([
+        \App\Models\ProductType::firstOrCreate([
             'name' => 'Secondary Packaging',
             'description' => 'Produk Bahan Kemas Sekunder',
             'type_code' => 'PS',
-            'batch_interval_days' => 0, // No batch interval for secondary packaging
+            'batch_interval_days' => 90, // No batch interval for secondary packaging
         ]);
 
-        \App\Models\ProductType::create([
+        \App\Models\ProductType::firstOrCreate([
             'name' => 'Tertiary Packaging',
             'description' => 'Produk Bahan Kemas Tersier',
             'type_code' => 'PT',
-            'batch_interval_days' => 0, // No batch interval for secondary packaging
+            'batch_interval_days' => 90, // No batch interval for secondary packaging
         ]);
 
-        \App\Models\ProductType::create([
+        \App\Models\ProductType::firstOrCreate([
             'name' => 'Packaging Contribute',
             'description' => 'Produk Bahan Kemas Kontribut',
             'type_code' => 'PC',
-            'batch_interval_days' => 0, // No batch interval for secondary packaging
+            'batch_interval_days' => 90, // No batch interval for secondary packaging
+        ]);
+
+        \App\Models\ProductType::firstOrCreate([
+            'name' => 'Finished Good',
+            'description' => 'Finished Good Product',
+            'type_code' => 'FG',
+            'batch_interval_days' => 90,
+            'assemblable' => true,
         ]);
 
     }
