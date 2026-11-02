@@ -165,6 +165,9 @@ export default function Create({finishedGoods}: {finishedGoods: Product[]}) {
                 {selectedProduct && !selectedProduct.active_bom ? (
                     <div className="my-6 border border-blue-100/20 p-4 rounded-lg text-center">
                         <h2 className="text-xl font-semibold">No active BOM for this product</h2>
+                        <Link href={route('bom.create', {product_id: selectedProduct.id})} className="mt-4 inline-block">
+                            <button className="px-4 py-2 bg-blue-500 text-white rounded-lg">Create BOM</button>
+                        </Link>
                     </div>
                 ) : null}
             </ContainerFormLayout>

@@ -88,7 +88,7 @@ class PurchaseOrderController extends Controller
         return redirect()->back()->with('success', 'Purchase order updated successfully.');
     }
 
-    public function receive(PurchaseOrder $purchaseOrder, Request $request): Response
+    public function receive(PurchaseOrder $purchaseOrder, Request $request): Response|RedirectResponse
     {
         $purchaseOrder->load(
             'items:id,purchase_order_id,price,quantity,product_id',
@@ -100,10 +100,15 @@ class PurchaseOrderController extends Controller
 
         $receiveAll = $request->boolean('receive_all', false);
 
-        $purchaseOrder->items->each(function ($item) {
+        foreach ($purchaseOrder->items as $item) {
             $item->quantity_received = $item->getQuantityReceivedAttribute();
+            if (! $item->product->productType || ! $item->product->productType->defaultLocation) {
+                return redirect()->route('purchase-orders.show', $purchaseOrder)
+                    ->with('error', "Default location is not set for the product type of product '{$item->product->name}'. Please set a default location before receiving this purchase order.");
+            }
+
             $item->location_id = $item->product->productType->defaultLocation->id;
-        });
+        }
 
         // Filter batches based on the product IDs in the purchase order items
         $productIds = $purchaseOrder->items->pluck('product_id')->unique();

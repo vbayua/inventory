@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { type Location, type Warehouse } from '@/types/resources';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Container, PlusIcon } from 'lucide-react';
@@ -11,6 +12,7 @@ import InputError from '@/components/input-error';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
+import DefaultLocationField from '@/components/product-types/default-location-field';
 
 interface EditProductTypeForm {
     name?: string;
@@ -19,8 +21,17 @@ interface EditProductTypeForm {
     has_scientific_name?: boolean;
     has_brand_name?: boolean;
     assemblable?: boolean;
+    default_location_id?: string;
 }
-export default function Edit({ productType }: { productType: any }) {
+export default function Edit({
+    productType,
+    warehouses,
+    locations,
+}: {
+    productType: any;
+    warehouses: Pick<Warehouse, 'id' | 'name'>[];
+    locations: Pick<Location, 'id' | 'name' | 'warehouse_id'>[];
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Product Types',
@@ -46,6 +57,7 @@ export default function Edit({ productType }: { productType: any }) {
         has_scientific_name: false,
         has_brand_name: false,
         assemblable: productType.assemblable ?? false,
+        default_location_id: productType.default_location_id ? String(productType.default_location_id) : '',
     });
 
     const editProductType: FormEventHandler = (e) => {
@@ -131,6 +143,13 @@ export default function Edit({ productType }: { productType: any }) {
                             className='mt-1 block w-full' />
                         <InputError message={errors.description} />
                     </div>
+                    <DefaultLocationField
+                        warehouses={warehouses}
+                        locations={locations}
+                        locationId={data.default_location_id}
+                        onLocationChange={(locationId) => setData('default_location_id', locationId)}
+                        error={errors.default_location_id}
+                    />
                     <div className="space-y-6">
                         <div className="flex items-start gap-3">
                             <Checkbox

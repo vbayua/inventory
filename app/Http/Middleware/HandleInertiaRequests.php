@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use Str;
 use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
@@ -46,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             ->filter(fn ($permission): bool => \Illuminate\Support\Str::endsWith($permission, '.viewAny'))
             ->mapWithKeys(fn ($permission): array => [\Illuminate\Support\Str::beforeLast($permission, '.') => true])
             ->all() ?? [];
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -63,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => function () {
                 return [
                     'success' => session('success'),
+                    'error' => session('error'),
                 ];
             },
         ];

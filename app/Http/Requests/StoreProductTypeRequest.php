@@ -28,6 +28,7 @@ class StoreProductTypeRequest extends FormRequest
             'disable_type_code' => ['required', 'boolean'],
             'type_code' => ['required_if:disable_type_code,false', 'unique:product_types,type_code', 'nullable', 'string'],
             'assemblable' => ['sometimes', 'boolean'],
+            'default_location_id' => ['nullable', 'integer', 'exists:locations,id'],
         ];
     }
 }
