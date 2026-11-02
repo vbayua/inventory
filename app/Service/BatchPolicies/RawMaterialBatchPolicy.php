@@ -28,6 +28,7 @@ class RawMaterialBatchPolicy implements BatchPolicyInterface
 
         $series = Batch::query()
             ->where('product_id', $product->id)
+            ->whereNull('parent_batch_id')
             ->where('batch_number', 'like', $BASE_PREFIX.'%')
             ->orderBy('id')
             ->get(['batch_number', 'supplier_id']);

@@ -28,4 +28,15 @@ return [
     ],
 
     'default_expiry_date' => env('BATCH_DEFAULT_EXPIRY_DATE', 365), // Default expiry days for batches
+
+    /*
+    |--------------------------------------------------------------------------
+    | Child Batches
+    |--------------------------------------------------------------------------
+    | A child batch is split or derived from a parent batch. Its number is the
+    | parent's number, the separator, then a suffix (given, or the next
+    | sequence among the parent's children), e.g. 26-PS0060-A-1.1.
+    | Policies number root batches only, so children never shift a series.
+    */
+    'child_separator' => '.',
 ];

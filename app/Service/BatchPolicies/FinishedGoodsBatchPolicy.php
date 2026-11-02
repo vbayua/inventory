@@ -41,6 +41,7 @@ class FinishedGoodsBatchPolicy implements BatchPolicyInterface
 
         $lastSequence = Batch::query()
             ->where('product_id', $product->id)
+            ->whereNull('parent_batch_id')
             ->where('batch_number', 'like', "{$prefix}%")
             ->pluck('batch_number')
             ->map(fn (string $batchNumber): int => (int) Str::afterLast($batchNumber, '-'))

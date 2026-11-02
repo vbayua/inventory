@@ -12,6 +12,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class BatchAssignmentService
@@ -78,6 +79,7 @@ class BatchAssignmentService
      * @param  string  $operationType  Optional. The type of operation ('inbound', 'initial', etc.). Defaults to 'inbound'.
      * @param  string|null  $operationDate  Optional. The date of the operation. Defaults to current date/time if not provided.
      * @param  int|null  $supplierId  Optional. The supplier ID to associate with the batch, if applicable.
+     * @param  int|null  $parentBatchId  Optional. Create a child batch of this batch instead of a new root batch.
      * @return int|null The determined batch ID, or null if no suitable batch is found.
      *
      * @throws ModelNotFoundException If the product is not found.
@@ -91,7 +93,8 @@ class BatchAssignmentService
         ?int $supplierId = null,
         ?int $minQty = 0,
         ?string $manufactureDate = null,
-        ?string $expiryDate = null
+        ?string $expiryDate = null,
+        ?int $parentBatchId = null
     ): ?int {
         // Define product
         $product = $product instanceof Product
@@ -105,7 +108,7 @@ class BatchAssignmentService
             ->where('supplier_id', $supplierId);
 
         if ($operationType === 'inbound'
-        && ! $supplier->exists() && ! $requestedBatchId) {
+        && ! $supplier->exists() && ! $requestedBatchId && ! $parentBatchId) {
             throw ValidationException::withMessages([
                 'supplier_id' => 'Supplier does not exist or not associated',
             ]);
@@ -113,6 +116,18 @@ class BatchAssignmentService
 
         if ($requestedBatchId) {
             return $policy->determineBatch($product, $requestedBatchId);
+        }
+
+        if ($parentBatchId) {
+            $parent = Batch::findOrFail($parentBatchId);
+
+            if ($parent->product_id !== $product->id) {
+                throw ValidationException::withMessages([
+                    'parent_batch_id' => 'Parent batch belongs to a different product',
+                ]);
+            }
+
+            return $policy->determineBatch($product, $this->createChildBatch($parent, minQty: $minQty)->id);
         }
 
         // Check product interval setting for batch
@@ -170,6 +185,51 @@ class BatchAssignmentService
         $policy = $this->resolvePolicy($product);
 
         return $policy->generateBatchNumber($product, $proposedNumber, $supplierId, $operationDate);
+    }
+
+    /**
+     * Create a batch split or derived from a parent batch.
+     *
+     * The child inherits the parent's product, supplier and dates. Its number is
+     * the parent's number, the configured separator, then the given suffix or
+     * the next numeric sequence among the parent's children.
+     *
+     * @throws ValidationException If the resulting batch number already exists.
+     */
+    public function createChildBatch(Batch|int $parent, ?string $suffix = null, ?int $minQty = null): Batch
+    {
+        $parent = $parent instanceof Batch ? $parent : Batch::findOrFail($parent);
+        $prefix = $parent->batch_number.config('batch.child_separator', '.');
+
+        if ($suffix === null) {
+            $lastSequence = $parent->children()
+                ->pluck('batch_number')
+                ->map(fn (string $batchNumber): string => Str::after($batchNumber, $prefix))
+                ->filter(fn (string $childSuffix): bool => ctype_digit($childSuffix))
+                ->map(fn (string $childSuffix): int => (int) $childSuffix)
+                ->max() ?? 0;
+
+            $suffix = (string) ($lastSequence + 1);
+        }
+
+        $batchNumber = $prefix.$suffix;
+
+        if (Batch::where('batch_number', $batchNumber)->exists()) {
+            throw ValidationException::withMessages([
+                'batch_number' => "Batch number {$batchNumber} already exists",
+            ]);
+        }
+
+        return Batch::create([
+            'product_id' => $parent->product_id,
+            'parent_batch_id' => $parent->id,
+            'batch_number' => $batchNumber,
+            'supplier_id' => $parent->supplier_id,
+            'manufacture_date' => $parent->manufacture_date,
+            'expiry_date' => $parent->expiry_date,
+            'minimum_quantity' => $minQty ?? $parent->minimum_quantity,
+            'user_id' => Auth::id(),
+        ]);
     }
 
     // public function generateBatchNumber(int $productId, string $proposedNumber): string

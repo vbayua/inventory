@@ -14,7 +14,7 @@ class Batch extends Model
     /** @use HasFactory<BatchFactory> */
     use HasFactory;
 
-    protected $fillable = ['product_id', 'batch_number', 'supplier_id', 'manufacture_date', 'expiry_date', 'user_id', 'minimum_quantity'];
+    protected $fillable = ['product_id', 'parent_batch_id', 'batch_number', 'supplier_id', 'manufacture_date', 'expiry_date', 'user_id', 'minimum_quantity'];
 
     protected $casts = [
         'manufacture_date' => 'date',
@@ -24,6 +24,26 @@ class Batch extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * The batch this one was split or derived from.
+     *
+     * @return BelongsTo<Batch, $this>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class, 'parent_batch_id');
+    }
+
+    /**
+     * Batches split or derived from this one.
+     *
+     * @return HasMany<Batch, $this>
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Batch::class, 'parent_batch_id');
     }
 
     public function supplier(): BelongsTo

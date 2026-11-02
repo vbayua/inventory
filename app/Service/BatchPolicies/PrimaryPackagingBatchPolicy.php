@@ -23,6 +23,7 @@ class PrimaryPackagingBatchPolicy implements BatchPolicyInterface
         // Fetch existing batches for this product+year, most recent first
         $series = Batch::query()
             ->where('product_id', $product->id)
+            ->whereNull('parent_batch_id')
             ->where('batch_number', 'like', "{$basePrefix}-%")
             ->orderBy('id', 'desc')
             ->get(['batch_number', 'created_at']);
