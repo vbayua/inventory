@@ -56,27 +56,6 @@ class OperationController extends Controller
         $operationType = $request->get('operation_type');
         $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
 
-        $query = Product::query()
-            ->when($request->search_term, function ($query, $search) use ($request) {
-                $query->when($request->has_stock, function ($query) {
-                    $query->whereHas('stocks');
-                })
-                    ->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%");
-            })
-            ->when($request->has_stock, function ($query) {
-                $query->withWhereHas('stocks', function ($query) {
-                    $query->where('quantity', '>', 0);
-                });
-            })
-            ->with('unit')
-            ->select(['id', 'name', 'sku', 'unit'])
-            ->paginate(10)
-            ->onEachSide(1)
-            ->withQueryString();
-
-        $products = $query;
-
-        // : Product::with('unit')->select(['id', 'name', 'sku', 'unit'])->orderBy('sku')->paginate(10)->onEachSide(1);
         return Inertia('Operations/Create', [
             'stocks' => $stock,
             'products' => Inertia::optional(fn () => $products),

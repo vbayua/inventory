@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
-import { Batch, Location, Product, Stock, Unit, Warehouse } from '@/types/resources';
+import { Batch, Location, Product, ProductsWithLinks, Stock, Unit, Warehouse } from '@/types/resources';
 import { Head, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { BoxesIcon, CalendarIcon, ChevronsUpDown, NotepadTextIcon, PackageIcon } from 'lucide-react';
@@ -41,18 +41,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
 
-interface ProductsWithLinks extends Product {
-    links: {
-        active: boolean;
-        label: string;
-        page: number;
-        url: string;
-    }[];
-    data: Product[];
-    total?: number;
-    from?: number;
-    to?: number;
-}
 
 export default function Create({
     stocks,
@@ -138,6 +126,7 @@ export default function Create({
         }
     }, [products, productDialogOpen])
 
+    console.log(operationTypeData);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
@@ -177,22 +166,46 @@ export default function Create({
                                     Product
                                 </FieldLabel>
                                 <div className="flex items-center gap-2">
-                                    <Input
+                                    {/*<Input
                                         type="text"
                                         className={cn('w-full', form.errors.product && 'text-muted-foreground border-red-500')}
                                         onClick={() => setProductDialogOpen(true)}
                                         readOnly
                                         value={form.selectedProduct ? `${form.selectedProduct?.sku} ${form.selectedProduct?.name}` : 'No Product Selected'}
+                                        />*/}
+                                <Popover open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Input
+                                            type="text"
+                                            className={cn('w-full', form.errors.product && 'text-muted-foreground border-red-500')}
+                                            onClick={() => setProductDialogOpen(true)}
+                                            readOnly
+                                            value={form.selectedProduct ? `${form.selectedProduct?.sku} ${form.selectedProduct?.name}` : 'No Product Selected'}
+                                        />
+                                    </PopoverTrigger>
+                                    <PopoverContent>
+                                        <SelectCommand
+                                            lists={products}
+                                            onSelect={(item) => {
+                                                setProductDialogOpen(false);
+                                                handleProductSelect(item);
+                                            }}
+                                            defaultValue={form.selectedProduct}
+                                            getKey={(item) => item.id}
+                                            getLabel={(item) => `${item.sku} ${item.name}`}
                                         />
 
+                                    </PopoverContent>
+                                    </Popover>
+
                                 </div>
-                                <ProductSelectDialog
+                                {/*<ProductSelectDialog
                                     products={products}
                                     onProductSelect={handleProductSelect}
                                     selectedProduct={form.selectedProduct}
                                     productDialogOpen={productDialogOpen}
                                     setProductDialogOpen={setProductDialogOpen}
-                                />
+                                />*/}
                             </Field>
 
                             <Field>

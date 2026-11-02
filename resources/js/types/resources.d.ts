@@ -42,6 +42,19 @@ export interface Product {
     active_bom?: Bom;
 }
 
+interface ProductsWithLinks extends Product {
+    links: {
+        active: boolean;
+        label: string;
+        page: number;
+        url: string;
+    }[];
+    data: Product[];
+    total?: number;
+    from?: number;
+    to?: number;
+}
+
 export interface Partner {
     id: number;
     name: string;
