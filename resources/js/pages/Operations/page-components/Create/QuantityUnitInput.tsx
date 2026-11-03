@@ -19,11 +19,23 @@ export default function QuantityUnitInput({
     data: any;
     setData: any;
     units: Unit[];
-    currentStock: Stock | 0;
+    currentStock: Stock;
     errors: any;
 }) {
     const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
     const selectedUnitName: string | undefined = data.unit || (currentStock ? currentStock.unit : undefined);
+    const handleAllQty = () => {
+        if (currentStock) {
+            setData('quantity', Number(currentStock.quantity));
+        }
+    };
+
+    const handleMaxQty = () => {
+        if (currentStock && data.operationType === 'outbound') {
+            return Number(currentStock.quantity);
+        }
+        return;
+    };
 
     return (
         <div className={cn('grid grid-cols-2 gap-4 rounded-md border p-4', (errors.quantity || errors.unit) && 'border-red-500')}>
@@ -33,51 +45,59 @@ export default function QuantityUnitInput({
             </Label>
             <div className="justify-self-end">
                 <ButtonGroup>
-                    <Input
-                        type="number"
-                        value={data.quantity}
-                        onChange={(e) => setData('quantity', parseFloat(e.target.value))}
-                        className={cn(errors.quantity && 'text-muted-foreground border-red-500')}
-                        placeholder="Enter quantity"
-                        min={1}
-                        step={0.01}
-                        disabled={!data.batch}
-                    />
-                    <Popover open={unitPopoverOpen} onOpenChange={setUnitPopoverOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className={cn('justify-between', errors.unit && 'text-muted-foreground border-red-500')}
-                                disabled={!data.batch}
-                                size={'sm'}
-                            >
-                                {selectedUnitName ?? 'Pilih unit'}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0" align="start">
-                            <SelectCommand
-                                lists={units}
-                                defaultValue={units.find((unit) => unit.name === selectedUnitName)}
-                                getKey={(item) => item.name}
-                                getId={(item) => item.name}
-                                getLabel={(item) => item.name}
-                                onSelect={(item) => {
-                                    setData('unit', item.name);
-                                    setUnitPopoverOpen(false);
-                                }}
-                                placeholder="Pilih unit"
-                                renderItem={(item) => <span>{item.name}</span>}
-                            />
-                        </PopoverContent>
-                    </Popover>
+                    <ButtonGroup>
+                        <Button variant="secondary" size="sm" type="button" className="justify-between" onClick={handleAllQty}>
+                            All
+                        </Button>
+                    </ButtonGroup>
+                    <ButtonGroup>
+                        <Input
+                            type="number"
+                            value={data.quantity}
+                            onChange={(e) => setData('quantity', parseFloat(e.target.value))}
+                            className={cn(errors.quantity && 'text-muted-foreground border-red-500')}
+                            placeholder="Enter quantity"
+                            min={1}
+                            max={handleMaxQty()}
+                            step={1}
+                            disabled={!data.batch}
+                        />
+                        <Popover open={unitPopoverOpen} onOpenChange={setUnitPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn('justify-between', errors.unit && 'text-muted-foreground border-red-500')}
+                                    disabled={!data.batch}
+                                    size={'sm'}
+                                >
+                                    {selectedUnitName ?? 'Pilih unit'}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="p-0" align="start">
+                                <SelectCommand
+                                    lists={units}
+                                    defaultValue={units.find((unit) => unit.name === selectedUnitName)}
+                                    getKey={(item) => item.name}
+                                    getId={(item) => item.name}
+                                    getLabel={(item) => item.name}
+                                    onSelect={(item) => {
+                                        setData('unit', item.name);
+                                        setUnitPopoverOpen(false);
+                                    }}
+                                    placeholder="Pilih unit"
+                                    renderItem={(item) => <span>{item.name}</span>}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </ButtonGroup>
                 </ButtonGroup>
+                {currentStock && (
+                    <p className="text-muted-foreground mt-1 text-sm text-right">
+                        {`In stock: ${Number(currentStock.quantity)} ${currentStock.unit}`}
+                    </p>
+                )}
             </div>
-            {currentStock && (
-                <p className="text-muted-foreground mt-1 text-sm">
-                    {`In stock: ${Number(currentStock.quantity)} ${currentStock.unit}`}
-                </p>
-            )}
         </div>
     );
 }

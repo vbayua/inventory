@@ -83,7 +83,7 @@ export default function Create({
         { value: 'return', label: 'Pengembalian Stock' },
     ];
 
-    const [operationTypeData, setOperationType] = useState<OperationType>('outbound');
+    const [operationTypeData, setOperationType] = useState<OperationType>(operationType ?? 'outbound');
 
     const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();

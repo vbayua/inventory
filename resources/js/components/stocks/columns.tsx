@@ -48,8 +48,8 @@ export const columns: ColumnDef<Stock>[] = [
     {
         id: 'actions',
         enableHiding: false,
-        header: ({ table, column }) => <DataTableViewOptions table={table} />,
-        cell: ({ row }) => <ActionDropdown item={row.original} />,
+        cell: ({ row }) => <ActionDropdown item={row.original} className="justify-center sticky left-0" />,
+        size: 80
     },
 
     {
@@ -62,7 +62,14 @@ export const columns: ColumnDef<Stock>[] = [
             const cell = row.getValue<string | undefined>(id);
             return (cell ?? '').toLowerCase() === String(value).toLowerCase();
         },
-        cell: ({ row }) => row.original.product?.sku ?? '-',
+        cell: ({ row }) => {
+            return <div className="flex flex-col gap-0">
+                {row.original.product?.sku ?? '-'}
+                <span className="text-sm text-muted-foreground">
+                    {row.original.batch?.batch_number ?? '-'}
+                </span>
+            </div>
+        },
     },
     {
         id: 'batch_number',
@@ -85,7 +92,7 @@ export const columns: ColumnDef<Stock>[] = [
         id: 'product_name',
         accessorKey: 'Product Name',
         accessorFn: (row) => row.product?.name,
-        header: 'Item',
+        header: 'Nama',
         meta: {
             filterVariant: 'select',
         },

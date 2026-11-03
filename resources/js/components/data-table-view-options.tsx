@@ -15,7 +15,6 @@ export function DataTableViewOptions<TData>({ table, className }: { table: Table
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="data-[state=open]:bg-accent -ml-3 h-8">
                     <Settings2 />
-                    Columns
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px]">
