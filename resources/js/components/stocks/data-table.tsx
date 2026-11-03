@@ -26,6 +26,7 @@ import { Field } from '../ui/field';
 import { Input } from '../ui/input';
 import { PaginationIndex } from '../ui/pagination-index';
 import { DataTableToolbar } from './data-table-toolbar';
+import { ButtonGroup } from '../ui/button-group';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -66,32 +67,6 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
         <div>
             <div className="mb-4 flex items-center justify-between overflow-x-auto">
                 {/*<DataTableToolbar table={table} />*/}
-                <div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="default" className="px-4 py-2 hover:cursor-pointer">
-                                Actions
-                                <ChevronDown className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="space-y-2 p-2">
-                            <DropdownMenuItem className="hover:cursor-pointer" asChild>
-                                <Link href={route('operations.create')}>
-                                    <PlusIcon className="mr-2 h-4 w-4" />
-                                    Buat Operasi Stock
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="hover:cursor-pointer" asChild>
-                                <Link href={route('operations.index')}>
-                                    <Database className="mr-2 h-4 w-4" />
-                                    Log Operasi Stock
-                                </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                <DataTableViewOptions table={table} />
             </div>
             <div className="grid w-full gap-4 overflow-x-auto [&>div]:max-h-120 [&>div]:rounded">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
@@ -111,8 +86,8 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     </div>
                 </div>
 
-                <Table className="overflow-x-auto border">
-                    <TableHeader>
+                <Table className="overflow-x-auto ">
+                    <TableHeader className="sticky top-0 bg-background">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {

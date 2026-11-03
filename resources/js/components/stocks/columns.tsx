@@ -3,6 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '../data-table-column-header';
 import { ActionDropdown } from './action-dropdown';
+import { DataTableViewOptions } from '../data-table-view-options';
 
 const handleCreateOperation = (id: number, operation_type: any) => {
     return function () {
@@ -47,6 +48,7 @@ export const columns: ColumnDef<Stock>[] = [
     {
         id: 'actions',
         enableHiding: false,
+        header: ({ table, column }) => <DataTableViewOptions table={table} />,
         cell: ({ row }) => <ActionDropdown item={row.original} />,
     },
 
