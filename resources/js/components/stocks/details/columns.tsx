@@ -105,7 +105,7 @@ export const columns: ColumnDef<Operation>[] = [
             const prefix = config?.prefix || '';
             return (
                 <span>
-                    {prefix} {operation.quantity}
+                    {prefix} {Number(operation.quantity)}
                 </span>
             );
         },

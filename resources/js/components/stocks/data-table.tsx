@@ -33,9 +33,10 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     links?: any[];
     clientSide?: boolean;
+    onRowClick?: (row: TData) => void;
 }
 
-export function DataTable<TData, TValue>({ columns, data, links, clientSide = false }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, links, clientSide = false, onRowClick }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
@@ -103,7 +104,19 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && 'selected'}
+                                    className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    onClick={() => onRowClick?.(row.original)}
+                                    onKeyDown={(event) => {
+                                        if (onRowClick && (event.key === 'Enter' || event.key === ' ')) {
+                                            event.preventDefault();
+                                            onRowClick(row.original);
+                                        }
+                                    }}
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                     ))}
