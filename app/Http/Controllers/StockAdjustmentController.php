@@ -46,13 +46,11 @@ class StockAdjustmentController extends Controller
      */
     public function store(StoreStockAdjustmentRequest $request, StockOperationService $stockOperationService)
     {
-        $validated = $request->validated();
-        $stockOperationService->adjustStockOperation(
-            stock: $validated['stock_id'],
-            quantity: $validated['quantity'],
-            unit: $validated['unit'],
-            type: $validated['adjustment_type'],
-            remarks: $validated['remarks'],
+        $data = $request->validated();
+        $stockOperationService->adjustStockToQuantity(
+            stock: $data['stock_id'],
+            targetQuantity: $data['quantity'],
+            remarks: $data['remarks'] ?? '',
             operationDate: now(),
         );
 

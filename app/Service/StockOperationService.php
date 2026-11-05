@@ -169,6 +169,33 @@ class StockOperationService
         });
     }
 
+    /**
+     * Adjust a stock record so its quantity matches a counted target, expressed in the stock's own unit.
+     *
+     * @throws ValidationException If the target already matches the current quantity.
+     */
+    public function adjustStockToQuantity(Stock|int $stock, float $targetQuantity, string $remarks = 'Stock Adjustment', $operationDate = null): Operation
+    {
+        return DB::transaction(function () use ($stock, $targetQuantity, $remarks, $operationDate) {
+            $stockId = $stock instanceof Stock ? $stock->id : $stock;
+            $stock = Stock::where('id', $stockId)->lockForUpdate()->firstOrFail();
+            $currentQuantity = (float) $stock->quantity;
+
+            if ($targetQuantity === $currentQuantity) {
+                throw ValidationException::withMessages(['quantity' => 'No adjustment needed']);
+            }
+
+            return $this->adjustStockOperation(
+                $stock,
+                abs($targetQuantity - $currentQuantity),
+                $stock->unit,
+                $targetQuantity > $currentQuantity ? 'addition' : 'subtraction',
+                $remarks,
+                $operationDate
+            );
+        });
+    }
+
     public function createInboundOperation(Product|int $product, Stock|StockData $stockData, float $receiveQuantity, string $unit, string $remarks = 'Inbound Operation', $operationDate = null)
     {
         return DB::transaction(function () use ($product, $stockData, $receiveQuantity, $unit, $remarks, $operationDate) {

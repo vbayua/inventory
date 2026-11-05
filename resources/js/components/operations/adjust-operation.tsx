@@ -17,8 +17,7 @@ import { Minus, Plus } from 'lucide-react';
 export default function AdjustOperation({ stock, isDialogOpen, setDialogOpen }: { stock: any, isDialogOpen?: boolean, setDialogOpen?: (open: boolean) => void }) {
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        adjustment_type: '',
-        adjustment_quantity: 0,
+        adjustment_quantity: Number(stock?.quantity ?? 0),
         remarks: 'Adjusted via stock adjustment form',
     });
 
@@ -28,7 +27,6 @@ export default function AdjustOperation({ stock, isDialogOpen, setDialogOpen }: 
             stock_id: stock?.id,
             quantity: data.adjustment_quantity,
             unit: stock?.unit,
-            adjustment_type: data.adjustment_type,
             remarks: data.remarks,
         }), {
             onSuccess: () => {
@@ -57,32 +55,13 @@ export default function AdjustOperation({ stock, isDialogOpen, setDialogOpen }: 
                         />
                     </Field>
                     <Field>
-                        <FieldLabel htmlFor='adjustment_type'>Adjustment Type</FieldLabel>
-                        <Select required onValueChange={(value) => setData('adjustment_type', value)}>
-                            <SelectTrigger id='adjustment_type' name='adjustment_type' className="w-full">
-                                <SelectValue placeholder="Select adjustment type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectLabel>Adjustment Types</SelectLabel>
-                                    <SelectItem value="addition">
-                                        <Plus className="mr-2 inline h-4 w-4" />Increase
-                                    </SelectItem>
-                                    <SelectItem value="subtraction">
-                                        <Minus className="mr-2 inline h-4 w-4" />Decrease
-                                    </SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                    <Field>
                         <FieldLabel htmlFor="adjustment_quantity">Adjustment Quantity</FieldLabel>
                         <Input
                             type="number"
                             id="adjustment_quantity"
                             name="adjustment_quantity"
                             onChange={(e) => setData('adjustment_quantity', e.target.valueAsNumber)}
-                            defaultValue={0}
+                            defaultValue={Number(stock?.quantity ?? 0)}
                             min={0}
                             required
                             autoFocus
