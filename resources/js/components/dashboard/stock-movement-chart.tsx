@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Skeleton } from '@/components/ui/skeleton';
 import { format, parseISO } from 'date-fns';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { type StockMovement } from './types';
@@ -16,25 +15,20 @@ const chartConfig = {
     },
 } satisfies ChartConfig;
 
+export const STOCK_MOVEMENT_TITLE = 'Stock movement';
+export const STOCK_MOVEMENT_DESCRIPTION = 'Inbound vs outbound operations per day, last 30 days';
+
 const formatDay = (date: string) => format(parseISO(date), 'd MMM');
 
 function StockMovementCard({ children }: { children: React.ReactNode }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Stock movement</CardTitle>
-                <CardDescription>Inbound vs outbound operations per day, last 30 days</CardDescription>
+                <CardTitle>{STOCK_MOVEMENT_TITLE}</CardTitle>
+                <CardDescription>{STOCK_MOVEMENT_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent>{children}</CardContent>
         </Card>
-    );
-}
-
-export function StockMovementChartSkeleton() {
-    return (
-        <StockMovementCard>
-            <Skeleton className="h-[250px] w-full animate-pulse" />
-        </StockMovementCard>
     );
 }
 

@@ -30,6 +30,23 @@ function dashboardStock(Location $location, array $attributes = [], ?Batch $batc
     ]);
 }
 
+test('renders the page shell first and defers every dashboard section', function () {
+    $response = asNoRole()->get(route('dashboard'));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('dashboard')
+        ->missing('stats')
+        ->missing('stockMovements')
+        ->missing('stockByWarehouse')
+        ->missing('topMovers')
+        ->missing('lowStock')
+        ->missing('expiringBatches')
+        ->missing('pendingInspections')
+        ->missing('overduePurchaseOrders')
+        ->missing('recentOperations')
+    );
+});
+
 test('lists stock below its batch minimum and falls back to the stock minimum without a batch', function () {
     $location = Location::factory()->create();
     $belowBatchMinimum = dashboardStock($location, ['quantity' => 5, 'minimum_quantity' => 0], Batch::factory()->create(['minimum_quantity' => 10]));
@@ -39,7 +56,7 @@ test('lists stock below its batch minimum and falls back to the stock minimum wi
 
     $response = asNoRole()->get(route('dashboard'));
 
-    $response->assertInertia(fn (Assert $page) => $page
+    $response->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->component('dashboard')
         ->where('stats.low_stock', 2)
         ->where('stats.out_of_stock', 1)
@@ -48,7 +65,7 @@ test('lists stock below its batch minimum and falls back to the stock minimum wi
         ->where('lowStock.1.id', $belowBatchMinimum->id)
         ->where('lowStock.1.minimum_quantity', 10)
         ->has('lowStock', 2)
-    );
+    ));
 });
 
 test('lists expired and soon-expiring batches that still hold stock', function () {
@@ -65,7 +82,7 @@ test('lists expired and soon-expiring batches that still hold stock', function (
 
     $response = asNoRole()->get(route('dashboard'));
 
-    $response->assertInertia(fn (Assert $page) => $page
+    $response->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->where('stats.expired_batches', 1)
         ->where('stats.expiring_batches', 1)
         ->has('expiringBatches', 2)
@@ -73,7 +90,7 @@ test('lists expired and soon-expiring batches that still hold stock', function (
         ->where('expiringBatches.0.is_expired', true)
         ->where('expiringBatches.1.id', $expiringSoon->id)
         ->where('expiringBatches.1.is_expired', false)
-    );
+    ));
 });
 
 test('lists open purchase orders past their expected delivery date', function () {
@@ -84,12 +101,12 @@ test('lists open purchase orders past their expected delivery date', function ()
 
     $response = asNoRole()->get(route('dashboard'));
 
-    $response->assertInertia(fn (Assert $page) => $page
+    $response->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->where('stats.open_purchase_orders', 2)
         ->where('stats.overdue_purchase_orders', 1)
         ->has('overduePurchaseOrders', 1)
         ->where('overduePurchaseOrders.0.id', $overdue->id)
-    );
+    ));
 });
 
 test('counts distinct products in stock per warehouse', function () {
@@ -103,9 +120,9 @@ test('counts distinct products in stock per warehouse', function () {
 
     $response = asNoRole()->get(route('dashboard'));
 
-    $response->assertInertia(fn (Assert $page) => $page
+    $response->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->where('stockByWarehouse', [['warehouse' => $location->warehouse->name, 'products' => 2]])
-    );
+    ));
 });
 
 test('defers daily inbound and outbound counts excluding transfers and adjustments', function () {
@@ -131,7 +148,6 @@ test('defers daily inbound and outbound counts excluding transfers and adjustmen
     $response = asNoRole()->get(route('dashboard'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->missing('stockMovements')
         ->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('stockMovements', 30)
             ->where('stockMovements.0', ['date' => '2026-10-08', 'inbound' => 0, 'outbound' => 0])
@@ -161,10 +177,10 @@ test('ranks products by outbound operations in the last 30 days', function () {
 
     $response = asNoRole()->get(route('dashboard'));
 
-    $response->assertInertia(fn (Assert $page) => $page
+    $response->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->where('topMovers', [
             ['product_id' => $busiest->id, 'product' => $busiest->name, 'movements' => 2],
             ['product_id' => $quieter->id, 'product' => $quieter->name, 'movements' => 1],
         ])
-    );
+    ));
 });

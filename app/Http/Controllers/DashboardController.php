@@ -47,18 +47,23 @@ class DashboardController extends Controller
      */
     private const MINIMUM_QUANTITY_SQL = 'coalesce(batches.minimum_quantity, stocks.minimum_quantity)';
 
+    /**
+     * Render the dashboard shell immediately and load each section as a deferred prop.
+     *
+     * Each group is fetched in its own parallel request, so a slow section does not hold up the rest.
+     */
     public function __invoke(): Response
     {
         return Inertia::render('dashboard', [
-            'stats' => $this->stats(),
-            'stockByWarehouse' => $this->stockByWarehouse(),
-            'stockMovements' => Inertia::defer(fn (): array => $this->stockMovements()),
-            'topMovers' => $this->topMovers(),
-            'lowStock' => $this->lowStock(),
-            'expiringBatches' => $this->expiringBatches(),
-            'pendingInspections' => $this->pendingInspections(),
-            'overduePurchaseOrders' => $this->overduePurchaseOrders(),
-            'recentOperations' => $this->recentOperations(),
+            'stats' => Inertia::defer(fn (): array => $this->stats(), 'stats'),
+            'stockMovements' => Inertia::defer(fn (): array => $this->stockMovements(), 'movements'),
+            'stockByWarehouse' => Inertia::defer(fn (): array => $this->stockByWarehouse(), 'charts'),
+            'topMovers' => Inertia::defer(fn (): array => $this->topMovers(), 'charts'),
+            'lowStock' => Inertia::defer(fn (): array => $this->lowStock(), 'attention'),
+            'expiringBatches' => Inertia::defer(fn (): array => $this->expiringBatches(), 'attention'),
+            'pendingInspections' => Inertia::defer(fn (): array => $this->pendingInspections(), 'attention'),
+            'overduePurchaseOrders' => Inertia::defer(fn (): array => $this->overduePurchaseOrders(), 'attention'),
+            'recentOperations' => Inertia::defer(fn (): array => $this->recentOperations(), 'activity'),
         ]);
     }
 

@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from '@inertiajs/react';
@@ -37,6 +38,9 @@ function RecordLink({ href, children }: { href: string; children: ReactNode }) {
     );
 }
 
+const ACTION_LIST_TITLE = 'Needs attention';
+const ACTION_LIST_DESCRIPTION = 'Stock, batches and orders that need action';
+
 type ActionListProps = {
     lowStock: LowStockItem[];
     lowStockTotal: number;
@@ -61,8 +65,8 @@ export default function ActionList({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Needs attention</CardTitle>
-                <CardDescription>Stock, batches and orders that need action</CardDescription>
+                <CardTitle>{ACTION_LIST_TITLE}</CardTitle>
+                <CardDescription>{ACTION_LIST_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="low-stock">
@@ -223,6 +227,31 @@ export default function ActionList({
                         </Table>
                     </TabsContent>
                 </Tabs>
+            </CardContent>
+        </Card>
+    );
+}
+
+export function ActionListSkeleton() {
+    return (
+        <Card aria-busy="true">
+            <CardHeader>
+                <CardTitle>{ACTION_LIST_TITLE}</CardTitle>
+                <CardDescription>{ACTION_LIST_DESCRIPTION}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Skeleton className="h-9 w-full max-w-md" />
+                <div className="space-y-3">
+                    {Array.from({ length: 5 }, (_, index) => (
+                        <div key={index} className="flex items-center gap-4">
+                            <Skeleton className="h-4 flex-1" />
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-16" />
+                        </div>
+                    ))}
+                </div>
+                <span className="sr-only">Loading items that need attention…</span>
             </CardContent>
         </Card>
     );

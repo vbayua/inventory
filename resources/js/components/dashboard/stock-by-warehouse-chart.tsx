@@ -12,12 +12,15 @@ const chartConfig = {
 
 const BAR_ROW_HEIGHT = 44;
 
+export const STOCK_BY_WAREHOUSE_TITLE = 'Stock by warehouse';
+export const STOCK_BY_WAREHOUSE_DESCRIPTION = 'Distinct products with quantity on hand';
+
 export default function StockByWarehouseChart({ warehouses }: { warehouses: WarehouseStock[] }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Stock by warehouse</CardTitle>
-                <CardDescription>Distinct products with quantity on hand</CardDescription>
+                <CardTitle>{STOCK_BY_WAREHOUSE_TITLE}</CardTitle>
+                <CardDescription>{STOCK_BY_WAREHOUSE_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent>
                 {warehouses.length === 0 ? (

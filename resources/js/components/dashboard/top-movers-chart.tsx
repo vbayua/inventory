@@ -15,14 +15,17 @@ const MAX_LABEL_LENGTH = 22;
 
 const truncateLabel = (label: string) => (label.length > MAX_LABEL_LENGTH ? `${label.slice(0, MAX_LABEL_LENGTH - 1)}…` : label);
 
+export const TOP_MOVERS_TITLE = 'Top movers';
+export const TOP_MOVERS_DESCRIPTION = 'Products with the most outbound operations, last 30 days';
+
 export default function TopMoversChart({ movers }: { movers: TopMover[] }) {
     const data = movers.map((mover) => ({ ...mover, product: mover.product ?? `Product #${mover.product_id}` }));
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Top movers</CardTitle>
-                <CardDescription>Products with the most outbound operations, last 30 days</CardDescription>
+                <CardTitle>{TOP_MOVERS_TITLE}</CardTitle>
+                <CardDescription>{TOP_MOVERS_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent>
                 {data.length === 0 ? (

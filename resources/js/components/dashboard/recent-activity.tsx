@@ -1,9 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@inertiajs/react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Shuffle } from 'lucide-react';
 import { formatQuantity, type RecentOperation } from './types';
+
+const RECENT_ACTIVITY_TITLE = 'Recent activity';
+const RECENT_ACTIVITY_DESCRIPTION = 'Latest stock operations';
 
 const operationLabels: Record<RecentOperation['operation_type'], string> = {
     initial: 'Initial',
@@ -33,8 +37,8 @@ export default function RecentActivity({ operations }: { operations: RecentOpera
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Recent activity</CardTitle>
-                <CardDescription>Latest stock operations</CardDescription>
+                <CardTitle>{RECENT_ACTIVITY_TITLE}</CardTitle>
+                <CardDescription>{RECENT_ACTIVITY_DESCRIPTION}</CardDescription>
             </CardHeader>
             <CardContent>
                 {operations.length === 0 ? (
@@ -73,6 +77,34 @@ export default function RecentActivity({ operations }: { operations: RecentOpera
                         ))}
                     </ul>
                 )}
+            </CardContent>
+        </Card>
+    );
+}
+
+export function RecentActivitySkeleton() {
+    return (
+        <Card aria-busy="true">
+            <CardHeader>
+                <CardTitle>{RECENT_ACTIVITY_TITLE}</CardTitle>
+                <CardDescription>{RECENT_ACTIVITY_DESCRIPTION}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ul className="divide-y">
+                    {Array.from({ length: 5 }, (_, index) => (
+                        <li key={index} className="flex items-start gap-3 py-3">
+                            <Skeleton className="size-4 shrink-0 rounded-full" />
+                            <div className="flex-1 space-y-2">
+                                <div className="flex justify-between gap-2">
+                                    <Skeleton className="h-4 w-1/2" />
+                                    <Skeleton className="h-4 w-16" />
+                                </div>
+                                <Skeleton className="h-3 w-3/4" />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+                <span className="sr-only">Loading recent activity…</span>
             </CardContent>
         </Card>
     );
