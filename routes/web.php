@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\BomController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OperationController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ProductionOrderController;
@@ -21,7 +22,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::prefix('operations')->group(function () {
         Route::get('/', [OperationController::class, 'index'])->name('operations.index');
