@@ -13,6 +13,7 @@ import {
     SidebarTrigger,
     useSidebar,
 } from '@/components/ui/sidebar';
+import { isUriActive } from '@/lib/utils';
 import { NavItem, SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -246,9 +247,9 @@ export function AppSidebar() {
     const canView = (permission?: string): boolean => {
         return permission == undefined || viewPermissions[permission] === true;
     }
-    const subItemIsActive = (item: NavItem[]): boolean => {
-        return item.some((subItem) => page.props.uri === subItem.uri)
-    };
+    const currentUri = typeof page.props.uri === 'string' ? page.props.uri : null;
+    const isActive = (uri?: string): boolean => isUriActive(currentUri, uri);
+    const anySubItemIsActive = (items: NavItem[]): boolean => items.some((subItem) => isActive(subItem.uri));
 
     return (
         <Sidebar collapsible="offcanvas" variant="inset" className="w-64 shrink-0">
@@ -277,7 +278,7 @@ export function AppSidebar() {
                                     key={item.uri}
                                     title={item.title}
                                     className="group/collapsible"
-                                    defaultOpen={true}
+                                    defaultOpen={anySubItemIsActive(visibleSubItems)}
                                 >
                                     <SidebarGroup className="px-0">
                                     <SidebarGroupLabel asChild className="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
@@ -296,7 +297,7 @@ export function AppSidebar() {
                                                     key={subItem.uri}
                                                     className="pr-4 pl-1.5"
                                                 >
-                                                    <SidebarMenuButton asChild isActive={subItemIsActive([subItem])}>
+                                                    <SidebarMenuButton asChild isActive={isActive(subItem.uri)}>
                                                             <Link href={route(subItem.href)} className='flex-auto text-xs' prefetch={false}>
                                                                 {subItem.title}
                                                             </Link>
@@ -311,7 +312,7 @@ export function AppSidebar() {
                             )}
 
                             {item.items === undefined && canView(item.permission) &&  <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={item.isActive} >
+                                <SidebarMenuButton asChild isActive={isActive(item.uri)}>
                                     <Link href={route(item.href)} prefetch={false}>{item.title}</Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>}
