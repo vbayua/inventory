@@ -78,6 +78,8 @@ export interface Role {
     id: number;
     name: string;
     description?: string;
+    users_count?: number;
+    permissions_count?: number;
 }
 
 export interface Product {

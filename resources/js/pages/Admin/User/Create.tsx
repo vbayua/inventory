@@ -2,35 +2,39 @@ import ContainerLayout from '@/components/container-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RoleCheckboxList from '@/components/users/role-checkbox-list';
 import AppLayout from '@/layouts/app-layout';
+import { Role } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-type Role = {
-    id: number;
+
+type CreateUserForm = {
     name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    roles: string[];
 };
-export default function Edit({ roles }: { roles: Role[] }) {
-    const { data, setData, post, reset, processing, errors } = useForm({
+
+export default function Create({ roles }: { roles: Role[] }) {
+    const { data, setData, post, reset, processing, errors } = useForm<CreateUserForm>({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
-        role_id: '',
+        roles: [],
     });
-    console.log(data.role_id)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log(data);
-        post(`/admin/users`, {
-            onSuccess: () => reset('name', 'email', 'password', 'password_confirmation', 'role_id'),
-            onError: (err) => console.log(err),
+        post(route('admin.users.store'), {
+            onSuccess: () => reset(),
+            onError: () => reset('password', 'password_confirmation'),
         });
     };
 
     return (
         <AppLayout>
-            <Head title="Edit User" />
+            <Head title="Create User" />
             <ContainerLayout>
                 <form onSubmit={handleSubmit}>
                     <Label htmlFor="name"> Name </Label>
@@ -54,18 +58,12 @@ export default function Edit({ roles }: { roles: Role[] }) {
                         onChange={(e) => setData('email', e.target.value)}
                         required
                     />
-                    <Select value={data.role_id} onValueChange={(value) => setData('role_id', value)}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Assign Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {roles.map((role) => (
-                                <SelectItem key={role.id} value={role.id.toString()}>
-                                    {role.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <RoleCheckboxList
+                        roles={roles}
+                        selectedRoleNames={data.roles}
+                        onChange={(roleNames) => setData('roles', roleNames)}
+                        error={errors.roles ?? errors['roles.0']}
+                    />
                     <div>
                         <Label htmlFor="password">Password</Label>
                         <Input
@@ -88,9 +86,8 @@ export default function Edit({ roles }: { roles: Role[] }) {
                             required
                         />
                     </div>
-                    {/* Additional form fields for password, roles, etc. */}
                     <Button disabled={processing} className="btn btn-primary mt-4">
-                        Save Changes
+                        Create User
                     </Button>
                 </form>
             </ContainerLayout>

@@ -27,6 +27,7 @@ class AuthorizationSeeder extends Seeder
             'purchase_order',
             'receive_order',
             'user',
+            'role',
             'qc_checklist',
             'qc_inspection',
             'production',
