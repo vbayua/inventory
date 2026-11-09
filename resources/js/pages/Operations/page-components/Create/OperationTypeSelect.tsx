@@ -15,7 +15,6 @@ export default function OperationTypeSelect({
 }) {
     const operationCardClassName =
         'hover:bg-accent hover:text-accent-foreground flex h-28 items-center justify-between rounded-md border p-6 shadow-md';
-
     return (
         <>
             <div className="md:hidden">

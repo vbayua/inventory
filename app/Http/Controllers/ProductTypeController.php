@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProductTypeRequest;
 use App\Http\Requests\UpdateProductTypeSettingeRequest;
 use App\Models\Location;
 use App\Models\ProductType;
+use App\Models\Warehouse;
 use App\Rules\Permissions\Product\ProductPermissions;
 use Inertia\Inertia;
 
@@ -30,7 +31,10 @@ class ProductTypeController extends Controller
 
     public function create()
     {
-        return Inertia::render('ProductTypes/Create');
+        return Inertia::render('ProductTypes/Create', [
+            'warehouses' => Warehouse::select('id', 'name')->get(),
+            'locations' => Location::select('id', 'name', 'warehouse_id')->get(),
+        ]);
     }
 
     public function store(StoreProductTypeRequest $request)
@@ -38,8 +42,10 @@ class ProductTypeController extends Controller
         $validated = $request->validated();
         $data = [
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'type_code' => $validated['type_code'],
+            'assemblable' => $validated['assemblable'] ?? false,
+            'default_location_id' => $validated['default_location_id'] ?? null,
         ];
         ProductType::create($data);
 
@@ -50,6 +56,8 @@ class ProductTypeController extends Controller
     {
         return Inertia::render('ProductTypes/Edit', [
             'productType' => $productType,
+            'warehouses' => Warehouse::select('id', 'name')->get(),
+            'locations' => Location::select('id', 'name', 'warehouse_id')->get(),
         ]);
     }
 
@@ -58,8 +66,10 @@ class ProductTypeController extends Controller
         $validated = $request->validated();
         $productType->update([
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? $productType->description,
             'type_code' => $validated['type_code'],
+            'assemblable' => $validated['assemblable'] ?? $productType->assemblable,
+            'default_location_id' => array_key_exists('default_location_id', $validated) ? $validated['default_location_id'] : $productType->default_location_id,
         ]);
 
         return redirect()->route('product-types.index')->with('success', 'Product Type updated successfully.');

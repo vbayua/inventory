@@ -1,28 +1,8 @@
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { ReceiveOrder } from '@/types/resources';
-import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Eye } from 'lucide-react';
-import { Button } from '../ui/button';
 
 export const columns: ColumnDef<ReceiveOrder>[] = [
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            const receiveOrder = row.original;
-            const viewReceiveOrder = route('receive-orders.show', { id: receiveOrder.id });
-            return (
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link href={viewReceiveOrder} className="flex items-center gap-1">
-                            <span className="sr-only">View Details</span>
-                            <Eye className="h-4 w-4" />
-                        </Link>
-                    </Button>
-                </div>
-            );
-        },
-    },
     {
         accessorKey: 'receive_number',
         header: ({ column }) => {
@@ -39,14 +19,7 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
             return <DataTableColumnHeader column={column} title="PO Number" />;
         },
         cell: ({ cell }) => {
-            return (
-                <Link
-                    href={route('purchase-orders.show', { id: cell.row.original.purchase_order_id })}
-                    className="hover:cursor-pointer hover:underline"
-                >
-                    {cell.getValue() as string}
-                </Link>
-            );
+            return cell.getValue() as string;
         },
     },
     {
@@ -98,13 +71,11 @@ export const columns: ColumnDef<ReceiveOrder>[] = [
         },
     },
     {
-        id: 'notes',
-        accessorKey: 'notes',
-        header: ({ column }) => {
-            return <DataTableColumnHeader column={column} title="Notes" />;
-        },
+        id: 'user',
+        accessorFn: (row) => row.user?.name,
+        header: 'User',
         cell: ({ cell }) => {
             return <>{(cell.getValue() as string) ?? '-'}</>;
         },
-    },
+    }
 ];

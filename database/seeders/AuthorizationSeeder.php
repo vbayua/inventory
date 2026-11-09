@@ -15,6 +15,7 @@ class AuthorizationSeeder extends Seeder
             'product',
             'partner',
             'stock',
+            'batch',
             'supplier',
             'operation',
             'warehouse',
@@ -26,16 +27,17 @@ class AuthorizationSeeder extends Seeder
             'purchase_order',
             'receive_order',
             'user',
+            'role',
             'qc_checklist',
-            'qc_inspection'
+            'qc_inspection',
+            'production',
+            'bom',
         ];
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
 
         $permissions = collect($resources)->flatMap(
-            fn(string $resource) =>
-            collect($actions)->map(
-                fn(string $action) =>
-                Permission::firstOrCreate(
+            fn (string $resource) => collect($actions)->map(
+                fn (string $action) => Permission::firstOrCreate(
                     ['name' => "{$resource}.{$action}"],
                     ['description' => ucfirst($action).' '.$resource]
                 )
@@ -92,7 +94,6 @@ class AuthorizationSeeder extends Seeder
 
         $adminUser->assignRole('admin');
         $operatorUser->assignRole('operator');
-
 
         $this->command->info('Authorization seeding completed successfully.');
     }

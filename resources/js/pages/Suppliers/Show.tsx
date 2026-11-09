@@ -1,4 +1,5 @@
 import ContainerLayout from '@/components/container-layout';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,14 +15,16 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item';
+import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Mail, MapPin, MoreHorizontal, Package, Phone, Plus, X } from 'lucide-react';
-import { useEffect, useMemo, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react';
 
 type Product = {
     id: number;
@@ -34,7 +37,7 @@ type Product = {
     };
     status?: string;
     pivot?: {
-        price?: number;
+        price?: number | string;
     };
 };
 
@@ -136,6 +139,26 @@ export default function Show({ supplier, products, totalProducts }: { supplier: 
                 clearSelectedProducts();
             },
             onError: (errors) => console.log(errors),
+        });
+    };
+
+    const [priceProduct, setPriceProduct] = useState<Product | null>(null);
+    const priceForm = useForm<{ price: string | number }>({ price: 0 });
+
+    const openPriceDialog = (product: Product) => {
+        priceForm.clearErrors();
+        priceForm.setData('price', product.pivot?.price ?? 0);
+        setPriceProduct(product);
+    };
+
+    const handleSubmitPrice = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!priceProduct) {
+            return;
+        }
+        priceForm.put(route('supplier.products.update-price', [supplier.id, priceProduct.id]), {
+            preserveScroll: true,
+            onSuccess: () => setPriceProduct(null),
         });
     };
 
@@ -354,11 +377,11 @@ export default function Show({ supplier, products, totalProducts }: { supplier: 
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        {product.pivot?.price ? formatPrice(product.pivot.price) : 0} / {product.unit}
+                                                        {product.pivot?.price ? formatPrice(Number(product.pivot.price)) : 0} / {product.unit}
                                                     </TableCell>
 
                                                     <TableCell className="text-right">
-                                                        <DropdownMenu>
+                                                        <DropdownMenu modal={false}>
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
@@ -367,6 +390,9 @@ export default function Show({ supplier, products, totalProducts }: { supplier: 
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="center">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem onSelect={() => openPriceDialog(product)}>
+                                                                    Edit Price
+                                                                </DropdownMenuItem>
                                                                 <DropdownMenuItem asChild>
                                                                     <Link href={route('products.show', product.id)}>View Product</Link>
                                                                 </DropdownMenuItem>
@@ -393,6 +419,42 @@ export default function Show({ supplier, products, totalProducts }: { supplier: 
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* PRODUCT PRICE DIALOG */}
+                <Dialog open={priceProduct !== null} onOpenChange={(open) => !open && setPriceProduct(null)}>
+                    <DialogContent>
+                        <form onSubmit={handleSubmitPrice} className="grid gap-4">
+                            <DialogHeader>
+                                <DialogTitle>Edit Price</DialogTitle>
+                                <DialogDescription>
+                                    {priceProduct?.sku} - {priceProduct?.name}. Default price used when creating purchase orders.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-2">
+                                <Label htmlFor="price">Price per {priceProduct?.unit ?? 'unit'} (IDR)</Label>
+                                <Input
+                                    id="price"
+                                    type="number"
+                                    min={0}
+                                    value={priceForm.data.price}
+                                    onChange={(e) => priceForm.setData('price', e.target.value)}
+                                    autoFocus
+                                />
+                                <InputError message={priceForm.errors.price} />
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="outline">
+                                        Cancel
+                                    </Button>
+                                </DialogClose>
+                                <Button type="submit" disabled={priceForm.processing}>
+                                    Save
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </ContainerLayout>
         </AppLayout>
     );

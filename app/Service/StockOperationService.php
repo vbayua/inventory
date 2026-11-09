@@ -20,9 +20,9 @@ use InvalidArgumentException;
 
 class StockOperationService
 {
-    protected $unitConverter;
+    protected UnitConverter $unitConverter;
 
-    protected $batchService;
+    protected BatchAssignmentService $batchService;
 
     protected const string INITIAL = 'initial';
 
@@ -40,8 +40,16 @@ class StockOperationService
         $this->batchService = $batchService;
     }
 
-    public function createStockOperation(string $operationType, Product|int $product, Stock|StockData $stockData, float $quantity, Unit|string $unit, string $remarks = '', $operationDate = null, ?bool $withContainer = false)
-    {
+    public function createStockOperation(
+        string $operationType,
+        Product|int $product,
+        Stock|StockData $stockData,
+        float $quantity,
+        Unit|string $unit,
+        string $remarks = '',
+        $operationDate = null,
+        ?bool $withContainer = false
+    ) {
         switch ($operationType) {
             case self::INBOUND:
                 return $this->createInboundOperation($product, $stockData, $quantity, $unit, $remarks, $operationDate);
@@ -50,35 +58,45 @@ class StockOperationService
             case self::ADJUSTMENT:
                 return $this->adjustStockOperation($stockData, $quantity, $unit, 'adjustment', $remarks, $operationDate, $withContainer);
             default:
-                throw new \InvalidArgumentException("Unknown operation type: {$operationType}");
+                throw new InvalidArgumentException("Unknown operation type: {$operationType}");
         }
     }
 
     public function createInitialStock(Product|int $product, StockData $stockData)
     {
         return DB::transaction(function () use ($product, $stockData) {
-            $supplierId = $stockData['supplier_id'] ?? null;
-            $batchId = $stockData['batch_id'] ?? null;
+            $supplierId = $stockData['supplier_id'];
             $product = $product instanceof Product ? $product : Product::findOrFail($product);
 
-            $batch = $batchId ? $this->batchService->determineBatch(
-                $product,
-                (int) $batchId,
-                self::INITIAL,
-                $stockData['date'] ?? null,
-                $supplierId,
-                $stockData['quantity']
-            ) : $this->batchService->determineBatch(
-                product: $product,
-                operationType: self::INITIAL,
-                operationDate: $stockData['date'] ?? null,
-                supplierId: $supplierId,
-                minQty:$stockData['minimum_quantity']
-            );
+            if ($stockData['batch_id']) {
+                $existingBatch = Batch::find($stockData['batch_id']);
+
+                if (! $supplierId && ! $existingBatch?->supplier_id) {
+                    throw new InvalidArgumentException('Supplier ID is required for batch assignment');
+                }
+
+                $batch = $this->batchService->determineBatch(
+                    product: $product,
+                    requestedBatchId: (int) $stockData['batch_id'],
+                    operationType: self::INITIAL,
+                    operationDate: $stockData['date'],
+                    supplierId: $supplierId,
+                    minQty: $stockData['quantity']
+                );
+            } else {
+                // Create new batch
+                $batch = $this->batchService->determineBatch(
+                    product: $product,
+                    operationType: self::INITIAL,
+                    operationDate: $stockData['date'],
+                    supplierId: $supplierId,
+                    minQty: $stockData['minimum_quantity']
+                );
+            }
 
             $stockData = $stockData->with(['batch_id' => (int) $batch]);
 
-            $operation = $this->createOperation(
+            $this->createOperation(
                 self::INITIAL,
                 $product,
                 $stockData,
@@ -144,10 +162,37 @@ class StockOperationService
                     $withContainer
                 );
             } else {
-                throw new \InvalidArgumentException("Stock Adjustment of type {$type} is unknown");
+                throw new InvalidArgumentException("Stock Adjustment of type {$type} is unknown");
             }
 
             return $operation;
+        });
+    }
+
+    /**
+     * Adjust a stock record so its quantity matches a counted target, expressed in the stock's own unit.
+     *
+     * @throws ValidationException If the target already matches the current quantity.
+     */
+    public function adjustStockToQuantity(Stock|int $stock, float $targetQuantity, string $remarks = 'Stock Adjustment', $operationDate = null): Operation
+    {
+        return DB::transaction(function () use ($stock, $targetQuantity, $remarks, $operationDate) {
+            $stockId = $stock instanceof Stock ? $stock->id : $stock;
+            $stock = Stock::where('id', $stockId)->lockForUpdate()->firstOrFail();
+            $currentQuantity = (float) $stock->quantity;
+
+            if ($targetQuantity === $currentQuantity) {
+                throw ValidationException::withMessages(['quantity' => 'No adjustment needed']);
+            }
+
+            return $this->adjustStockOperation(
+                $stock,
+                abs($targetQuantity - $currentQuantity),
+                $stock->unit,
+                $targetQuantity > $currentQuantity ? 'addition' : 'subtraction',
+                $remarks,
+                $operationDate
+            );
         });
     }
 
@@ -167,7 +212,7 @@ class StockOperationService
 
             if ($stockExists) {
                 // ── Inbound into an existing batch ────────────────────────────
-                $this->createOperation(
+                $operation = $this->createOperation(
                     self::INBOUND,
                     $product,
                     $stockData,
@@ -177,7 +222,7 @@ class StockOperationService
                     $operationDate
                 );
 
-                return $this->setStock(
+                $this->setStock(
                     $product,
                     $stockData,
                     $receiveQuantity,
@@ -185,32 +230,41 @@ class StockOperationService
                     'increment',
                     $stockData['with_container'] ?? false
                 );
+
+                return $operation;
             }
 
             // ── Initial stock: no existing stock record for this batch ────────
             // Determine (or create) the appropriate batch before recording stock.
-            $batchId    = $stockData['batch_id'] ?? null;
-            $supplierId = $stockData['supplier_id'] ?? null;
+            $supplierId = $stockData['supplier_id'];
+            if (! $stockData['supplier_id']) {
+                throw new InvalidArgumentException('Supplier ID is required for initial stock batch assignment');
+            }
 
-            $resolvedBatchId = $batchId
-                ? $this->batchService->determineBatch(
-                    $product,
-                    (int) $batchId,
-                    self::INBOUND,
-                    $stockData['date'] ?? null,
-                    $supplierId,
-                )
-                : $this->batchService->determineBatch(
+            if ($stockData['batch_id']) {
+
+                $resolvedBatchId = $this->batchService->determineBatch(
+                    product: $product,
+                    requestedBatchId: (int) $stockData['batch_id'],
+                    operationType: self::INBOUND,
+                    operationDate: $stockData['date'],
+                    supplierId: $supplierId,
+                    minQty: $stockData['quantity']
+                );
+            } else {
+                // Create new batch
+                $resolvedBatchId = $this->batchService->determineBatch(
                     product: $product,
                     operationType: self::INBOUND,
-                    operationDate: $stockData['date'] ?? null,
+                    operationDate: $stockData['date'],
                     supplierId: $supplierId,
-                    minQty: (int) ($stockData['minimum_quantity'] ?? 0),
+                    minQty: $stockData['minimum_quantity']
                 );
+            }
 
             $stockData = $stockData->with(['batch_id' => (int) $resolvedBatchId]);
 
-            $this->createOperation(
+            $operation = $this->createOperation(
                 self::INITIAL,
                 $product,
                 $stockData,
@@ -220,7 +274,7 @@ class StockOperationService
                 $operationDate
             );
 
-            return $this->setStock(
+            $this->setStock(
                 $product,
                 $stockData,
                 $receiveQuantity,
@@ -228,6 +282,8 @@ class StockOperationService
                 'set',
                 $stockData['with_container'] ?? false
             );
+
+            return $operation;
         });
     }
 
@@ -243,6 +299,7 @@ class StockOperationService
                 $remarks,
                 $operationDate
             );
+
             $stock = $this->setStock(
                 $product,
                 $stockData,
@@ -252,7 +309,7 @@ class StockOperationService
                 $stockData['with_container'] ?? false
             );
 
-            return $stock;
+            return $operation;
         });
     }
 
@@ -388,13 +445,34 @@ class StockOperationService
                 $updatedSourceStock->delete();
             }
 
+            $operationIn->context()->create([
+                'operation_id' => $operationIn->id,
+                'notes' => $inRemarks,
+            ]);
+            $operationOut->context()->create([
+                'operation_id' => $operationOut->id,
+                'notes' => $outRemarks,
+            ]);
+
             return [
-                        'transfer_out' => $operationOut,
-                        'transfer_in' => $operationIn,
-                        'source' => $updatedSourceStock,
-                        'destination' => $updatedDestinationStock,
-                    ];
+                'transfer_out' => $operationOut,
+                'transfer_in' => $operationIn,
+                'source' => $updatedSourceStock,
+                'destination' => $updatedDestinationStock,
+            ];
         });
+    }
+
+    public function reserveStock(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
+    {
+
+        // TODO:
+        //         return DB::transaction(function () use ($product, $stockData, $quantity, $unit, $remarks, $operationDate) {
+        //             $product = $product instanceof Product ? $product : Product::findOrFail($product);
+        //             $stockData = $stockData instanceof StockData ? $stockData : StockData::fromStock($stockData);
+        //
+        //
+        //         });
     }
 
     public function createTransferOutOperation(Product|int $product, Stock|StockData $stockData, float $quantity, string $unit, ?string $remarks = null, ?string $operationDate = null, ?bool $withContainer = false)
@@ -498,7 +576,6 @@ class StockOperationService
         });
     }
 
-
     public function setStockStatus(float $quantity, float $minimum_quantity = 0, string $status = ''): string
     {
         if ($quantity <= 0) {
@@ -510,9 +587,9 @@ class StockOperationService
         }
     }
 
-    private function resolveBucketColumn(?string $qualityStatus):string
+    private function resolveBucketColumn(?string $qualityStatus): string
     {
-        return match($qualityStatus) {
+        return match ($qualityStatus) {
             'pending', 'checking', 'on_hold' => 'quantity_on_hold',
             'reserved' => 'quantity_reserved',
             'rejected' => 'quantity_rejected',
@@ -594,7 +671,6 @@ class StockOperationService
                     throw new InvalidArgumentException("Unknown stock change mode: {$mode}");
             }
 
-
             $newQuantity = $this->unitConverter->fromBaseUnit($newInBase, $stockUnit);
             $stock->updateOrFail([
                 $bucket => $newQuantity,
@@ -621,6 +697,7 @@ class StockOperationService
             return $stock->fresh();
         });
     }
+
     private function transferStock(Product|int $product, int $sourceStockLocation, int $destinationStockLocation, int $batchId, float $quantity, ?string $unit)
     {
         return DB::transaction(function () use ($product, $sourceStockLocation, $destinationStockLocation, $batchId, $quantity, $unit) {
@@ -679,7 +756,7 @@ class StockOperationService
 
         // Use unit conversion service to convert quantity to base unit
         if ($quantity < 0) {
-            throw new \InvalidArgumentException('Quantity must be a positive number.');
+            throw new InvalidArgumentException('Quantity must be a positive number.');
         }
 
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit) {
@@ -724,7 +801,7 @@ class StockOperationService
     private function decrementStock(Product|int $product, Stock|StockData $stockData, float $quantity, ?string $unit)
     {
         if ($quantity <= 0) {
-            throw new \InvalidArgumentException('Quantity must be a positive number.');
+            throw new InvalidArgumentException('Quantity must be a positive number.');
         }
 
         return DB::transaction(function () use ($product, $stockData, $quantity, $unit) {

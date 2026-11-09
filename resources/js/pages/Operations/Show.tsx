@@ -4,33 +4,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Operation } from '@/types/resources';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowDown, ArrowDownUp, ArrowUp, Edit2, Hash, LogIn, MapPin, Package } from 'lucide-react';
 
 import { toast } from 'sonner';
-
-type Operation = {
-    id: number;
-    product?: {
-        id: number;
-        name?: string;
-    };
-    batch?: {
-        id: number;
-        batch_number?: string;
-    };
-    location?: {
-        id: number;
-        name?: string;
-    };
-    quantity?: number;
-    unit?: string;
-    remarks?: string;
-    operation_type?: string;
-    operation_date?: Date | string;
-    created_at?: string;
-    updated_at?: string;
-};
 
 export default function Show({ operation }: { operation: Operation }) {
     const operationConfig = {
@@ -132,7 +110,7 @@ export default function Show({ operation }: { operation: Operation }) {
                 <Card>
                     <CardHeader>
                         <div className="flex items-start justify-between">
-                            <CardTitle>Operasi Stok</CardTitle>
+                            <CardTitle>Operation - {`#${operation?.id}`}</CardTitle>
                             <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${operationTypeConfig.color}`}>
                                 {operationTypeConfig.icon && <operationTypeConfig.icon className="mr-1 h-4 w-4" />}
                                 {operationTypeConfig.label}
@@ -141,44 +119,47 @@ export default function Show({ operation }: { operation: Operation }) {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div className="flex items-start gap-3">
-                                <div className="bg-primary/10 rounded-lg p-2">
-                                    <Hash className="text-primary h-6 w-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <CardDescription className="text-muted-foreground text-sm">No. Batch</CardDescription>
-                                    <p className="font-medium">{operation?.batch?.batch_number}</p>
-                                </div>
+                            <div className="flex flex-col items-start">
+                                <h3 className="font-semibold">Batch Number</h3>
+                                <p className="text-xl">{operation?.batch?.batch_number}</p>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <div className="bg-primary/10 rounded-lg p-2">
-                                    <Package className="text-primary h-6 w-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <CardDescription className="text-muted-foreground text-sm">Nama Product</CardDescription>
-                                    <Button variant="link" className="p-0 font-medium" asChild>
-                                        <Link href={route('products.show', { id: operation?.product?.id })}>{operation?.product?.name}</Link>
-                                    </Button>
-                                </div>
+                            <div className="flex flex-col items-start">
+                                <h3 className="font-semibold">Product Name</h3>
+                                <Link href={route('products.show', { id: operation?.product?.id })} className="text-xl">{operation?.product?.name}</Link>
                             </div>
                             <Separator className="md:col-span-2" />
-                            <div className="flex items-start gap-3">
-                                <div className="bg-primary/10 rounded-lg p-2">
-                                    <MapPin className="text-primary h-6 w-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <CardDescription className="text-muted-foreground text-sm">Lokasi</CardDescription>
-                                    <p className="font-medium">{operation?.location?.name}</p>
-                                </div>
+                            <div className="flex flex-col items-start">
+                                <h3 className="font-semibold">Location</h3>
+                                <p className="">{operation?.location?.name}</p>
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <h3 className="font-semibold">Created At</h3>
+                                <p className="">{operation?.created_at}</p>
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <h3 className="font-semibold">User</h3>
+                                <p className="">{operation?.user?.name}</p>
                             </div>
                         </div>
                     </CardContent>
                     <CardFooter className="border-border border-t pt-4">
                         <div className="w-full">
-                            <CardDescription>Remarks</CardDescription>
+                            <CardDescription>Notes</CardDescription>
                             <p className="font-medium">{operation?.remarks || '-'}</p>
                         </div>
                     </CardFooter>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Context</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="flex flex-col items-start">
+                                <p className="">{operation?.detail?.context_type}</p>
+                            </div>
+                        </div>
+                    </CardContent>
                 </Card>
             </ContainerLayout>
         </AppLayout>

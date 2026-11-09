@@ -1,5 +1,6 @@
 import ContainerFormLayout from '@/components/container-form-layout';
 import InputError from '@/components/input-error';
+import DefaultLocationField from '@/components/product-types/default-location-field';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { type Location, type Warehouse } from '@/types/resources';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef } from 'react';
 import { toast } from 'sonner';
@@ -18,8 +20,16 @@ interface CreateProductTypeForm {
     disable_type_code?: boolean;
     has_scientific_name?: boolean;
     has_brand_name?: boolean;
+    assemblable?: boolean;
+    default_location_id?: string;
 }
-export default function Create() {
+export default function Create({
+    warehouses,
+    locations,
+}: {
+    warehouses: Pick<Warehouse, 'id' | 'name'>[];
+    locations: Pick<Location, 'id' | 'name' | 'warehouse_id'>[];
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Product Types',
@@ -41,6 +51,8 @@ export default function Create() {
         disable_type_code: false,
         has_scientific_name: false,
         has_brand_name: false,
+        assemblable: false,
+        default_location_id: '',
     });
 
     const createProductType: FormEventHandler = (e) => {
@@ -132,6 +144,13 @@ export default function Create() {
                         />
                         <InputError message={errors.description} />
                     </div>
+                    <DefaultLocationField
+                        warehouses={warehouses}
+                        locations={locations}
+                        locationId={data.default_location_id}
+                        onLocationChange={(locationId) => setData('default_location_id', locationId)}
+                        error={errors.default_location_id}
+                    />
                     <div className="space-y-6">
                         <div className="flex items-start gap-3">
                             <Checkbox
@@ -162,6 +181,21 @@ export default function Create() {
                                 <p className="text-muted-foreground text-sm">
                                     Product types that require a brand name will have this option enabled. This is useful for products that are
                                     branded.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Checkbox
+                                id="assemblable"
+                                name="assemblable"
+                                checked={data.assemblable}
+                                onCheckedChange={(checked) => setData('assemblable', !!checked)}
+                                className="mt-1"
+                            />
+                            <div className="grid gap-2">
+                                <Label htmlFor="assemblable">Assemblable</Label>
+                                <p className="text-muted-foreground text-sm">
+                                    Products of this type are assembled from other products through a Bill of Materials.
                                 </p>
                             </div>
                         </div>

@@ -29,6 +29,7 @@ export default function StockCard({
     total_stock_quantity_across_locations: number;
     opening_balance: number;
 }) {
+    const totalStockQuantity = stock.unit === 'pcs' ? Number(total_stock_quantity_across_locations) : total_stock_quantity_across_locations;
     // console.log({ stock, operations, total_stock_quantity_across_locations });
     return (
         <AppLayout>
@@ -129,7 +130,7 @@ export default function StockCard({
                             </div>
                             <div className="">
                                 <h2 className="text-muted-foreground">Total Qty</h2>
-                                <p className="text-primary text-2xl font-medium">{`${total_stock_quantity_across_locations} ${stock.unit}`}</p>
+                                <p className="text-primary text-2xl font-medium">{`${totalStockQuantity} ${stock.unit}`}</p>
                             </div>
                         </CardContent>
                     </Card>

@@ -1,4 +1,5 @@
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
+import { isUriActive } from '@/lib/utils';
 import { MainNavItem } from '@/types';
 import {
     Collapsible,
@@ -23,7 +24,7 @@ export function NavMain({ items = [], groupTitle = 'Group' }:
                     <Collapsible
                         key={item.title}
                         asChild
-                        defaultOpen={item.subItems?.some(subItem => subItem.href === page.url)}
+                        defaultOpen={item.subItems?.some((subItem) => isUriActive(page.url, subItem.href)) ?? false}
                         className="group/collapsible"
                     >
                         <SidebarMenuItem>
@@ -38,7 +39,7 @@ export function NavMain({ items = [], groupTitle = 'Group' }:
                                 <SidebarMenuSub>
                                     {item.subItems?.map((subItem) => (
                                         <SidebarMenuSubItem key={subItem.title}>
-                                            <SidebarMenuSubButton asChild>
+                                            <SidebarMenuSubButton asChild isActive={isUriActive(page.url, subItem.href)}>
                                                 <Link href={subItem.href}>
                                                     {subItem.icon && <subItem.icon />}
                                                     <span>{subItem.title}</span>

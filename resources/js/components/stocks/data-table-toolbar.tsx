@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { usePage } from '@inertiajs/react';
 import { Table } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { CalendarIcon, X } from 'lucide-react';
+import { CalendarIcon, FilterIcon, X, XIcon } from 'lucide-react';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
 import { Button } from '../ui/button';
@@ -12,6 +12,8 @@ import { Calendar } from '../ui/calendar';
 import { Field } from '../ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
+import { DataTableViewOptions } from '../data-table-view-options';
+import { Badge } from '../ui/badge';
 
 interface Options {
     label: string;
@@ -42,6 +44,16 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const products: Options[] = [
         { label: 'All', value: '' },
         ...productColumn, // Assuming warehouse names are similar to location names
+    ];
+
+    const locations: Options[] = [
+        { label: 'All', value: '' },
+        ...(table.getColumn('location_name')
+            ? Array.from(table.getColumn('location_name')!.getFacetedUniqueValues().keys()).map((value: string) => ({
+                  label: value,
+                  value: value,
+              }))
+            : []),
     ];
 
     const productTypeColumn = table.getColumn('product_type')
@@ -79,46 +91,67 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         const productSku = params.get('product_sku');
         // set global filter value
         table.setGlobalFilter(productSku ?? '');
-    }, [url]);
+    }, [url, table]);
+
+    const [rangePickerOpen, setRangePickerOpen] = React.useState<boolean>(false);
+    const [filterOpen, setFilterOpen] = React.useState<boolean>(false);
+    const getFilterCount = table.getState().columnFilters.length;
     return (
         <div className="flex items-center justify-between">
             <div className="flex flex-1 items-center space-x-2">
-                {table.getColumn('product_type') && (
-                    <DataTableFacetedFilter column={table.getColumn('product_type')} title="Product Type" options={productTypes} />
-                )}
-                {table.getColumn('status') && <DataTableFacetedFilter column={table.getColumn('status')} title="Status" options={status} />}
+                {!filterOpen && <Button variant={'outline'} size={'sm'} onClick={() => setFilterOpen(true)} type="button">
+                    <FilterIcon />
+                    <Badge variant={getFilterCount > 0 ? 'secondary' : 'outline'} size={'sm'}>{getFilterCount}</Badge>
+                </Button>}
+                <ButtonGroup className={filterOpen ? 'flex' : 'hidden'}>
+                    <Button variant={'outline'} size={'sm'} onClick={() => setFilterOpen(false)} type="button" className="hover:bg-red-500"><XIcon /></Button>
+                    {table.getColumn('product_type') && (
+                        <DataTableFacetedFilter column={table.getColumn('product_type')} title="Type" options={productTypes} />
+                    )}
+                    {table.getColumn('status') && <DataTableFacetedFilter column={table.getColumn('status')} title="Status" options={status} />}
+                    {table.getColumn('location_name') && <DataTableFacetedFilter column={table.getColumn('location_name')} title="Location" options={locations} />}
+                </ButtonGroup>
                 <Field>
                     <ButtonGroup>
-                        {table.getColumn('updated_at') && (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={'outline'}
-                                        className={cn('h-8 w-[250px] justify-start text-left font-normal', !dateRange && 'text-muted-foreground')}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {dateRange?.from ? (
-                                            dateRange.to ? (
-                                                <>
-                                                    {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
-                                                </>
+                        {!rangePickerOpen && <Button variant={'outline'} size={'sm'} onClick={() => setRangePickerOpen(true)} type="button">
+                            <CalendarIcon />
+                        </Button>}
+                        {(rangePickerOpen || (dateRange?.from && dateRange?.to)) && table.getColumn('updated_at') && (
+                            <ButtonGroup>
+                                <Button variant={'outline'} size={'sm'} onClick={() => setRangePickerOpen(false)} type="button">
+                                    <XIcon />
+                                </Button>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={'outline'}
+                                            size={'sm'}
+                                            className={cn('text-left font-normal', !dateRange && 'text-muted-foreground')}
+                                        >
+                                            <CalendarIcon />
+                                            {dateRange?.from ? (
+                                                dateRange.to ? (
+                                                    <>
+                                                        {format(dateRange.from, 'LLL dd, y')} - {format(dateRange.to, 'LLL dd, y')}
+                                                    </>
+                                                ) : (
+                                                    format(dateRange.from, 'LLL dd, y')
+                                                )
                                             ) : (
-                                                format(dateRange.from, 'LLL dd, y')
-                                            )
-                                        ) : (
-                                            <span>Last Update Range</span>
-                                        )}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar autoFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
-                                </PopoverContent>
-                            </Popover>
+                                                <span>Last Update Range</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar autoFocus mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
+                                    </PopoverContent>
+                                </Popover>
+                            </ButtonGroup>
                         )}
                         {table.getColumn('updated_at') && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="h-8 px-2 lg:px-3">
+                                    <Button variant="outline" size="sm">
                                         Quick Date
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -181,6 +214,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                         <X />
                     </Button>
                 )}
+                <DataTableViewOptions table={table} />
             </div>
         </div>
     );

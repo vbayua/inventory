@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AdminController extends Controller
 {
@@ -19,26 +19,33 @@ class AdminController extends Controller
         $this->authorizeResource(User::class, 'user');
     }
 
-    public function index()
+    public function index(): Response
     {
-        $users = User::with('roles')->get();
+        $users = User::query()
+            ->with('roles:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'email_verified_at', 'created_at']);
+
         return Inertia::render('Admin/User/Index', [
             'users' => $users,
+            'roleNames' => Role::query()->orderBy('name')->pluck('name'),
         ]);
     }
 
     public function show(User $user)
-       {
-           // Optionally eager-load relations if needed
-           $user->load('roles');
-           return Inertia::render('Admin/User/Show', [
-               'user' => $user,
-           ]);
-       }
+    {
+        // Optionally eager-load relations if needed
+        $user->load('roles');
+
+        return Inertia::render('Admin/User/Show', [
+            'user' => $user,
+        ]);
+    }
 
     public function create()
     {
-        $roles = Role::all();
+        $roles = Role::query()->orderBy('name')->get(['id', 'name', 'description']);
+
         return Inertia::render('Admin/User/Create', [
             'roles' => $roles,
         ]);
@@ -50,6 +57,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password_confirmation' => 'required',
             'roles' => 'required|array',
             'roles.*' => 'exists:roles,name',
         ]);
@@ -58,8 +66,9 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'roles' => $request->roles,
         ]);
+
+        $user->roles()->sync(Role::whereIn('name', $request->roles)->pluck('id')->all());
 
         event(new Registered($user));
 
@@ -68,9 +77,11 @@ class AdminController extends Controller
 
     public function edit(User $user)
     {
-        $user->load('roles');
+        $user->load('roles:id,name');
+
         return Inertia::render('Admin/User/Edit', [
             'user' => $user,
+            'roles' => Role::query()->orderBy('name')->get(['id', 'name', 'description']),
         ]);
     }
 
@@ -102,7 +113,7 @@ class AdminController extends Controller
             return redirect()->route('admin.users.index')->with('error', 'You cannot delete your own account.');
         }
         $user->delete();
+
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
-
 }

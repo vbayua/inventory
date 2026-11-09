@@ -7,7 +7,7 @@ type OperationForm = {
     product: string;
     batch: string;
     quantity: string | number;
-    location: string;
+    location: string | undefined;
     date?: string; // Optional date field,
     unit: string;
     operationType: string;
@@ -31,7 +31,7 @@ export default function useOperationForm({
     stocks: Stock[];
     warehouses: Warehouse[];
     batches: Batch[];
-    locations: Location[];
+    locations: Location[] | undefined;
     units: Unit[];
     stockQuery?: Stock | undefined;
     operationType: 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
@@ -44,8 +44,8 @@ export default function useOperationForm({
         location: '',
         date: '',
         unit: '',
-        operationType: operationType || 'outbound',
-        adjustmentType: adjustmentType || 'addition',
+        operationType: operationType,
+        adjustmentType: adjustmentType,
         remarks: '',
         source_location: '',
         destination_location: '',
@@ -79,47 +79,58 @@ export default function useOperationForm({
         setSelectedUnit(undefined);
     };
 
+    const resetLocation = () => {
+        setSelectedLocation(undefined);
+        setData('location', '');
+    };
+
+    const resetWarehouse = () => {
+        setSelectedWarehouse(undefined);
+        setSelectedLocation(undefined);
+        setData('location', '');
+    };
+
     const handleProductChange = (product: Product) => {
         if (selectedProduct) resetForm();
         setSelectedProduct(product);
 
-        setData({ ...data, product: String(product.id) });
+        setData('product', String(product.id));
     };
 
     const handleBatchChange = (batch: Batch) => {
         setSelectedBatch(batch);
-        setData({ ...data, batch: String(batch.id) });
+        setData('batch', String(batch.id));
     };
 
     const handleLocationChange = (location: Location) => {
         setSelectedLocation(location);
-        setData({ ...data, location: String(location.id) });
+        setData('location', String(location.id));
     };
 
     const handleWarehouseChange = (warehouse: Warehouse) => {
         setSelectedWarehouse(warehouse);
-        setData({ ...data, location: '' });
+        setData('location', '');
     };
 
     const handleUnitChange = (unit: Unit) => {
         setSelectedUnit(unit);
-        setData({ ...data, unit: String(unit.name) });
+        setData('unit', String(unit.name));
     };
 
     const handleTransferChange = ({ name, value }: { name: string; value: any }) => {
         if (name === 'source_warehouse') {
             setSelectedTransferLocations({ ...selectedTransferLocations, source_warehouse: value ?? undefined, source_location: undefined });
-            setData({ ...data, source_location: undefined });
+            setData('source_location', undefined);
         } else if (name === 'destination_warehouse') {
             setSelectedTransferLocations({
                 ...selectedTransferLocations,
                 destination_warehouse: value ?? undefined,
                 destination_location: undefined,
             });
-            setData({ ...data, destination_location: undefined });
+            setData('destination_location', undefined);
         } else {
             setSelectedTransferLocations({ ...selectedTransferLocations, [name]: value ?? undefined });
-            setData({ ...data, [name]: value?.id });
+            setData(name as keyof OperationForm, value?.id);
         }
     };
 
@@ -249,5 +260,7 @@ export default function useOperationForm({
         filteredSourceLocations,
         filteredDestinationLocations,
         filteredUnits,
+        resetLocation,
+        resetWarehouse,
     };
 }

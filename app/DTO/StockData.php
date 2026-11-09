@@ -93,10 +93,6 @@ readonly class StockData implements ArrayAccess
             throw new \InvalidArgumentException('StockData requires a location_id.');
         }
 
-        // if (! isset($data['quantity'])) {
-        //     throw new \InvalidArgumentException('StockData requires a quantity.');
-        // }
-
         if (! isset($data['unit'])) {
             throw new \InvalidArgumentException('StockData requires a unit.');
         }

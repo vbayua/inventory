@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Unit;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOperationRequest extends FormRequest
 {
@@ -40,6 +41,17 @@ class StoreOperationRequest extends FormRequest
              'container_unit' => 'nullable|exists:units,name',
         ];
     }
+    protected function prepareForValidation(): void
+    {
+        $normalize = fn ($value) => in_array($value, ['', 'undefined', 'null'], true) ? null : $value;
+
+        $this->merge([
+            'location' => $normalize($this->input('location')),
+            'source_location' => $normalize($this->input('source_location')),
+            'destination_location' => $normalize($this->input('destination_location')),
+        ]);
+    }
+
 
     /**
      * Configure the validator instance.

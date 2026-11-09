@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class UpdateProductRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -28,6 +30,13 @@ class UpdateProductRequest extends FormRequest
             'is_active' => ['nullable', 'boolean'],
             'brand_name' => ['nullable', 'string'],
             'scientific_name' => ['nullable', 'string'],
+            'suppliers' => ['nullable', 'array'],
+            'suppliers.*.id' => [
+                'required',
+                'integer',
+                Rule::exists('products_suppliers', 'supplier_id')->where('product_id', $this->product->id),
+            ],
+            'suppliers.*.price' => ['required', 'numeric', 'min:0'],
         ];
     }
 }

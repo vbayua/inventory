@@ -808,12 +808,16 @@ export default function Show({ inspection, availableChecklists, batch }: Props) 
                                                     </Field>
                                                     {!selectedBatch && (
                                                         <Field>
+                                                            <Label>Minimum Quantity</Label>
                                                             <Input
                                                                 id="minimum_quantity"
                                                                 type="number"
                                                                 placeholder="Minimum Quantity"
                                                                 defaultValue={0}
-                                                                onChange={(e) => setMinimumQuantity(Number(e.target.value))}
+                                                                onChange={(e) => {
+                                                                    const parsed = parseInt(e.target.value);
+                                                                    setMinimumQuantity(isNaN(parsed) ? 0 : parsed);
+                                                                }}
                                                             />
                                                         </Field>
                                                     )}

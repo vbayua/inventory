@@ -38,7 +38,7 @@ export default function Index({ suppliers }: { suppliers: any }) {
                         Add Supplier
                     </Link>
                 </div>
-                <DataTable data={suppliers} columns={columns} clientSide={true} />
+                <DataTable data={suppliers} columns={columns} clientSide={true} onRowClick={(supplier) => {router.visit(route('supplier.show', { supplier }))}} />
             </ContainerLayout>
         </AppLayout>
     );

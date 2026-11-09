@@ -101,7 +101,27 @@ class SupplierController extends Controller
 
         $supplier->products()->syncWithoutDetaching($productIds);
 
-        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added to'.$supplier->name);
+        return to_route('supplier.show', $supplier)->with('success', 'Products successfuly added');
+    }
+
+    /**
+     * Update the default price of a product supplied by this supplier.
+     */
+    public function updateProductPrice(Request $request, Supplier $supplier, Product $product)
+    {
+        $this->authorize('update', $supplier);
+
+        $validated = $request->validate([
+            'price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        abort_unless($supplier->products()->whereKey($product->id)->exists(), 404);
+
+        $supplier->products()->updateExistingPivot($product->id, [
+            'price' => $validated['price'],
+        ]);
+
+        return to_route('supplier.show', $supplier)->with('success', 'Product price updated');
     }
 
     /**

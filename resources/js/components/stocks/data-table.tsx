@@ -17,7 +17,7 @@ import * as React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { Link } from '@inertiajs/react';
-import { ChevronDown, Database, PlusIcon } from 'lucide-react';
+import { ChevronDown, Database, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import { DataTablePagination } from '../data-table-pagination';
 import { DataTableViewOptions } from '../data-table-view-options';
 import { Button } from '../ui/button';
@@ -26,18 +26,22 @@ import { Field } from '../ui/field';
 import { Input } from '../ui/input';
 import { PaginationIndex } from '../ui/pagination-index';
 import { DataTableToolbar } from './data-table-toolbar';
+import { ButtonGroup } from '../ui/button-group';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     links?: any[];
     clientSide?: boolean;
+    onRowClick?: (row: TData) => void;
 }
 
-export function DataTable<TData, TValue>({ columns, data, links, clientSide = false }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, links, clientSide = false, onRowClick }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [searchInput, setSearchInput] = React.useState<boolean>(false);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+        batch_number: false,
         product_type: false,
         warehouse_name: false,
         minimum_qty: false,
@@ -66,44 +70,23 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
         <div>
             <div className="mb-4 flex items-center justify-between overflow-x-auto">
                 {/*<DataTableToolbar table={table} />*/}
-                <div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="default" className="px-4 py-2 hover:cursor-pointer">
-                                Actions
-                                <ChevronDown className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="space-y-2 p-2">
-                            <DropdownMenuItem className="hover:cursor-pointer" asChild>
-                                <Link href={route('operations.create')}>
-                                    <PlusIcon className="mr-2 h-4 w-4" />
-                                    Buat Operasi Stock
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="hover:cursor-pointer" asChild>
-                                <Link href={route('operations.index')}>
-                                    <Database className="mr-2 h-4 w-4" />
-                                    Log Operasi Stock
-                                </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                <DataTableViewOptions table={table} />
             </div>
-            <div className="grid w-full gap-4 overflow-x-auto [&>div]:max-h-120 [&>div]:rounded">
+            <div className="grid w-full gap-4 overflow-x-auto [&>div]:max-h-200 [&>div]:rounded">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
                     <div>
-                        <h2 className="sr-only">Stock List</h2>
                         <Field>
-                            <Input
-                                placeholder="Cari..."
-                                value={(table.getState().globalFilter as string) ?? ''}
-                                onChange={(event) => table.setGlobalFilter(event.target.value)}
-                                className="w-full max-w-sm"
-                            />
+                            <Button variant="outline" size="sm" type="button" onClick={() => setSearchInput(true)} className={searchInput ? "hidden" : "w-full max-w-sm"}><SearchIcon /></Button>
+                            {
+                                searchInput && <ButtonGroup className="flex gap-2">
+                                    <Input
+                                        placeholder="Cari..."
+                                        value={(table.getState().globalFilter as string) ?? ''}
+                                        onChange={(event) => table.setGlobalFilter(event.target.value)}
+                                        className="w-full max-w-sm"
+                                    />
+                                    <Button onClick={() => setSearchInput(false)} variant="ghost" className="hover:bg-red-500" type="button"><XIcon /></Button>
+                                </ButtonGroup>
+                            }
                         </Field>
                     </div>
                     <div>
@@ -111,13 +94,13 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     </div>
                 </div>
 
-                <Table className="overflow-x-auto border">
-                    <TableHeader>
+                <Table className="overflow-x-auto ">
+                    <TableHeader className="bg-background after:bg-border sticky top-0 *:whitespace-nowrap after:absolute after:inset-x-0 after:bottom-0 after:h-px after:content-['']">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead key={header.id} style={{ width: header.column.getSize() }}>
                                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                         </TableHead>
                                     );
@@ -128,9 +111,21 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && 'selected'}
+                                    className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    onDoubleClick={() => onRowClick?.(row.original)}
+                                    onKeyDown={(event) => {
+                                        if (onRowClick && (event.key === 'Enter' || event.key === ' ')) {
+                                            event.preventDefault();
+                                            onRowClick(row.original);
+                                        }
+                                    }}
+                                >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                     ))}
                                 </TableRow>
                             ))

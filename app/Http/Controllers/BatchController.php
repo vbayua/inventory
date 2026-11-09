@@ -5,9 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBatchRequest;
 use App\Http\Requests\UpdateBatchRequest;
 use App\Models\Batch;
+use App\Models\Product;
+use App\Models\Supplier;
 use App\Service\BatchAssignmentService;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class BatchController extends Controller
 {
@@ -28,11 +33,11 @@ class BatchController extends Controller
     public function create()
     {
         return Inertia::render('Batches/Create', [
-            'products' => \App\Models\Product::select('id', 'name', 'sku')->with(
+            'products' => Product::select('id', 'name', 'sku')->with(
                 'suppliers:id,partner_id',
                 'suppliers.partner:id,name'
             )->get(),
-            'suppliers' => \App\Models\Supplier::with('partner:id,name')->select('id', 'partner_id')->get(),
+            'suppliers' => Supplier::with('partner:id,name')->select('id', 'partner_id')->get(),
         ]);
     }
 
@@ -41,11 +46,26 @@ class BatchController extends Controller
      */
     public function store(StoreBatchRequest $request, BatchAssignmentService $batchAssignmentService)
     {
-        DB::transaction(function () use ($request, $batchAssignmentService) {
-            $batch = $request->validated();
-            $operationDate = $batch['operation_date'] ?? now();
-            $batchAssignmentService->determineBatch($batch['product_id'], supplierId: $batch['supplier_id'], operationDate: $operationDate, minQty: $batch['minimum_quantity'] );
-        });
+        try {
+            DB::transaction(function () use ($request, $batchAssignmentService) {
+                $batch = $request->validated();
+                $operationDate = $batch['operation_date'] ?? now();
+                $batchAssignmentService->determineBatch(
+                    $batch['product_id'],
+                    operationDate: $operationDate,
+                    supplierId: $batch['supplier_id'],
+                    minQty: $batch['minimum_quantity'] ?? 0,
+                    manufactureDate: $batch['manufacture_date'] ?? null,
+                    expiryDate: $batch['expiry_date'] ?? null,
+                );
+            });
+        } catch (ModelNotFoundException $e) {
+            return redirect()->route('batch.index')->with('error', 'Product not found.');
+        } catch (ValidationException $e) {
+            return redirect()->route('batch.index')->with('error', $e->getMessage());
+        } catch (Exception $e) {
+            return back()->withErrors($e->getMessage());
+        }
 
         return redirect()->route('batch.index')->with('success', 'Batch created successfully.');
     }

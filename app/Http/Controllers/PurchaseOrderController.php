@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\DTO\StockData;
 use App\Http\Requests\ReceiveOrderStoreRequest;
 use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Http\Requests\UpdatePurchaseOrderRequest;
 use App\Models\Batch;
+use App\Models\Location;
+use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\QcInspection;
 use App\Models\Supplier;
-use App\Models\Location;
-use App\Models\Product;
 use App\Rules\Permissions\PurchaseOrderPermissions;
 use App\Service\StockOperationService;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +31,7 @@ class PurchaseOrderController extends Controller
     public function index(PurchaseOrderPermissions $permissions)
     {
         $purchaseOrders = PurchaseOrder::with('supplier:id,partner_id', 'supplier.partner:id,name')->latest()->get();
+
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $purchaseOrders,
         ])->with($permissions);
@@ -40,6 +40,7 @@ class PurchaseOrderController extends Controller
     public function create()
     {
         $suppliers = Supplier::with('partner:id,name', 'products:id,name,sku')->get();
+
         return Inertia::render('PurchaseOrders/Create', [
             'suppliers' => $suppliers,
             'products' => Product::all(),
@@ -61,7 +62,13 @@ class PurchaseOrderController extends Controller
 
     public function show(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->load('items', 'items.product:id,name,sku,unit', 'supplier:id,partner_id', 'supplier.partner:id,name', 'user:id,name');
+        $purchaseOrder->load([
+            'items',
+            'items.product:id,name,sku,unit',
+            'supplier:id,partner_id',
+            'supplier.partner:id,name',
+            'user:id,name',
+        ]);
 
         $receiveOrders = $purchaseOrder->receive_orders()->latest()->get();
         $receiveOrders->load('user:id,name');
@@ -74,11 +81,14 @@ class PurchaseOrderController extends Controller
 
     public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->update($request->validated());
+        $purchaseOrder->update([
+            'status' => 'cancelled',
+        ]);
+
         return redirect()->back()->with('success', 'Purchase order updated successfully.');
     }
 
-    public function receive(PurchaseOrder $purchaseOrder): Response
+    public function receive(PurchaseOrder $purchaseOrder, Request $request): Response|RedirectResponse
     {
         $purchaseOrder->load(
             'items:id,purchase_order_id,price,quantity,product_id',
@@ -86,12 +96,19 @@ class PurchaseOrderController extends Controller
             'items.product.productType:id,default_location_id',
             'items.product.productType.defaultLocation:id,name',
             'supplier',
-            'items.receiveOrderItems'
         );
 
-        $purchaseOrder->items->each(function ($item) {
-            $item->quantity_received = $item->receiveOrderItems->sum('quantity_received');
-        });
+        $receiveAll = $request->boolean('receive_all', false);
+
+        foreach ($purchaseOrder->items as $item) {
+            $item->quantity_received = $item->getQuantityReceivedAttribute();
+            if (! $item->product->productType || ! $item->product->productType->defaultLocation) {
+                return redirect()->route('purchase-orders.show', $purchaseOrder)
+                    ->with('error', "Default location is not set for the product type of product '{$item->product->name}'. Please set a default location before receiving this purchase order.");
+            }
+
+            $item->location_id = $item->product->productType->defaultLocation->id;
+        }
 
         // Filter batches based on the product IDs in the purchase order items
         $productIds = $purchaseOrder->items->pluck('product_id')->unique();
@@ -101,6 +118,7 @@ class PurchaseOrderController extends Controller
             'purchaseOrder' => $purchaseOrder,
             'locations' => Location::with('warehouse:id,name')->get(),
             'batches' => $batches,
+            'receiveAll' => $receiveAll,
         ]);
     }
 
@@ -108,23 +126,23 @@ class PurchaseOrderController extends Controller
     {
         $receiveOrder = array_merge($request->validated(), ['user_id' => Auth::id()]);
 
-
-        DB::transaction(function () use ($purchaseOrder, $receiveOrder, $stockOperationService) {
+        $userId = Auth::id();
+        DB::beginTransaction();
+        try {
             $newReceiveOrder = $purchaseOrder->receive_orders()->create([
                 'receive_number' => $receiveOrder['receive_order_number'],
                 'reference_number' => $receiveOrder['reference_number'] ?? null,
                 'receive_date' => Carbon::parse($receiveOrder['receive_date']),
                 'notes' => $receiveOrder['notes'] ?? null,
-                'user_id' => $receiveOrder['user_id'] ?? null,
+                'user_id' => $userId,
             ]);
 
             foreach ($receiveOrder['items'] as $item) {
                 $purchaseOrderItem = $purchaseOrder->items()->where('product_id', $item['product_id'])->first();
 
-                if (!$purchaseOrderItem) {
+                if (! $purchaseOrderItem) {
                     continue; // Skip if the product is not part of the purchase order
                 }
-
 
                 $quantityToReceive = $item['quantity_received'];
 
@@ -141,9 +159,9 @@ class PurchaseOrderController extends Controller
 
                 // Create a QC inspection record for this receive order item
                 QcInspection::create([
-                    'receive_order_id'      => $newReceiveOrder->id,
+                    'receive_order_id' => $newReceiveOrder->id,
                     'receive_order_item_id' => $newReceiveOrderItem->id,
-                    'status'                => 'pending',
+                    'status' => 'pending',
                 ]);
 
                 if ($purchaseOrderItem->quantity_received >= $purchaseOrderItem->quantity) {
@@ -155,18 +173,54 @@ class PurchaseOrderController extends Controller
 
             // Update the purchase order status based on all items' statuses
             $allItems = $purchaseOrder->items()->get(['status']);
-            $allReceived = $allItems->every(fn($item) => $item->status === 'received');
-            $anyReceived = $allItems->contains(fn($item) => in_array($item->status, ['received', 'partially_received']));
+            $allReceived = $allItems->every(fn ($item) => $item->status === 'received');
+            $anyReceived = $allItems->contains(fn ($item) => in_array($item->status, ['received', 'partially_received']));
 
             if ($allReceived) {
                 $purchaseOrder->update(['status' => 'received']);
             } elseif ($anyReceived) {
                 $purchaseOrder->update(['status' => 'partially_received']);
             }
+        } catch (\Exception $e) {
+            DB::rollBack();
 
-        });
+            return back()->withErrors($e->getMessage());
+        }
 
+        DB::commit();
 
-        return redirect()->route('purchase-orders.show', $purchaseOrder)->with('success', 'Items received successfully.');
+        return redirect()->route('receive-orders.show', $newReceiveOrder)->with('success', 'Items received successfully.');
+    }
+
+    public function closePurchaseOrder(PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $hasApprovedQcInspection = QcInspection::whereHas('receiveOrder', function ($query) use ($purchaseOrder) {
+            $query->where('purchase_order_id', $purchaseOrder->id);
+        })->whereHas('approval', function ($query) {
+            $query->where('status', 'approved');
+        })->exists();
+
+        if (! $hasApprovedQcInspection) {
+            return back()->withErrors('Purchase order cannot be closed without at least one approved QC inspection.');
+        }
+
+        $purchaseOrder->update(['status' => 'completed']);
+
+        return redirect()->route('purchase-orders.index')->with('success', 'Purchase order closed.');
+    }
+
+    public function cancelPurchaseOrder(PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $hasQcInspections = QcInspection::whereHas('receiveOrder', function ($query) use ($purchaseOrder) {
+            $query->where('purchase_order_id', $purchaseOrder->id);
+        })->exists();
+
+        if ($hasQcInspections || $purchaseOrder->receive_orders()->exists()) {
+            return back()->withErrors('Purchase order cannot be cancelled once it has receive orders or QC inspections.');
+        }
+
+        $purchaseOrder->update(['status' => 'cancelled']);
+
+        return redirect()->route('purchase-orders.index')->with('success', 'Purchase order cancelled.');
     }
 }

@@ -8,13 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 
 export const columns: ColumnDef<Supplier>[] = [
     {
-        accessorKey: 'name',
+        id: 'name',
+        accessorFn: (row) => row.partner?.name,
         header: ({ column }) => {
             return <DataTableColumnHeader column={column} title="Supplier Name" />;
         },
         cell: ({ row }) => {
             const id = row.original.id;
-            const name = row.original.partner?.name;
+            const name = row.getValue<string>('name');
             return <Link href={route('supplier.show', id)}>{name}</Link>;
         },
     },

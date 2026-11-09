@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Operation extends Model
 {
@@ -23,6 +25,11 @@ class Operation extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function detail(): HasOne
+    {
+        return $this->hasOne(OperationDetail::class);
+    }
+
     public function batch(): BelongsTo
     {
         return $this->belongsTo(Batch::class);
@@ -36,5 +43,10 @@ class Operation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function context(): MorphOne
+    {
+        return $this->morphOne(OperationDetail::class, 'context');
     }
 }

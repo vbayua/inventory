@@ -6,15 +6,28 @@ import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import { BreadcrumbItem } from '@/types';
 import { Product, Supplier } from '@/types/resources';
 import { Head, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, PlusIcon, TrashIcon } from 'lucide-react';
-import { SubmitEventHandler, useEffect, useState } from 'react';
+import { SubmitEventHandler, useEffect, useRef, useState } from 'react';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Purchase Orders',
+        href: '/purchase-orders',
+    },
+    {
+        title: 'Create Purchase Order',
+        href: '/purchase-orders/create',
+    }
+];
 
 export default function Create({ suppliers }: { suppliers: Supplier[] }) {
     const { data, setData, post, reset, processing, errors } = useForm({
@@ -64,6 +77,7 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
         setData('items', []);
     };
 
+
     const createPOHandler: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
         // Handle form submission logic here
@@ -79,36 +93,41 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
         });
     };
 
+    const supplierInputRef = useRef<HTMLButtonElement>(null);
+
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Purchase Order" />
             <ContainerFormLayout>
+            <div className="mb-6 md:mb-12">
+                <h1 className="mb-4 text-xl font-bold">Create Purchase Order</h1>
+                <p className="text-muted-foreground mb-6 text-sm">Create a new purchase order.</p>
+                <Separator />
+            </div>
                 <form className="space-y-6" onSubmit={createPOHandler}>
-                    <div className="mb-4">
-                        <h1 className="mb-4 text-2xl font-bold">Create Purchase Order</h1>
-                        <p className="text-muted-foreground mb-6 text-sm">Create a new purchase order.</p>
-                    </div>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div className="space-y-2 md:col-span-2">
+                        <div className="md:col-span-2">
                             <Label htmlFor="po_number">Nomor PO</Label>
                             <Input
                                 id="po_number"
                                 name="po_number"
                                 type="text"
                                 placeholder="No. PO"
+                                className="mt-2"
                                 onChange={(e) => setData('po_number', String(e.target.value))}
                             />
                             <InputError message={errors.po_number} className="mt-1" />
                         </div>
-                        <div className="space-y-2 md:col-span-2">
+                        <div className="md:col-span-2">
                             <Label htmlFor="supplier">Supplier</Label>
-                            <Popover open={supplierOpen} onOpenChange={setSupplierOpen} defaultOpen={false}>
+                            <Popover open={supplierOpen} onOpenChange={setSupplierOpen}  defaultOpen={false}>
                                 <PopoverTrigger asChild>
                                     <Button
+                                        ref={supplierInputRef}
                                         variant="outline"
                                         className={cn(
-                                            'w-full justify-between',
-                                            data.supplier_id ? 'text-primary' : 'text-muted-foreground',
+                                            'w-full justify-between mt-2',
+                                            data.supplier_id ? 'text-foreground' : 'text-muted-foreground',
                                             errors.supplier_id && 'text-muted-foreground border-red-500',
                                         )}
                                     >
@@ -139,14 +158,14 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
                             <InputError message={errors.supplier_id} className="mt-1" />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="">
                             <Label htmlFor="order_date">Order Date</Label>
-                            <Popover open={orderDateOpen} onOpenChange={setOrderDateOpen} defaultOpen={false}>
+                            <Popover open={orderDateOpen} onOpenChange={setOrderDateOpen} defaultOpen={false} >
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant={'outline'}
                                         className={cn(
-                                            'w-full pl-3 text-left font-normal',
+                                            'w-full pl-3 text-left font-normal mt-2',
                                             errors.order_date && 'text-muted-foreground border-red-500',
                                         )}
                                     >
@@ -178,14 +197,14 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
                             </Popover>
                             <InputError message={errors.order_date} className="mt-1" />
                         </div>
-                        <div className="space-y-2">
+                        <div className="">
                             <Label htmlFor="expected_date">Expected Delivery Date</Label>
                             <Popover open={expectedDateOpen} onOpenChange={setExpectedDateOpen} defaultOpen={false}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant={'outline'}
                                         className={cn(
-                                            'w-full pl-3 text-left font-normal',
+                                            'w-full pl-3 text-left font-normal mt-2',
                                             errors.expected_date && 'text-muted-foreground border-red-500',
                                         )}
                                     >
@@ -222,7 +241,11 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
                         <Label htmlFor="items">Product Items</Label>
                         <div className="overflow-y-auto rounded-md">
                             {selectedProducts.length === 0 ? (
-                                <div className="border-muted bg-muted flex h-32 items-center justify-center rounded-md border p-4">
+                                <div className="border-muted-foreground bg-muted-foreground/20 flex h-32 items-center justify-center rounded-md border p-4" onClick={(e) => {
+                                    e.preventDefault();
+                                    // setFocus to supplier
+                                    supplierInputRef.current?.focus()
+                                }}>
                                     <p className="text-muted-foreground text-center">No items added. Please add items to the purchase order.</p>
                                 </div>
                             ) : (
@@ -335,7 +358,7 @@ export default function Create({ suppliers }: { suppliers: Supplier[] }) {
                             placeholder="Total Price"
                             value={`Rp. ${totalPrice.toLocaleString('id-ID')}`}
                             readOnly
-                            className="bg-accent w-full cursor-not-allowed text-right align-middle text-4xl font-semibold tracking-wide"
+                            className="bg-blue-600/20 border-b-blue-100 w-full cursor-not-allowed text-right align-middle text-4xl font-semibold tracking-wide"
                         />
                     </div>
 

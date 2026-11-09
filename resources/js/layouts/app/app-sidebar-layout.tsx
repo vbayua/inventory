@@ -17,7 +17,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
         if (success) {
             toast.success(success, { id: 'flash-success' });
         } else if (error) {
-            toast.error(error, { id: 'flash-error' });
+            toast.error(error, { id: 'flash-error', duration: 10000});
         }
     }, [success, error]);
     return (

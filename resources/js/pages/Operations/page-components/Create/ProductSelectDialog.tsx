@@ -164,7 +164,7 @@ export default function ProductSelectDialog({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.data.map((product: Product) => (
+                            {products ? products.data.map((product: Product) => (
                                 <TableRow
                                     key={product.id}
                                     onClick={() => {
@@ -181,22 +181,21 @@ export default function ProductSelectDialog({
                                     </TableCell>
                                     {/*<TableCell>{product.quantity}</TableCell>*/}
                                 </TableRow>
-                            ))}
+                            )) : null}
                         </TableBody>
                     </table>
                 </div>
                 <div className="flex items-center justify-center">
                     <div>
-                        <span className="text-sm">
-                            {products.from} to {products.to} out of {products.total} items
-                        </span>
+                       {products ? <span className="text-sm">{`${products?.from} to ${products?.to} out of ${products?.total} items`}</span> : null}
                     </div>
                 </div>
                 <div className="max-w-md overflow-x-auto">
+
                     <Pagination>
                         <PaginationContent>
-                            {products.links &&
-                                products.links.map((link) => (
+                            {products?.links &&
+                                products?.links.map((link) => (
                                     <>
                                         {link.label.includes('Previous') && (
                                             <PaginationItem>

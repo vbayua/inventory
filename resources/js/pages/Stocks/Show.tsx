@@ -287,7 +287,7 @@ export default function Show({ stock, operations }: { stock: Stock; operations: 
                         warehouse_name={stock?.location?.warehouse?.name}
                         location_name={stock?.location?.name}
                         supplier_name={stock?.batch?.supplier?.partner?.name}
-                        quantity={stock?.quantity}
+                        quantity={Number(stock?.quantity)}
                         unit={stock?.unit}
                         status={stockStatus}
                         minimum_quantity={stock?.batch?.minimum_quantity}
@@ -353,7 +353,7 @@ export default function Show({ stock, operations }: { stock: Stock; operations: 
                                                                 </div>
                                                                 <div className="flex-1 px-4">
                                                                     <div>
-                                                                        <span className="text-accent-foreground text-lg">{operation.quantity} </span>
+                                                                        <span className="text-accent-foreground text-lg">{Number(operation.quantity)} </span>
                                                                         <span className="text-accent-foreground text-lg">{operation.unit}</span>
                                                                     </div>
                                                                     <span className="text-muted-foreground text-sm">

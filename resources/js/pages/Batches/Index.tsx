@@ -24,7 +24,7 @@ export default function Index({ batches }: { batches: any }) {
                         <h1 className="mb-4 text-2xl font-bold">Batches</h1>
                         <p className="text-muted-foreground mb-6 text-sm">Manage your batches here. You can create, edit, and delete batches.</p>
                     </div>
-                    <Link className={buttonVariants({ variant: 'default' })} href={`/batches/create`}>
+                    <Link className={buttonVariants({ variant: 'default' })} href={route('batch.create')} prefetch>
                         <PlusIcon className="mr-2 h-4 w-4" />
                         Create Batch
                     </Link>

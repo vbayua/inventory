@@ -13,7 +13,7 @@ class DefaultBatchPolicy implements BatchPolicyInterface
         return $requestedBatchId;
     }
 
-    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate): string
+    public function generateBatchNumber(Product $product, string $proposedNumber, ?int $supplierId = null, ?string $operationDate = null): string
     {
         $YEAR = date('y', $operationDate ? strtotime($operationDate) : time());
         $YEAR_INDEX = 0;
@@ -28,6 +28,7 @@ class DefaultBatchPolicy implements BatchPolicyInterface
 
         $series = Batch::query()
             ->where('product_id', $product->id)
+            ->whereNull('parent_batch_id')
             ->where('batch_number', 'like', $BASE_PREFIX.'%')
             ->orderBy('id')
             ->get(['batch_number', 'supplier_id']);

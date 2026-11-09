@@ -26,7 +26,6 @@ export default function TransferSection({ form, warehouses, locations }: { form:
         handleTransferChange,
         currentStock,
     } = form;
-    console.log(data);
     return (
         <>
             <div className={cn('grid grid-cols-2 gap-4 rounded-md border p-4', errors.location && 'border-red-500')}>

@@ -13,5 +13,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
         Route::put('/{supplier}', [SupplierController::class, 'update'])->name('supplier.update');
         Route::put('/{supplier}/assign-products', [SupplierController::class, 'assignProduct'])->name('supplier.assign-products');
+        Route::put('/{supplier}/products/{product}/price', [SupplierController::class, 'updateProductPrice'])->name('supplier.products.update-price');
     });
 });

@@ -26,7 +26,7 @@ export interface Product {
     brand_name?: string;
     scientific_name?: string;
     sku: string;
-    unit: Unit;
+    unit: Unit | string;
     price?: number;
     category_id?: number;
     product_type_id?: number;
@@ -38,6 +38,21 @@ export interface Product {
     pivot?: SupplierProductsPivot;
     suppliers?: Supplier[];
     data?: Product[];
+    boms?: Bom[];
+    active_bom?: Bom;
+}
+
+interface ProductsWithLinks extends Product {
+    links: {
+        active: boolean;
+        label: string;
+        page: number;
+        url: string;
+    }[];
+    data: Product[];
+    total?: number;
+    from?: number;
+    to?: number;
 }
 
 export interface Partner {
@@ -173,6 +188,15 @@ export interface Operation {
     remarks: string;
     created_at: string;
     operation_date: string;
+    detail?: OperationDetail
+}
+
+export interface OperationDetail {
+    id: number;
+    operation_id: number;
+    context_type: string;
+    context_id: number;
+    notes?: string;
 }
 
 export interface PurchaseOrderItem {
@@ -187,6 +211,7 @@ export interface PurchaseOrderItem {
     created_at?: string;
     updated_at?: string;
     quantity_received?: number;
+    receive_order_items_sum_quantity_received?: number;
 }
 
 export interface PurchaseOrder {
@@ -218,6 +243,8 @@ export interface ReceiveOrder {
     receive_order_items?: ReceiveOrderItem[];
     user_id?: number;
     user?: User;
+    qc_inspection?: QcInspection;
+    receive_order_items_sum_quantity_received?: number;
 }
 
 export interface ReceiveOrderItem {
@@ -232,6 +259,7 @@ export interface ReceiveOrderItem {
     location?: Location;
     notes?: string;
     qc_inspection?: QcInspection;
+    receive_order_items_sum_quantity_received?: number;
 }
 
 export interface QcChecklistItem {
@@ -303,4 +331,117 @@ export interface QcApproval {
     approved_at?: string;
     qc_inspection?: QcInspection;
     approver?: User;
+}
+
+export interface RolePermission {
+    id: number;
+    role_id: number;
+    permission_id: number;
+}
+
+export interface Permission {
+    id: number;
+    name: string;
+    description?: string;
+}
+
+export interface ProductionOrder {
+    id: number;
+    order_number: string;
+    product_id: number;
+    target_quantity: number;
+    produced_quantity?: number;
+    bom_id: number;
+    unit: string;
+    status: 'draft' | 'released' | 'in_progress' | 'completed' | 'cancelled';
+    start_date?: string;
+    end_date?: string;
+    released_at?: string;
+    released_by?: number;
+    started_at?: string;
+    started_by?: number;
+    completed_at?: string;
+    completed_by?: number;
+    cancelled_at?: string;
+    cancelled_by?: number;
+    cancel_note?: string;
+    created_at?: string;
+    updated_at?: string;
+    notes?: string;
+    bom?: Bom;
+    product?: Product;
+    materials?: ProductionOrderMaterial[];
+}
+
+export interface ProductionOrderMaterial {
+    id: number;
+    production_order_id: number;
+    product_id: number;
+    component_product_id: number;
+    quantity_per_unit: number; // copied from bom
+    quantity_required: number;
+    quantity_issued: number;
+    quantity_reserved: number;
+    scrap_percentage?: number;
+    production?: ProductionOrder;
+    product?: Product;
+    component_product?: Product;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface ProductionOrderIssue {
+    id: number;
+    uuid?: string;
+    production_order_id: number;
+    production_order_material_id: number;
+    batch_id: number;
+    type: string;
+    quantity: number;
+    operation_id: number;
+    suggested_batch_id: number;
+    is_override?: boolean;
+    note?: string;
+    created_at?: string;
+    user_id?: number;
+    updated_at?: string;
+    operation?: Operation;
+    user?: User;
+    production_order?: ProductionOrder;
+    production_order_material?: ProductionOrderMaterial;
+    batch?: Batch;
+    suggested_batch?: Batch;
+}
+
+export type BomStatus = 'draft' | 'active' | 'retired';
+
+export interface Bom {
+    id: number;
+    product_id: number;
+    version: number;
+    status: BomStatus;
+    active_product_id?: number;
+    notes?: string;
+    user_id?: number;
+    created_at?: string;
+    updated_at?: string;
+    user?: User;
+    product?: Product;
+    lines?: BomLines[];
+    active_product?: Product;
+    activated_at?: string;
+    activated_by?: number;
+    activated_user?: User;
+}
+
+export interface BomLines{
+    id: number;
+    bom_id: number;
+    component_product_id: number;
+    quantity_per_unit: number;
+    unit: string;
+    scrap_percentage?: number;
+    bom?: Bom;
+    component?: Product;
+    notes?: string;
 }

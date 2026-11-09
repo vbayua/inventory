@@ -32,9 +32,10 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     links?: any[];
     clientSide?: boolean;
+    onRowClick?: (item: TData) => void;
 }
 
-export function DataTable<TData, TValue>({ columns, data, links, clientSide = false }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, links, clientSide = false, onRowClick}: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFIlters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -60,14 +61,6 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
     return (
         <div>
             <div className="mb-4 flex items-center justify-between overflow-x-auto">
-                <div>
-                    <Button variant={'default'} size={'sm'} asChild>
-                        <Link href={`/receive-orders/create`} className="">
-                            <PlusIcon className="mr-2" />
-                            Create Receive Order
-                        </Link>
-                    </Button>
-                </div>
                 <DataTableViewOptions table={table} />
             </div>
             <div className="grid w-full gap-4 overflow-x-auto [&>div]:max-h-120 [&>div]:rounded">
@@ -90,7 +83,10 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            className="bg-background after:bg-border sticky top-0 *:whitespace-nowrap after:absolute after:inset-x-0 after:bottom-0 after:h-px after:content-['']"
+                                        >
                                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                         </TableHead>
                                     );
@@ -101,7 +97,14 @@ export function DataTable<TData, TValue>({ columns, data, links, clientSide = fa
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && 'selected'}
+                                    className={onRowClick ? 'cursor-pointer' : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                                    onKeyDown={onRowClick ? (e) => e.key === 'enter' && onRowClick(row.original) : undefined}
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                                     ))}

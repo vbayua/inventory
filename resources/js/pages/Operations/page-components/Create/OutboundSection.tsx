@@ -19,7 +19,6 @@ export default function OutboundSection({ form, warehouses }: { form: any; wareh
         setWarehousePopoverOpen,
         setLocationPopoverOpen,
     } = form;
-    console.log(currentStock);
     return (
         <>
             <WarehouseLocationPicker
