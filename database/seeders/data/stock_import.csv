@@ -1,0 +1,391 @@
+sku,batch_number,name,quantity,remarks,location,product_id,supplier_id,batch_id,location_id,product_type_id,user_id
+PS0086,25-PS0086-1,Inner Box UKR Blue Dorelle ExDP 50ml,4080,,A1,270,4,629,4,3,1
+PS0085,25-PS0085-1,Inner Box UKR Black Avalon ExDP 50ml,3208,,A1,269,4,630,4,3,1
+PS0087,25-PS0087-1,Inner Box UKR Pink Floravie ExDP 50ml,2903,,A1,271,4,631,4,3,1
+PS0072,25-PS0072-1,Sekat Inner Box Polos D,1996,,A2,256,44,632,5,3,1
+PS0090,25-PS0090-1,Sekat Inner Bos Polos F Pink,2772,,A2,274,4,633,5,3,1
+PS0088,24-PS0088-1,Sekat Inner Bos Polos D Hitam,200,,A2,272,4,634,5,3,1
+PS0089,24-PS0089-1,Sekat Inner Bos Polos E Biru,115,,A2,273,4,635,5,3,1
+PC0001,23-PC0001-1,Seal Tape Printing PT.IKI,60,,A3,290,47,636,6,5,1
+PP0108,25-PP0108-1,Set Pot Ice Cube Maroon 10g,1987,,A3,110,5,637,6,2,1
+PP0067,24-PP0067-1,Mureeskin Set Botol Serum 20ml (Vitamin C),533,,A3,67,5,638,6,2,1
+PP0015,24-PP0015-1,Mureeskin Golden Cover 30g,9310,,A4,15,4,639,7,2,1
+PP0014,24-PP0014-1,Mureeskin Golden Cover 15g,5040,,A4,14,4,640,7,2,1
+PP0012,24-PP0012-1,Mureeskin 30ml Rubber Head,18139,,A4,12,4,641,7,2,1
+PP0017,24-PP0017-1,Mureeskin Circle Botol 30ml,7512,,A5,17,4,642,8,2,1
+PP0019,24-PP0019-1,Mureeskin Dropper Botol 30ml,9450,,A5,19,4,,8,2,1
+PP0016,24-PP0016-1,Mureeskin Stopper Botol 30ml,9485,,A5,16,4,,8,2,1
+PP0007,24-PP0007-1,Mureeskin Tutup Botol 120ml,4798,,A6,7,4,645,9,2,1
+PP0066,24-PP0066-1,Disktop Gold,8509,,A7,66,5,646,10,2,1
+PP0110,25-PP0110-1,Set Botol Airless Silinder Gold 20ml,1780,,A7,112,5,647,10,2,1
+PP0006,24-PP0006-1,Mureeskin Botol Kaca Matte,3480,,B1,6,4,648,11,2,1
+PP0005,24-PP0005-1,Mureeskin Botol Kaca Matte Pink,1857,,B2,5,4,649,12,2,1
+PP0007,24-PP0007-1,Mureeskin Tutup Botol 120ml,5600,,B3,7,4,645,13,2,1
+PP0065,24-PP0065-1,Mureeskin Botol Plastik White 100ml (Toner),2020,,B4,65,5,652,14,2,1
+PP0063,24-PP0063-1,Mureeskin Botol Plastik White 100ml (Facial Wash),31,,B4,63,5,653,14,2,1
+PP0011,24-PP0011-1,Mureeskin 15 gram Pull Pad,5276,,B4,11,4,654,14,2,1
+PP0012,24-PP0012-1,Mureeskin 30ml Rubber Head,2458,,B4,12,4,641,14,2,1
+PP0001,23-PP0001-1,Botol Kaca Frosted 20 ml,6146,,B5,1,1,655,15,2,1
+PP0107,25-PP0107-1,Set Botol Kanebo Pink 20ml,1483,,B6,109,5,656,16,2,1
+PP0106,25-PP0106-1,Set Botol Kanebo Gold 20ml,1482,,B6,108,5,657,16,2,1
+PP0076,24-PP0076-1,Set Botol Mureeskin Brightening Silky Serum 20ml (Silver),1488,,B6,76,5,658,16,2,1
+PP0082,26-PP0082-1,Mureeskin Youthful Solution Botol Rose Gold 20ml,1036,,B7,82,5,,17,2,1
+PP0081,25-PP0081-1,Mureeskin L'Revitalise Skin Moisturizer Pot Cream Matte Pink 30g,1388,,B7,81,5,659,17,2,1
+PP0018,24-PP0018-1,Mureeskin Botol Rose Gold 30ml,8157,,B8,18,4,660,18,2,1
+PP0109,25-PP0109-1,Set Pot Ice Cube Gold 10g,2999,,C1,111,5,662,19,2,1
+PP0009,24-PP0009-1,Mureeskin Pot Cream Clear Pink,5016,,C2,9,4,663,20,2,1
+PP0008,24-PP0008-1,Mureeskin Pot Cream Matte Pink,4032,,C3,8,4,664,21,2,1
+PP0013,24-PP0013-A-1,Mureeskin Tutup Botol 40ml Pump,130,,C3,13,4,665,21,2,1
+PP0028,24-PP0028-1,Botol Parfum Chloe 30ml,3148,,C4,28,7,667,22,2,1
+PP0008,24-PP0008-1,Mureeskin Pot Cream Matte Pink,2667,,C5,8,4,664,23,2,1
+PP0005,24-PP0005-1,Mureeskin Botol Kaca Matte Pink,1200,,C6,5,4,649,24,2,1
+PP0005,24-PP0005-1,Mureeskin Botol Kaca Matte Pink,2406,,C7,5,4,649,25,2,1
+PP0006,24-PP0006-1,Mureeskin Botol Kaca Matte,3350,,C8,6,4,648,26,2,1
+PP0006,24-PP0006-1,Mureeskin Botol Kaca Matte,3120,,C9,6,4,648,27,2,1
+PP0005,24-PP0005-1,Mureeskin Botol Kaca Matte Pink,2098,,D1,5,4,649,28,2,1
+PP0005,24-PP0005-1,Mureeskin Botol Kaca Matte Pink,2100,,D2,5,4,649,29,2,1
+PP0018,24-PP0018-1,Mureeskin Botol Rose Gold 30ml,5007,,D3,18,4,660,30,2,1
+PP0013,24-PP0013-1,Mureeskin Tutup Botol 40ml Pump,9008,,D4,13,4,666,31,2,1
+PP0246,26-PP0246-A-1,Botol Serum Elegant Silver 20ml,3128,,D5,982,40,463,32,2,1
+PP0025,24-PP0025-1,Px289 Diamond 30ml Crimp,2515,,D6,25,6,668,33,2,1
+PP0026,24-PP0026-1,Spray Gold D Full Press,2547,,D7,26,6,669,34,2,1
+PP0105,25-PP0105-2,Spray Gold C,6017,,D7,107,16,670,34,2,1
+PP0027,24-PP0027-1,Px289 Gold Cap,3790,,D7,27,6,671,34,2,1
+PP0148,25-PP0148-1,Px 195 Black Cap,7766,,D7,150,24,672,34,2,1
+PP0032,24-PP0032-1,Cap Parfum Chloe 30ml Ungu,2127,,D7,32,7,673,34,2,1
+PP0030,24-PP0030-1,Cap Parfum Chloe 30ml Hitam,2090,,D7,30,7,674,34,2,1
+PP0087,25-PP0087-1,Spray Gold A,6854,,D7,87,14,675,34,2,1
+PP0089,25-PP0089-1,RedBox x W-Mate Parfume Bottle Psyhi 30ml,640,,D8,89,10,676,35,2,1
+PP0090,25-PP0090-1,RedBox x W-Mate Parfume Bottle Eleftheree 30ml,640,,D8,90,10,677,35,2,1
+PP0143,26-PP0143-A-2,Botol Hermes Polos Biru Tua 50ml,503,,D8,145,22,101,35,2,1
+PP0086,25-PP0086-1,Px289 Diamond Crimp 50ml,74,,D8,86,14,678,35,2,1
+PP0024,24-PP0024-1,Tutup Fliptop Putih,2141,,D9,24,5,680,36,2,1
+PP0064,24-PP0064-1,Pump Clip Oil Gold,9991,,D9,64,5,,36,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,6549,,E1,184,31,162,37,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,6588,,E2,184,31,162,38,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,6480,,E3,184,31,162,39,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,6480,,E4,184,31,162,40,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,6588,,E5,184,31,162,41,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,856,,E6,184,31,162,42,2,1
+PP0182,26-PP0182-1,Botol Lelabo Clear 30 mL,2800,,E7,184,31,162,43,2,1
+PP0020,24-PP0020-1,Botol PETG Dior 60ml Black Opaque,8028,,F1,20,5,681,45,2,1
+PP0205,26-PP0205-1,Plastik Pump Neck 24 White,4000,,F2,941,33,682,46,2,1
+PP0192,26-PP0192-A-1,Set Pot PS Mureeskin Ultimate Acne Night Cream 10 gr,1240,,F2,928,28,337,46,2,1
+PP0194,26-PP0194-A-1,Set Pot PS Mureeskin Ultimate Acne Day Cream 10 gr,222,,F2,930,28,350,46,2,1
+PP0191,26-PP0191-A-1,Glass Bottle BR Mureeskin Ultimate Anti Acne Serum 10 mL,46,,F2,927,28,336,46,2,1
+PP0188,26-PP0188-A-1,Botol Mureeskin ultimate Acne Toner 60 mL,88,,F2,924,28,333,46,2,1
+PP0192,26-PP0192-A-1,Set Pot PS Mureeskin Ultimate Acne Night Cream 10 gr,1240,,F2,928,28,337,46,2,1
+PP0053,25-PP0053-1,Skintee Flower Gasket,6840,,F3,53,5,,47,2,1
+PP0054,25-PP0054-1,Skintee Glasstube,8222,,F3,54,5,684,47,2,1
+PP0208,26-PP0208-E-1,Botol Skinlite Bellissimo ExDP 30ml,118,,F3,944,17,406,47,2,1
+PP0001,23-PP0001-1,Botol Kaca Frosted 20 ml,1300,,F4,1,1,655,48,2,1
+PP0152,25-PP0152-1,Glass Bottle Frosted BR 10ml,285,,F4,154,8,685,48,2,1
+PP0146,25-PP0146-1,Botol Px 195 50ml,1467,,F5,148,24,679,49,2,1
+PP0199,26-PP0199-B-1,Cap Bottle Parfume Jamalone Black Circle ( Bulat ),11296,,F6,935,32,368,50,2,1
+PP0202,26-PP0202-E-1,Botol Lalic Square Hitam Candy 35ml,1296,,F6,938,17,390,50,2,1
+PP0203,26-PP0203-C-1,Botol Lalic Square Coklat Candy 35 mL,134,,F7,939,17,393,51,2,1
+PP0177,26-PP0177-B-2,Botol Hermes Clear 50ml,5085,,F7,179,29,134,51,2,1
+PP0196,26-PP0196-1,Botol Lalic Square Clear 35 mL,2016,,F8,932,32,,52,2,1
+PP0196,26-PP0196-A-1,Botol Lalic Square Clear 35 mL,2016,,F8,932,32,360,52,2,1
+PP0142,26-PP0142-A-2,Tutup Botol Hitam Jojo,6350,,Fast Moving,144,21,94,107,2,1
+PP0142,26-PP0142-B-2,Tutup Botol Hitam Jojo,13800,,Fast Moving,144,21,95,107,2,1
+PP0142,26-PP0142-D-1,Tutup Botol Hitam Jojo,6093,,Fast Moving,144,21,93,107,2,1
+PP0142,26-PP0142-D-2,Tutup Botol Hitam Jojo,15063,,Fast Moving,144,21,97,107,2,1
+PP0142,26-PP0142-A-1,Tutup Botol Hitam Jojo,4086,,Fast Moving,144,21,90,107,2,1
+PP0142,26-PP0142-C-2,Tutup Botol Hitam Jojo,6900,,Fast Moving,144,21,96,107,2,1
+PP0061,26-PP0061-A-3,Spray Black B,10172,,Fast Moving,61,10,28,107,2,1
+PP0210,26-PP0210-B-2,Spray Black B Semi Continuous,5000,,Fast Moving,946,4,415,107,2,1
+PP0232,26-PP0232-A-1,Ring Spray Black ZAZA,136,,Fast Moving,968,28,443,107,2,1
+PP0061,26-PP0061-C-2,Spray Black B,8748,ONE SPRAY,Fast Moving,61,10,27,107,2,1
+PP0210,26-PP0210-A-2,Spray Black B Semi Continuous,9976,,Fast Moving,946,4,414,107,2,1
+PP0210,26-PP0210-C-1,Spray Black B Semi Continuous,10141,,Fast Moving,946,4,413,107,2,1
+PP0210,26-PP0210-A-1,Spray Black B Semi Continuous,1270,,Fast Moving,946,4,411,107,2,1
+PP0210,26-PP0210-B-1,Spray Black B Semi Continuous,2274,,Fast Moving,946,4,412,107,2,1
+PP0237,26-PP0237-B-1,Cap Black Px446,2770,,Fast Moving,973,32,450,107,2,1
+PP0231,26-PP0231-A-1,Botol ZAZA 100ml,971,,Fast Moving,967,28,442,107,2,1
+PP0235,26-PP0235-B-1,Botol Px486 BRD Semi Press 50ml,117,,Fast Moving,971,32,447,107,2,1
+PP0243,26-PP0243-B-1,Cap Px 486 Black Setengah Lingkaran,3246,,Fast Moving,979,32,460,107,2,1
+PP0176,26-PP0176-A-1,Pot PP Clear White Cap+Spatula 30 g,4623,,G1,178,28,127,53,2,1
+PP0075,26-PP0075-A-1,Botol Set Airless Bening Spray 50ml,1020,,G1,75,13,36,53,2,1
+PP0132,26-PP0132-A-1,Skintee Hydra Glow Sun Protection Set Pot 10g,5000,,G2,134,19,80,54,2,1
+PP0132,26-PP0132-B-1,Skintee Hydra Glow Sun Protection Set Pot 10g,5002,,G2,134,19,81,54,2,1
+PP0165,26-PP0165-C-1,Pump Lotion Black,1123,,G2,167,26,120,54,2,1
+PP0165,26-PP0165-A-1,Pump Lotion Black,4180,,G2,167,26,118,54,2,1
+PP0165,26-PP0165-B-2,Pump Lotion Black,2000,,G2,167,26,122,54,2,1
+PP0206,26-PP0206-A-1,Cap Bottle Parfume Jamalone Silver Circle,2629,,G3,942,32,396,55,2,1
+PP0206,26-PP0206-B-1,Cap Bottle Parfume Jamalone Silver Circle,7669,,G3,942,32,397,55,2,1
+PP0021,24-PP0021-2,Mist Spray Black Smooth,6860,,G4,21,5,686,56,2,1
+PP0048,24-PP0048-1,Botol Clear Pink 10 ml,1911,,G5,48,9,687,57,2,1
+PP0003,23-PP0003-1,Pot Double PK 15 gr,1319,,G5,3,1,688,57,2,1
+PP0129,26-PP0129-A-1,SkinConfess Glowy Smooth Serum Botol Frosted 10ml,50,,G5,131,19,74,57,2,1
+PP0041,26-PP0041-A-2,White Ring n20 RF 15/20/30ml,80,,G5,41,8,8,57,2,1
+PP0042,26-PP0042-A-2,Plug n20 RF 15/20/30ml,2613,,G5,42,8,11,57,2,1
+PP0043,26-PP0043-A-2,Gasket n20 RF 15/20/30ml,366,,G5,43,8,13,57,2,1
+PP0044,26-PP0044-A-2,White Rubber n20 RF,95,,G5,44,8,15,57,2,1
+PP0050,24-PP0050-1,White Rubber 10 ml,2011,,G5,50,9,689,57,2,1
+PP0049,24-PP0049-1,White Ring Smooth 10 ml,1685,,G5,49,9,690,57,2,1
+PP0040,25-PP0040-2,Glasstube n20 RF 20ml,290,,G5,40,8,691,57,2,1
+PP0147,25-PP0147-1,Cap Bottle Parfume Jamalone Gold Circle,31872,,G6,149,16,692,58,2,1
+PP0183,26-PP0183-A-1,Botol BR 100ml N24 Amber,5090,,G7,919,28,326,59,2,1
+PP0212,26-PP0212-A-1,Spray Fix Made-Up N24 Silver,9960,,H1,948,28,418,60,2,1
+PP0177,26-PP0177-B-2,Botol Hermes Clear 50ml,3883,,H2,179,29,134,61,2,1
+PP0138,26-PP0138-B-1,SC Clear Bottel 300ml,590,,H3,140,6,83,62,2,1
+PP0139,26-PP0139-A-1,Pump N24 White,660,,H3,141,8,84,62,2,1
+PP0221,26-PP0221-A-1,Botol BR Tubular 70ml N24 Clear,10089,,H4,957,4,428,63,2,1
+PP0072,26-PP0072-B-2,Botol RF 100ml N 24MM Clear,2589,,H5,72,12,31,64,2,1
+PP0247,26-PP0247-B-1,Botol Alumunium Airless Gold 20ml,2286,,H6,983,40,,65,2,1
+PP0052,24-PP0052-1,Skintee Glass Bottle BR 30ml Frosted Green,7016,,H7,52,5,693,66,2,1
+PP0197,26-PP0197-A-3,Botol Jamalone Clear 100mL,4716,,I1,933,32,365,67,2,1
+PP0197,26-PP0197-A-2,Botol Jamalone Clear 100mL,5184,,I2,933,32,363,68,2,1
+PP0103A,26-PP0103A-B-3,Botol Jamalone Merah Candy 100ml (Pak Dian),182,,I3,104,17,61,69,2,1
+PP0180,26-PP0180-B-3,Botol Jamalone Hitam Candy 100 mL (Royal Sanctiors Medes),2716,,I4,182,17,156,70,2,1
+PP0179,26-PP0179-B-2,Botol Jamalone Coklat Candy 100 mL (Royal Sanctiors Atlas),2570,,I5,181,17,140,71,2,1
+PP0207,26-PP0207-D-1,Botol Skinlite Terra Nova ExDP 30ml,109,,I5,943,17,401,71,2,1
+PP0209,26-PP0209-C-1,Botol Skinlite Obsidian ExDP 30ml,95,,I5,945,17,409,71,2,1
+PP0130,26-PP0130-C-1,Cap Bottle Parfume Jamalone Gold Square 100ml,8155,,I6,132,16,77,72,2,1
+PP0198,26-PP0198-A-1,Cap Bottle Parfume Jamalone Black Square ( Kotak ),7200,,J1,934,32,366,73,2,1
+PP0199,26-PP0199-A-1,Cap Bottle Parfume Jamalone Black Circle ( Bulat ),9600,,J1,935,32,367,73,2,1
+PP0171,26-PP0171-A-1,Pot PS Flat Polos Putih 10g,96,,J1,173,11,124,73,2,1
+PP0172,26-PP0172-A-1,Cap Pot PS Flat Polos Putih 10g,96,,J1,174,11,125,73,2,1
+PP0173,26-PP0173-A-1,AnBc Pull Pad Pot Polos 10g,103,,J1,175,11,126,73,2,1
+PP0190,26-PP0190-A-1,Spray N24 Silver Full Cover,105,,J2,926,28,335,74,2,1
+PP0189,26-PP0189-A-1,Pump Treatment N24 Silver Full Cover,3,,J2,925,28,334,74,2,1
+PP0163,25-PP0163-1,Spray Silver Half Cover,317,,J2,165,8,694,74,2,1
+PP0162,25-PP0162-1,Botol RF 70ml Tubular White N29,324,,J2,164,8,695,74,2,1
+PP0161,25-PP0161-1,Pump Treatment N24 Half Cover Silver,301,,J2,163,8,696,74,2,1
+PP0145,26-PP0145-C-1,Tutup Botol Parfume Polos 10ml,1117,,J2,147,23,105,74,2,1
+PP0127,26-PP0127-C-1,Botol Parfume Frosted Polos 10ml,3,,J2,129,8,73,74,2,1
+PP0126,26-PP0126-B-1,Spray Botol Parfume Polos 10ml,238,,J2,128,8,69,74,2,1
+PP0140,25-PP0140-1,Tutup Fliptop Mushroom N24 White,3000,,J2,142,8,697,74,2,1
+PP0071,24-PP0071-1,BeautyKen's Pull Pad 30gr,948,,J2,71,11,698,74,2,1
+PP0115,25-PP0115-1,Pull Pad Putih 30g,687,,J2,117,19,699,74,2,1
+PP0218,26-PP0218-A-1,Botol Zara Semi Press PX 305 50 mL ( Sceen Plus ),9741,,J3,954,4,424,75,2,1
+PP0072,26-PP0072-A-3,Botol RF 100ml N 24MM Clear,8513,,J4,72,12,32,76,2,1
+PP0223,26-PP0223-A-1,Pump Treatment Full Cover N24 White,10009,,K1,959,28,430,78,2,1
+PP0199,26-PP0199-B-2,Cap Bottle Parfume Jamalone Black Circle ( Bulat ),5074,,K2,935,32,370,79,2,1
+PP0220,26-PP0220-A-1,Cap Bottle Parfume Jamalone Silver Mini Circle,5023,,K2,956,4,427,79,2,1
+PP0238,26-PP0238-B-1,Set Tube Elzet Dark Spot Night Cream 10g,670,,K2,974,28,452,79,2,1
+PP0222,26-PP0222-A-1,Fliptop Mushroom N24 Pink,10162,,K3,958,4,429,80,2,1
+PP0091,26-PP0091-A-1,Square Black Cap Bottle Parfume 30ml,4662,,K3,91,10,37,80,2,1
+PP0216,26-PP0216-A-1,Botol Powder Putih 50ml,372,,K3,952,35,422,80,2,1
+PP0239,26-PP0239-A-1,Botol Hermes Clear 35ml,21,,K3,975,38,453,80,2,1
+PP0240,26-PP0240-A-1,Tutup Channel Cap Cincin,24,,K3,976,38,454,80,2,1
+PP0029,26-PP0029-A-1,Spray Gold B,4,,K3,29,7,1,80,2,1
+PP0127,26-PP0127-C-1,Botol Parfume Frosted Polos 10ml,1252,,K4,129,8,73,81,2,1
+PP0186,26-PP0186-A-2,Plug Clear Botol RF 100ml White N12,2212,,K4,922,28,331,81,2,1
+PP0234,26-PP0234-A-1,Set Botol Frosted Polos 10ml,30,,K4,970,37,445,81,2,1
+PP0074,26-PP0074-A-2,Cap White Botol RF N 24MM,1849,,K4,74,12,35,81,2,1
+PP0160,26-PP0160-A-3,Botol RF 100ml White N12,1093,,K4,162,8,112,81,2,1
+PS0072,26-PS0072-A-1,Sekat Inner Box Polos D,15553,,KARANTINA,256,44,206,108,3,1
+PS0133,26-PS0133-A-1,Inner Box Elzet Dark Spot Night Cream 10g,273,,KARANTINA,1011,4,499,108,3,1
+PC0113,26-PC0113-A-3,Stiker Anbc glow perfect Toner Essence 100mL,257,,KARANTINA,1026,56,612,108,5,1
+PC0087,26-PC0087-B-1,"Plastik Shrink P (5,5 cm)",45,,KARANTINA,376,4,274,108,5,1
+PP0160,26-PP0160-B-3,Botol RF 100ml White N12,20200,,KARANTINA,162,8,,108,2,1
+PP0142,26-PP0142-C-1,Tutup Botol Hitam Jojo,14339,,KARANTINA,144,21,92,108,2,1
+PP0181,26-PP0181-B-2,Spray Black B Continue (Royal),14542,,KARANTINA,183,30,161,108,2,1
+PP0141,26-PP0141-B-2,Botol Jojo Bening Semi Press 35ml,14400,,KARANTINA,143,8,,108,2,1
+PP0140,26-PP0140-A-1,Tutup Fliptop Mushroom N24 White,20363,,KARANTINA,142,8,,108,2,1
+PS0146,26-PS0146-A-1,Hardbox Set Scentplus Dominant x Fiore ExDP 50mL,37,,KARANTINA,,,,108,3,1
+PC0167,26-PC0167-A-1,Sleeve Scentplus Dominant x Fiore ExDP 50mL,37,,KARANTINA,,,,108,5,1
+PS0145,26-PS0145-A-1,Hardbox Set Scentplus Dominant x Fiore The Lantis ExDP 50mL,20,,KARANTINA,,,,108,3,1
+PC0166,26-PC0166-A-1,Sleeve Scentplus Dominant x Fiore The Lantis ExDP 50mL,20,,KARANTINA,1082,4,726,108,5,1
+PC0181,26-PC0181-A-1,Stiker Transparan Skinfiction Flawless Underarm Toner 100ml,5118,,KARANTINA,,,,108,5,1
+PP0164,26-PP0164-A-3,Botol SC 250ml Amber,2127,,L1,166,26,117,83,2,1
+PP0249,26-PP0249-A-1,Botol Lelabo Clear 50 mL,10800,,L2,,,,,2,1
+PP0226,26-PP0226-A-1,Glass Jar Frosted 15g,592,,L4,962,28,435,84,2,1
+PP0227,26-PP0227-A-1,Gasket Hand Pull For Glass Jar 15g,652,,L4,963,28,436,84,2,1
+PP0228,26-PP0228-A-1,Cap White For Glass Jar 15g,624,,L4,964,28,437,84,2,1
+PP0224,26-PP0224-B-1,Botol RF Frosted N24 100ml,300,,L4,960,28,432,84,2,1
+PP0225,26-PP0225-B-1,Fliptop Plain White N24,234,,L4,961,28,434,84,2,1
+PS0084,25-PS0084-2,Inner Box Skiniverse Velvet Haze EDP 10ml,10031,,M1,268,43,700,85,3,1
+PS0084,26-PS0084-A-1,Inner Box Skiniverse Velvet Haze EDP 10ml,7939,25DO,M1,268,43,219,85,3,1
+PS0084,25-PS0084-1,Inner Box Skiniverse Velvet Haze EDP 10ml,1321,1321 non char 25IN,M1,268,43,701,85,3,1
+PS0074,25-PS0074-2,Inner Box Skiniverse Velvet Haze 35ml,1645,"25NE, 23 25IN",M1,258,43,702,85,3,1
+PS0096,26-PS0096-A-1,Inner Bos Skiniverse Party Hour EDP 10ml,8839,25DO,M1,280,43,225,85,3,1
+PS0078,25-PS0078-2,Inner Box Skiniverse Party Hour 35ml,21,25IN,M1,262,43,,85,3,1
+PS0095,26-PS0095-A-1,Inner Box Skiniverse Day Dream EDP 10ml,5014,25IN,M2,279,43,224,86,3,1
+PS0095,26-PS0095-A-1,Inner Box Skiniverse Day Dream EDP 10ml,10861,25DO,M2,279,43,224,86,3,1
+PS0079,25-PS0079-2,Inner Box Skiniverse Day Dream 35ml,10724,25DO,M2,263,4,706,86,3,1
+PS0079,25-PS0079-2,Inner Box Skiniverse Day Dream 35ml,152,25IN,M2,263,4,706,86,3,1
+PS0082,26-PS0082-A-1,Inner Box Skiniverse Ocean Drift EDP 10ml,16832,25IN,M2,266,43,218,86,3,1
+PS0082,26-PS0082-A-1,Inner Box Skiniverse Ocean Drift EDP 10ml,947,25KA,M2,266,43,218,86,3,1
+PC0061,25-PC0061-2,Stiker Skiniverse Ocean Drift EDP 35ml,1913,25DO,M2,350,41,708,86,5,1
+PS0083,25-PS0083-2,Inner Box Skiniverse Serena Flora EDP 10ml,53,25IN,M3,267,4,709,87,3,1
+PS0083,25-PS0083-2,Inner Box Skiniverse Serena Flora EDP 10ml,797,,M3,267,4,709,87,3,1
+PC0065,25-PC0065-2,Stiker Skiniverse Serene Flora EDP 35ml,1567,25NE,M3,354,41,710,87,5,1
+PC0065,25-PC0065-2,Stiker Skiniverse Serene Flora EDP 35ml,2565,25IN,M3,354,41,710,87,5,1
+PS0081,26-PS0081-A-1,Inner Box Skiniverse Gardenia Veil EDP 10ml,17965,25IN,M3,265,43,217,87,3,1
+PS0094,26-PS0094-A-1,Inner Box Skiniverse Luxe Romeo EDP 10ml,6618,25DO,M3,278,43,223,87,3,1
+PS0076,26-PS0076-1,Inner Box Skiniverse Luxe Romeo 35ml,1169,25NE,M3,260,43,213,87,3,1
+PS0076,26-PS0076-1,Inner Box Skiniverse Luxe Romeo 35ml,24,25IN,M3,260,43,213,87,3,1
+PS0081,26-PS0081-A-1,Inner Box Skiniverse Gardenia Veil EDP 10ml,964,25KA,M3,265,43,217,87,3,1
+PS0083,25-PS0083-2,Inner Box Skiniverse Serena Flora EDP 10ml,9975,25IN,M3,267,4,709,87,3,1
+PS0067,26-PS0067-A-1,Inner Box Skintee Hydra Glow Sun Protection 12g,6029,,M4,251,44,202,88,3,1
+PS0128,26-PS0128-A-1,Inner Box Levrescent Lizzi EDP 10mL,116,,M4,1006,4,494,88,3,1
+PS0129,26-PS0129-A-1,Inner Box Levrescent Papyrus EDP 10mL,47,,M4,1007,4,495,88,3,1
+PS0130,26-PS0130-A-1,Inner Box Levrescent Pink Berry EDP 10mL,100,,M4,1008,4,496,88,3,1
+PS0131,26-PS0131-A-1,Inner Box Levrescent Prism EDP 10mL,32,,M4,1009,4,497,88,3,1
+PS0132,26-PS0132-A-1,Inner Box Levrescent Sparkle EDP 10mL,84,,M4,1010,4,498,88,3,1
+PS0140,26-PS0140-A-1,Innerbox Glowthinc Night Cream 15g,107,,M4,1018,43,,88,3,1
+PS0025,26-PS0025-B-1,Inner Box Skintee Hydra Glow Sun Protection,38,,M4,209,43,166,88,3,1
+PS0127,26-PS0127-C-1,Sekat Inner Box Polos G (Skiniverse 50ml ),30527,,N1,1005,43,493,89,3,1
+PS0040,26-PS0040-A-1,Sekat Inner Box Polos B,10600,,N2,224,44,167,90,3,1
+PS0040,26-PS0040-A-1,Sekat Inner Box Polos B,16717,,N3,224,44,167,91,3,1
+PP0241,26-PP0241-A-1,Seal Stiker Foam A,44386,,N4,977,28,455,92,2,1
+PS0065,26-PS0065-B-1,Inner Box Skinconfess Glowy Smooth Serum 10mL,3665,,N4,249,44,201,92,3,1
+PC0063,26-PC0063-B-2,Sleeves Skiniverse EDP 35ml,24621,,N4,352,43,270,92,5,1
+PS0059,26-PS0059-B-1,Inner Box Skiniverse Sofie EDP 10ml,9636,25NE,O1,243,44,189,93,3,1
+PS0059,26-PS0059-B-1,Inner Box Skiniverse Sofie EDP 10ml,369,25TI,O1,243,44,189,93,3,1
+PC0099,26-PC0099-C-1,Stiker Skiniverse Sofie EDP 50ml,222,,O1,388,56,290,93,5,1
+PS0041,25-PS0041-3,Inner Box Skiniverse Sofie Eau De Parfume 50ml,4681,25TI,O1,225,4,711,93,3,1
+PS0041,25-PS0041-3,Inner Box Skiniverse Sofie Eau De Parfume 50ml,427,25NE,O1,225,4,711,93,3,1
+PS0053,26-PS0053-B-1,Inner Box Skiniverse Bouyega EDP 10ml,10221,25NE,O1,237,44,177,93,3,1
+PS0053,26-PS0053-B-1,Inner Box Skiniverse Bouyega EDP 10ml,37,25NE,O1,237,44,177,93,3,1
+PS0044,25-PS0044-3,Inner Box Skiniverse Bouyega Eau De Parfume 50ml,454,25NE,O1,228,44,712,93,3,1
+PC0102,26-PC0102-C-1,Stiker Skiniverse Lumiel EDP 50ml,155,,O2,391,56,299,94,5,1
+PS0043,25-PS0043-3,Inner Box Skiniverse Lumiel Eau De Parfume 50ml,5456,25TI,O2,227,44,713,94,3,1
+PS0043,25-PS0043-3,Inner Box Skiniverse Lumiel Eau De Parfume 50ml,206,25NE,O2,227,44,713,94,3,1
+PS0043,25-PS0043-3,Inner Box Skiniverse Lumiel Eau De Parfume 50ml,7,25KOS,O2,227,44,713,94,3,1
+PS0061,26-PS0061-B-1,Inner Box Skiniverse Lumiel EDP 10ml,10109,25NE,O2,245,44,193,94,3,1
+PS0061,26-PS0061-B-1,Inner Box Skiniverse Lumiel EDP 10ml,55,25TI,O2,245,44,193,94,3,1
+PS0061,26-PS0061-B-1,Inner Box Skiniverse Lumiel EDP 10ml,1418,25KOS,O2,245,44,193,94,3,1
+PS0055,26-PS0055-B-1,Inner Box Skiniverse Danton EDP 10ml,9480,25NE,O2,239,44,181,94,3,1
+PS0055,26-PS0055-B-1,Inner Box Skiniverse Danton EDP 10ml,22,25KOS,O2,239,44,181,94,3,1
+PS0055,26-PS0055-B-1,Inner Box Skiniverse Danton EDP 10ml,68,25TI,O2,239,44,181,94,3,1
+PC0104,26-PC0104-C-1,Stiker Skiniverse Danton EDP 50ml,116,,O2,393,56,305,94,5,1
+PS0045,25-PS0045-3,Inner Box Skiniverse Danton Eau De Parfume 50ml,3410,25TI,O2,229,4,714,94,3,1
+PS0045,25-PS0045-3,Inner Box Skiniverse Danton Eau De Parfume 50ml,12,25KOS,O2,229,4,714,94,3,1
+PS0045,25-PS0045-3,Inner Box Skiniverse Danton Eau De Parfume 50ml,285,25NE,O2,229,4,714,94,3,1
+PS0047,25-PS0047-3,Inner Box Skiniverse Lolita Eau De Parfume 50ml,744,25NE,O3,231,44,715,95,3,1
+PS0047,25-PS0047-3,Inner Box Skiniverse Lolita Eau De Parfume 50ml,130,25TI,O3,231,44,715,95,3,1
+PS0047,25-PS0047-3,Inner Box Skiniverse Lolita Eau De Parfume 50ml,25,25KOS,O3,231,44,715,95,3,1
+PC0103,26-PC0103-C-1,Stiker Skiniverse Lolita EDP 50ml,119,,O3,392,56,302,95,5,1
+PS0050,25-PS0050-3,Inner Box Skiniverse Gangsta Eau De Parfume 50ml,6106,25TI,O3,234,44,716,95,3,1
+PS0050,25-PS0050-3,Inner Box Skiniverse Gangsta Eau De Parfume 50ml,45,25KOS,O3,234,44,716,95,3,1
+PS0050,25-PS0050-3,Inner Box Skiniverse Gangsta Eau De Parfume 50ml,1078,25NE,O3,234,44,716,95,3,1
+PC0100,26-PC0100-C-1,Stiker Skiniverse Gangsta EDP 50ml,222,,O3,389,56,293,95,5,1
+PS0060,26-PS0060-B-1,Inner Box Skiniverse Gangsta EDP 10ml,10259,25NE,O3,244,44,191,95,3,1
+PS0060,26-PS0060-B-1,Inner Box Skiniverse Gangsta EDP 10ml,78,25KOS,O3,244,44,191,95,3,1
+PS0060,26-PS0060-B-1,Inner Box Skiniverse Gangsta EDP 10ml,112,25TI,O3,244,44,191,95,3,1
+PS0058,26-PS0058-B-1,Inner Box Skiniverse Lolita EDP 10ml,10200,25NE,O3,242,44,187,95,3,1
+PS0058,26-PS0058-B-1,Inner Box Skiniverse Lolita EDP 10ml,412,25TI,O3,242,44,187,95,3,1
+PS0052,26-PS0052-B-1,Inner Box Skiniverse Sunny EDP 10ml,59,25TI,P1,236,44,175,96,3,1
+PS0052,26-PS0052-B-1,Inner Box Skiniverse Sunny EDP 10ml,10282,25NE,P1,236,44,175,96,3,1
+PS0048,25-PS0048-3,Inner Box Skiniverse Catleya Eau De Parfume 50ml,730,25NE,P1,232,44,717,96,3,1
+PS0048,25-PS0048-3,Inner Box Skiniverse Catleya Eau De Parfume 50ml,4965,25TI,P1,232,44,717,96,3,1
+PS0048,25-PS0048-3,Inner Box Skiniverse Catleya Eau De Parfume 50ml,2,25KOS,P1,232,44,717,96,3,1
+PS0056,26-PS0056-B-1,Inner Box Skiniverse Catleya EDP 10ml,82,25TI,P1,240,44,183,96,3,1
+PS0056,26-PS0056-B-1,Inner Box Skiniverse Catleya EDP 10ml,9892,25NE,P1,240,44,183,96,3,1
+PS0042,25-PS0042-3,Inner Box Skiniverse Sunny Eau De Parfume 50ml,2,25KOS,P1,226,44,718,96,3,1
+PS0042,25-PS0042-3,Inner Box Skiniverse Sunny Eau De Parfume 50ml,60,25NE,P1,226,44,718,96,3,1
+PS0049,25-PS0049-3,Inner Box Skiniverse Belle Eau De Parfume 50ml,416,25TI,P2,233,44,719,97,3,1
+PS0054,26-PS0054-B-1,Inner Box Skiniverse Belle EDP 10ml,10262,25NE,P2,238,44,179,97,3,1
+PS0054,26-PS0054-B-1,Inner Box Skiniverse Belle EDP 10ml,11,25KOS,P2,238,44,179,97,3,1
+PS0054,26-PS0054-B-1,Inner Box Skiniverse Belle EDP 10ml,81,25TI,P2,238,44,179,97,3,1
+PS0046,25-PS0046-3,Inner Box Skiniverse Celina Eau De Parfume 50ml,680,25TI,P2,230,44,720,97,3,1
+PS0046,25-PS0046-3,Inner Box Skiniverse Celina Eau De Parfume 50ml,572,25NE,P2,230,44,720,97,3,1
+PS0046,25-PS0046-3,Inner Box Skiniverse Celina Eau De Parfume 50ml,87,25KOS,P2,230,44,720,97,3,1
+PS0049,25-PS0049-3,Inner Box Skiniverse Belle Eau De Parfume 50ml,1914,25NE,P2,233,44,719,97,3,1
+PS0057,26-PS0057-B-1,Inner Box Skiniverse CelinaEDP 10ml,62,25TI,P2,241,44,185,97,3,1
+PS0057,26-PS0057-B-1,Inner Box Skiniverse CelinaEDP 10ml,28,25KOS,P2,241,44,185,97,3,1
+PS0057,26-PS0057-B-1,Inner Box Skiniverse CelinaEDP 10ml,10217,25NE,P2,241,44,185,97,3,1
+PC0069,25-PC0069-2,Stiker Skiniverse Showtime EDP 35ml,481,25DO,P3,358,41,722,98,5,1
+PS0080,26-PS0080-1,Inner Box Skiniverse Aurora Kiss 35ml,17,25IN,P3,264,43,216,98,3,1
+PS0080,26-PS0080-1,Inner Box Skiniverse Aurora Kiss 35ml,3295,25NE,P3,264,43,216,98,3,1
+PS0092,26-PS0092-A-1,Inner Box Skiniverse Aurora Kiss EDP 10ml,7138,25DO,P3,276,43,221,98,3,1
+PS0093,26-PS0093-A-1,Inner Box Skiniverse Showtime EDP 10ml,12763,25DO,P3,277,43,222,98,3,1
+PS0093,26-PS0093-A-1,Inner Box Skiniverse Showtime EDP 10ml,72,25IN,P3,277,43,222,98,3,1
+PS0077,26-PS0077-1,Inner Box Skiniverse Showtime 35ml,2623,25NE,P3,261,43,214,98,3,1
+PS0077,26-PS0077-1,Inner Box Skiniverse Showtime 35ml,192,25DO,P3,261,43,214,98,3,1
+PS0091,26-PS0091-A-1,Inner Box Skiniverse Fearless EDP 10ml,2400,25DO,P3,275,43,220,98,3,1
+PS0075,26-PS0075-1,Inner Box Skiniverse Fearless 35ml,22,25IN,P3,259,43,212,98,3,1
+PS0123,26-PS0123-B-1,Inner Box Royale Sanctiors Story of Medes ExDP 30ml,3730,,Q1,1001,43,484,99,3,1
+PS0062,26-PS0062-B-1,Inner Box Royale Sanctiors Story of Medes 100ml,9340,,Q1,246,44,195,99,3,1
+PS0106,26-PS0106-A-1,Inner Box Royale Sanctiors Story of Atlas 100 mL,2577,,Q2,984,4,465,100,3,1
+PS0122,26-PS0122-A-1,Inner Box Royale Sanctiors Atlas ExDP 30ml,3986,,Q2,1000,43,482,100,3,1
+PS0125,26-PS0125-C-1,Sekat Inner Box Polos F (Royale 30ml),15837,,R1,1003,43,489,101,3,1
+PS0124,26-PS0124-B-1,Inner Box Royale Sanctiors Birth of Venus ExDP 30ml,3823,,R2,1002,43,486,102,3,1
+PS0063,26-PS0063-A-2,Inner Box Royale Sanctiors Birth of Venus 100ml,360,,R2,247,44,198,102,3,1
+PS0105,26-PS0105-A-1,Inner Box BT Trusmi Skiniverse Gardenia Veil ExDP 50ml,170,,R2,289,44,226,102,3,1
+PS0108,26-PS0108-A-1,Inner Box Skintee Freedom EDP X Iren Premium Parfume 50mL,48,,R2,986,4,467,102,3,1
+PS0107,26-PS0107-A-1,Inner Box Skintee Enchante EDP X Iren Premium Parfume 50mL,30,,R2,985,4,466,102,3,1
+PS0109,26-PS0109-A-1,Inner Box Skintee Crush EDP X Iren Premium Parfume 50mL,89,,R2,987,4,468,102,3,1
+PS0051,26-PS0051-B-2,Sekat Inner Box Polos C,5737,,S1,235,44,173,103,3,1
+PC0096,25-PC0096-1,Stiker Pot Linkskin Flawless Day Moisturizer 30g,189,,T1,385,4,724,104,5,1
+PC0097,25-PC0097-1,Stiker Tutup Pot Linkskin Flawless Day Moisturizer 30g,434,,T1,386,4,725,104,5,1
+PC0117,26-PC0117-A-1,Stiker Mureeskin Ultimate Anti Acne Spot Serum,275,,T1,1030,56,616,104,5,1
+PC0116,26-PC0116-A-1,Stiker Skiniverse Body Mist Summer Time 50 mL,2600,,T1,1029,56,615,104,5,1
+PC0115,26-PC0115-A-1,Stiker Skiniverse Body Mist Sweet Island 50 mL,2653,,T1,1028,56,614,104,5,1
+PC0128,26-PC0128-A-1,Stiker NJR Skin All Day Fresh Deo Spray 100ml,81,,T1,1041,56,619,104,5,1
+PC0143,26-PC0143-A-1,Stiker Redbox Water Base Hair Pomade Can Pot 80g,111,,T1,1056,36,626,104,5,1
+PC0139,26-PC0139-B-1,Stiker Skiniverse x Iicha Pricilia Indigo Moon EDP 30ml,36,,T1,1052,56,624,104,5,1
+PC0137,26-PC0137-B-1,Stiker Skiniverse x Iicha Pricilia Fortune Potion EDP 30ml,13,,T1,1050,56,623,104,5,1
+PC0149,26-PC0149-A-1,Stiker Redbox Hair Styling Powder 10g,30,,T1,1062,4,627,104,5,1
+PC0114,26-PC0114-A-1,Stiker Ratwomine Deomine's Deo Spray 60 mL,36,,T1,1027,56,613,104,5,1
+PC0123,26-PC0123-A-1,Stiker Metalik Yeji Sweet Breeze EDP 30ml,132,,T1,1036,56,617,104,5,1
+PC0127,26-PC0127-A-1,Stiker Metalik Yeji Panthasm EDP 30ml,30,,T1,1040,56,618,104,5,1
+PC0019,26-PC0019-A-1,Sticker AnBC Glow Brightening-C Glow Serum,273,,T1,308,41,237,104,5,1
+PC0133,26-PC0133-A-2,Stiker Plat Metal Royale Sanctiors Story if Medes ExDP 100ml variasi 2,4845,,T1,1046,31,621,104,5,1
+PC0132,26-PC0132-A-1,Stiker Plat Metal Royale Sanctiors ATLAS ExDP 100ml,3821,,T1,1045,31,620,104,5,1
+PC0151,26-PC0151-B-1,Stiker Scentplus Dominant ExDP 50ml,367,,T1,1064,42,628,104,5,1
+PC0108,26-PC0108-A-1,Stiker Plat Metal Royale Sanctiors Story of Medes ExDP,4320,,T1,397,31,316,104,5,1
+PC0137,26-PC0137-B-1,Stiker Skiniverse x Iicha Pricilia Fortune Potion EDP 30ml,13,,T1,1050,56,623,104,5,1
+PC0156,26-PC0156-A-1,Stiker Cap Pot Glowthinc Day Cream 15g,97,,T1,1069,56,,104,5,1
+PC0157,26-PC0157-A-1,Stiker Pot Glowthinc Night Cream 15g,43,,T1,1070,56,,104,5,1
+PC0158,26-PC0158-A-1,Stiker Cap Pot Glowthinc Night Cream 15g,97,,T1,1071,56,,104,5,1
+PC0091,26-PC0091-A-2,Stiker Metalik BT Trusmi 50ml,62,,T1,380,56,284,104,5,1
+PC0161,26-PC0161-A-1,Stiker Skiniverse Velvet Haze EDP x I'louse 35mL,560,,T1,1074,45,,104,5,1
+PC0159,26-PC0159-A-1,Stiker Skiniverse Daydream EDP x I'louse 35mL,265,,T1,1072,45,,104,5,1
+PC0160,26-PC0160-A-1,Stiker Skiniverse Luxe Romeo EDP x I'louse 35mL,32,,T1,1073,45,,104,5,1
+PC0091,26-PC0091-A-2,Stiker Metalik BT Trusmi 50ml,62,,T1,380,56,284,104,5,1
+PC0019,26-PC0019-A-1,Sticker AnBC Glow Brightening-C Glow Serum,273,,T1,308,41,237,104,5,1
+PC0064,25-PC0064-2,Stiker Skiniverse Velvet Haze EDP 35ml,2898,25NE,T2,353,4,703,105,5,1
+PC0067,25-PC0067-1,Stiker Skiniverse Day Dream EDP 35ml,8800,25DO,T2,356,41,707,105,5,1
+PC0062,26-PC0062-B-1,Stiker Skiniverse Gardenia Veil EDP 35ml,1499,25NE,T2,351,4,266,105,5,1
+PC0068,25-PC0068-2,Stiker Skiniverse Luxe Romeo EDP 35ml,2223,25NE,T2,357,41,,105,5,1
+PC0106,26-PC0106-C-1,Stiker Skiniverse Belle EDP 50ml,225,25NE,T2,395,56,311,105,5,1
+PC0105,26-PC0105-C-1,Stiker Skiniverse Sunny EDP 50ml,324,25NE,T2,394,56,308,105,5,1
+PC0066,25-PC0066-2,Stiker Skiniverse Fearless EDP 35ml,240,"25DO,",T2,355,41,721,105,5,1
+PC0066,25-PC0066-2,Stiker Skiniverse Fearless EDP 35ml,1548,25NE,T2,355,41,721,105,5,1
+PC0069,25-PC0069-2,Stiker Skiniverse Showtime EDP 35ml,4299,25NE,T2,358,41,722,105,5,1
+PC0071,25-PC0071-2,Stiker Skiniverse Aurora Kiss EDP 35ml,4332,25NE,T2,360,41,723,105,5,1
+PC0062,26-PC0062-A-1,Stiker Skiniverse Gardenia Veil EDP 35ml,898,25KOS,T2,351,4,265,105,5,1
+PS0138,26-PS0138-B-1,Innerbox Glowthinc Toner 100mL,660,,T2,1016,43,,105,3,1
+PS0134,26-PS0134-B-1,Inner Box Scentplus Dominant 50ml,115,,T2,1012,42,501,105,3,1
+PC0152,25-PC0152-1,Stiker Scentplus Dominant ExDP 100ml,117,,T2,1065,42,,105,5,1
+PC0153,26-PC0153-B-1,Sleeve Scentplus Dominant ExDP 50ml,114,,T2,1066,42,,105,5,1
+PC0154,26-PC0154-B-1,Sleeve Scentplus Dominant ExDP 100ml,13,,T2,1067,42,,105,5,1
+PS0135,26-PS0135-A-1,Inner Box Scentplus Dominant 100ml,45,,T2,1013,42,502,105,3,1
+PC0173,26-PC0173-A-1,Stiker Transparan Scentplus Fiore ExDP 5ml,97,,T2,,,,105,5,1
+PC0168,26-PC0168-A-1,Stiker Skintee Vanilla Le Franco ExDP 50ml,10,,T2,,,,105,5,1
+PC0170,26-PC0170-A-1,Stiker Skintee Sagesse Elegance ExDP 50ml,10,,T2,,,,105,5,1
+PC0171,26-PC0171-A-1,Stiker Skintee Midnight Scrambler ExDP 50ml,10,,T2,,,,105,5,1
+PC0172,26-PC0172-A-1,Stiker Skintee Jazzy Blues ExDP 50ml,10,,T2,,,,105,5,1
+PC0011,26-PC0011-B-2,Plastik Shrink E (8 cm),22,,U1,300,50,236,106,5,1
+PC0010,26-PC0010-A-1,Plastik Shrink D (7 cm),11,,U1,299,49,233,106,5,1
+PC0050,26-PC0050-B-2,Plastik Shrink K (18 cm),2,,U1,339,50,253,106,5,1
+PC0087,26-PC0087-B-1,"Plastik Shrink P (5,5 cm)",45,,U1,376,4,274,106,5,1
+PC0075,25-PC0075-1,Plastik Shrink O (21 cm),4,4 ROLL,U2,364,4,727,,5,1
+PC0041,25-PC0041-3,Plastik Shrink J (20 cm),2,,U2,330,55,728,,5,1
+PC0026,25-PC0026-1,Plastik Shrink F (13 cm),2,2 ROLL,U2,315,50,729,,5,1
+PC0057,26-PC0057-C-1,Plastik Shrink M (11cm),4,4 ROLL,U2,346,50,262,,5,1
+PC0003,26-PC0003-A-2,Shrink B (10 cm),3,3 ROLL,U2,292,48,229,,5,1
+PC0053,25-PC0053-1,Plastik Shrink L (19 cm),1,1 ROLL,U2,342,50,730,,5,1
+PC0141,26-PC0141-A-1,Plastik Shrink R (22cm),1,,U2,1054,50,625,,5,1
+PP0022,24-PP0022-1,Botol Skintee (Print),10109,,Lantai 2,22,5,735,109,2,1
+PP0058,25-PP0058-1,MOB Tutup Pot RF Pink 10 g,5032,,Lantai 2,58,5,740,109,2,1
+PP0059,24-PP0059-1,MOB Pull Pad RF Pink 10 g,7514,,Lantai 2,59,5,741,109,2,1
+PP0057,24-PP0057-1,MOB Pot RF Pink 10 g,4745,,Lantai 2,57,5,,109,2,1
+PP0046,24-PP0046-1,Plastik White Mis Sprayer N24,6000,,Lantai 2,46,1,737,109,2,1
+PP0055,26-PP0055-A-1,Botol RF 100 ml Pink,14738,,Lantai 2,55,5,18,109,2,1
+PP0023,24-PP0023-1,Tutup Oval Hijau,11059,,Lantai 2,23,5,736,109,2,1
+PP0135,25-PP0135-1,Skintee Hydra Glow Sun Protection Pot Ungu 12g,6161,,Lantai 2,137,8,742,109,2,1
+PC0137,25-PC0137-1,Stiker Skiniverse x Iicha Pricilia Fortune Potion EDP 30ml,6254,,Lantai 2,1050,56,,109,5,1
+PP0136,25-PP0136-1,Pull Pad RF 12g,7221,,Lantai 2,138,8,743,109,2,1
+PC0095,25-PC0095-1,Stiker Skiniverse Chill Bliss Body Wash 300ml,8,,Lantai 2,384,4,734,109,5,1
+PC0094,25-PC0094-1,Stiker Skiniverse Tropic Kiss Body Wash 300ml,3,,Lantai 2,383,4,733,109,5,1
+PC0072,25-PC0072-1,Stiker UKR Avalon ExDP 50ml,101,,Lantai 2,361,4,,109,5,1
+PC0073,25-PC0073-1,Stiker UKR Dorelle ExDP 50ml,94,,Lantai 2,362,4,732,109,5,1
+PP0024,24-PP0024-1,Tutup Fliptop Putih,8594,,Lantai 2,24,5,680,109,2,1
+PP0056,24-PP0056-1,Botol RF 60 ml Pink,1386,,Lantai 2,56,5,738,109,2,1
+PS0067,26-PS0067-A-1,Inner Box Skintee Hydra Glow Sun Protection 12g,808,,Lantai 2,251,44,202,109,3,1
