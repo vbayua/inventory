@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Service\BatchPolicies\BatchPolicyInterface;
 use App\Service\BatchPolicies\DefaultBatchPolicy;
+use App\Service\BatchPolicies\LotSequenceBatchPolicy;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -140,8 +141,9 @@ class BatchAssignmentService
             ->latest('operation_date')
             ->first();
 
-        // If there is interval in the last received stock, check the interval.
-        if ($lastInbound?->batch_id && $interval > 0) {
+        // Reuse the last received batch within the interval, except for lot-sequence
+        // policies, which open a new lot for every inbound instead.
+        if ($lastInbound?->batch_id && $interval > 0 && ! $policy instanceof LotSequenceBatchPolicy) {
             $diff = $lastInbound->operation_date->diffInDays($operationDate);
             if ($diff < $interval) {
                 return $policy->determineBatch($product, $lastInbound->batch_id);
@@ -170,6 +172,7 @@ class BatchAssignmentService
         $newBatch = Batch::create([
             'product_id' => $product->id,
             'batch_number' => $batchNumber,
+            'batch_date' => $operationDate->toDateString(),
             'manufacture_date' => $manufactureDate ?? null,
             'expiry_date' => $expiryDate ?? null,
             'minimum_quantity' => $minQty,
@@ -224,6 +227,7 @@ class BatchAssignmentService
             'product_id' => $parent->product_id,
             'parent_batch_id' => $parent->id,
             'batch_number' => $batchNumber,
+            'batch_date' => $parent->batch_date,
             'supplier_id' => $parent->supplier_id,
             'manufacture_date' => $parent->manufacture_date,
             'expiry_date' => $parent->expiry_date,

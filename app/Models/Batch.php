@@ -14,9 +14,10 @@ class Batch extends Model
     /** @use HasFactory<BatchFactory> */
     use HasFactory;
 
-    protected $fillable = ['product_id', 'parent_batch_id', 'batch_number', 'supplier_id', 'manufacture_date', 'expiry_date', 'user_id', 'minimum_quantity'];
+    protected $fillable = ['product_id', 'parent_batch_id', 'batch_number', 'batch_date', 'supplier_id', 'manufacture_date', 'expiry_date', 'user_id', 'minimum_quantity'];
 
     protected $casts = [
+        'batch_date' => 'date',
         'manufacture_date' => 'date',
         'expiry_date' => 'date',
     ];

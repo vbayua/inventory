@@ -4,7 +4,6 @@ use App\Models\Batch;
 use App\Models\ProductType;
 use App\Service\BatchAssignmentService;
 use Database\Seeders\BlankStateSeeder;
-use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
     $this->seed(BlankStateSeeder::class);
@@ -59,21 +58,54 @@ describe('finished goods', function () {
 describe('primary packaging', function () {
     beforeEach(function () {
         $this->product = productWithSupplier(['product_type_id' => ProductType::where('type_code', 'PP')->value('id')]);
-        $this->existingBatch = Batch::factory()->create([
+        $this->sku = $this->product->sku;
+        $this->batchOn = fn (string $lotSequence, string $batchDate): Batch => Batch::factory()->create([
             'product_id' => $this->product->id,
-            'batch_number' => now()->format('y')."-{$this->product->sku}-A-1",
+            'batch_number' => "26-{$this->sku}-{$lotSequence}",
+            'batch_date' => $batchDate,
         ]);
     });
 
-    it('rejects a second batch on the same day', function () {
-        $this->service->generateBatchNumber($this->product, $this->product->sku, null, now()->toDateString());
-    })->throws(ValidationException::class);
+    it('starts the first sequence at lot A', function () {
+        expect($this->service->generateBatchNumber($this->product, $this->sku, null, '2026-01-01'))
+            ->toBe("26-{$this->sku}-A-1");
+    });
 
-    it('issues the next lot when the latest batch was created on an earlier day', function () {
-        $this->existingBatch->forceFill(['created_at' => now()->subDay()])->save();
+    it('issues the next lot for a second batch on the same day', function () {
+        ($this->batchOn)('A-1', '2026-01-01');
 
-        $batchNumber = $this->service->generateBatchNumber($this->product, $this->product->sku, null, now()->toDateString());
+        expect($this->service->generateBatchNumber($this->product, $this->sku, null, '2026-01-01'))
+            ->toBe("26-{$this->sku}-B-1");
+    });
 
-        expect($batchNumber)->toBe(now()->format('y')."-{$this->product->sku}-B-1");
+    it('keeps advancing the lot while within the interval from the first batch of the sequence', function () {
+        ($this->batchOn)('A-1', '2026-01-01');
+        ($this->batchOn)('B-1', '2026-03-01');
+
+        expect($this->service->generateBatchNumber($this->product, $this->sku, null, '2026-03-20'))
+            ->toBe("26-{$this->sku}-C-1");
+    });
+
+    it('starts a new sequence at lot A once the interval from the first batch of the sequence has elapsed', function () {
+        ($this->batchOn)('A-1', '2026-01-01');
+        ($this->batchOn)('B-1', '2026-03-01');
+
+        expect($this->service->generateBatchNumber($this->product, $this->sku, null, '2026-04-01'))
+            ->toBe("26-{$this->sku}-A-2");
+    });
+
+    it('advances the lot within the new sequence', function () {
+        ($this->batchOn)('A-1', '2026-01-01');
+        ($this->batchOn)('A-2', '2026-04-15');
+
+        expect($this->service->generateBatchNumber($this->product, $this->sku, null, '2026-05-01'))
+            ->toBe("26-{$this->sku}-B-2");
+    });
+
+    it('measures the interval from the batch date rather than when the record was created', function () {
+        ($this->batchOn)('A-1', '2026-01-01')->forceFill(['created_at' => '2026-11-12'])->save();
+
+        expect($this->service->generateBatchNumber($this->product, $this->sku, null, '2026-04-15'))
+            ->toBe("26-{$this->sku}-A-2");
     });
 });
