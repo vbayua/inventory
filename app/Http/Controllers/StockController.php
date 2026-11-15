@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockCardExport;
+use App\Exports\StockCardLocationExport;
+use App\Exports\StockCardViewAllExport;
+use App\Exports\StockCardViewExport;
+use App\Exports\StockExport;
 use App\Http\Requests\StoreStockRequest;
 use App\Http\Requests\UpdateStockRequest;
 use App\Models\Operation;
 use App\Models\Stock;
 use App\Service\StockOperationService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -23,24 +29,21 @@ class StockController extends Controller
      */
     public function index()
     {
-        // Check parameter for filtering stocks by status
-        // $stocks = Stock::with(['product:id,name,sku.productType:id,name,type_code', 'location:id,name.warehouse:id,name', 'batch:id,batch_number.supplier:id,name'])->get();
-        $stocks = Stock::with([
-            'product:id,name,sku,product_type_id',
-            'product.productType:id,name,type_code',
-            'location:id,name,warehouse_id',
-            'location.warehouse:id,name',
-            'batch:id,batch_number,supplier_id',
-            'batch.supplier:id,partner_id',
-            'batch.supplier.partner:id,name',
-        ])->get();
-
         return Inertia('Stocks/Index', [
-            'stocks' => $stocks,
-            'stats' => [
-                'total_items' => Stock::count(),
-                'total_locations' => Stock::distinct('location_id')->count(),
-            ],
+            'stocks' => Inertia::defer(fn () => Stock::with([
+                'product:id,name,sku,product_type_id',
+                'product.productType:id,name,type_code',
+                'location:id,name,warehouse_id',
+                'location.warehouse:id,name',
+                'batch:id,batch_number,supplier_id',
+                'batch.supplier:id,partner_id',
+                'batch.supplier.partner:id,name',
+            ])->get(), rescue: true),
+            'available_stocks' => Inertia::defer(fn () => Stock::where('status', 'available')->count(), group: 'stats'),
+            'low_stocks' => Inertia::defer(fn () => Stock::where('status', 'low_stock')->count(), group: 'stats'),
+            'out_of_stock' => Inertia::defer(fn () => Stock::where('status', 'out_of_stock')->count(), group: 'stats'),
+            'total_items' => Inertia::defer(fn () => Stock::count(), group: 'stats'),
+            'total_locations' => Inertia::defer(fn () => Stock::distinct('location_id')->count(), group: 'stats'),
         ]);
     }
 
@@ -73,15 +76,14 @@ class StockController extends Controller
             'batch:id,batch_number,supplier_id',
             'batch.supplier:id,partner_id',
             'batch.supplier.partner:id,name',
-            'user:id,name'
+            'user:id,name',
         ])
-        ->where('product_id', $stock->product_id)
-        ->where('location_id', $stock->location_id)
-        ->where('batch_id', $stock->batch_id)
-        ->latest()
-        ->get();
-        $operations = Inertia::lazy(fn() => $operationsData);
-
+            ->where('product_id', $stock->product_id)
+            ->where('location_id', $stock->location_id)
+            ->where('batch_id', $stock->batch_id)
+            ->latest()
+            ->get();
+        $operations = Inertia::lazy(fn () => $operationsData);
 
         // dd($operations);
 
@@ -94,7 +96,7 @@ class StockController extends Controller
                 'batch:id,batch_number,supplier_id,minimum_quantity',
                 'batch.supplier:id,partner_id',
                 'batch.supplier.partner:id,name',
-                'user:id,name'
+                'user:id,name',
             ]),
             'operations' => $operations,
         ]);
@@ -113,13 +115,13 @@ class StockController extends Controller
             'batch:id,batch_number,supplier_id',
             'batch.supplier:id,partner_id',
             'batch.supplier.partner:id,name',
-            'user:id,name'
+            'user:id,name',
         ])
-        ->where('product_id', $stock->product_id)
-        ->where('batch_id', $stock->batch_id)
-        ->orderBy('operation_date', 'asc')
-        ->orderBy('id', 'asc')
-        ->get();
+            ->where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->orderBy('operation_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
         // $operations = Inertia::lazy(fn() => $operationsData);
 
         $totalLocations = Stock::where('product_id', $stock->product_id)
@@ -128,62 +130,68 @@ class StockController extends Controller
             ->where('batch_id', $stock->batch_id)
             ->sum('quantity');
 
-            // Compute delta for each operation type
-               $operationDeltas = $operations->map(function ($op) {
-                   $type = $op->operation_type;
+        // Compute delta for each operation type
+        $operationDeltas = $operations->map(function ($op) {
+            $type = $op->operation_type;
 
-                   // Normalize types to your domain semantics
-                   // inbound => +qty, outbound => -qty, adjustment(addition) => +qty, adjustment(subtraction) => -qty,
-                   // return => +qty, transfer => 0 (when aggregating across locations)
-                   $qty = (float) $op->quantity;
+            // Normalize types to your domain semantics
+            // inbound => +qty, outbound => -qty, adjustment(addition) => +qty, adjustment(subtraction) => -qty,
+            // return => +qty, transfer => 0 (when aggregating across locations)
+            $qty = (float) $op->quantity;
 
-                   $delta = 0.0;
-                   if ($type === 'inbound') {
-                       $delta = +$qty;
-                   } elseif ($type === 'outbound') {
-                       $delta = -$qty;
-                   } elseif ($type === 'adjustment') {
-                       // When stored, remarks or a dedicated field may indicate addition/subtraction.
-                       // If you persist adjustmentType, use it here; otherwise infer from remarks.
-                       // Example assumes you have "addition"/"subtraction" in remarks, adjust to your actual data.
-                       $adj = null;
-                       if (isset($op->remarks)) {
-                           $r = strtolower($op->remarks);
-                           if (str_contains($r, 'addition')) $adj = 'addition';
-                           if (str_contains($r, 'subtraction')) $adj = 'subtraction';
-                       }
-                       if ($adj === 'subtraction') {
-                           $delta = -$qty;
-                       } else {
-                           $delta = +$qty;
-                       }
-                   } elseif ($type === 'return') {
-                       $delta = +$qty;
-                   } elseif ($type === 'transfer') {
-                       // Aggregated card across locations: neutralize transfers
-                       $delta = 0.0;
-                   } else {
-                       // Unknown type -> neutral
-                       $delta = 0.0;
-                   }
+            $delta = 0.0;
+            if ($type === 'inbound') {
+                $delta = +$qty;
+            } elseif ($type === 'outbound') {
+                $delta = -$qty;
+            } elseif ($type === 'adjustment') {
+                // When stored, remarks or a dedicated field may indicate addition/subtraction.
+                // If you persist adjustmentType, use it here; otherwise infer from remarks.
+                // Example assumes you have "addition"/"subtraction" in remarks, adjust to your actual data.
+                $adj = null;
+                if (isset($op->remarks)) {
+                    $r = strtolower($op->remarks);
+                    if (str_contains($r, 'addition')) {
+                        $adj = 'addition';
+                    }
+                    if (str_contains($r, 'subtraction')) {
+                        $adj = 'subtraction';
+                    }
+                }
+                if ($adj === 'subtraction') {
+                    $delta = -$qty;
+                } else {
+                    $delta = +$qty;
+                }
+            } elseif ($type === 'return') {
+                $delta = +$qty;
+            } elseif ($type === 'transfer') {
+                // Aggregated card across locations: neutralize transfers
+                $delta = 0.0;
+            } else {
+                // Unknown type -> neutral
+                $delta = 0.0;
+            }
 
-                   // Attach the computed delta
-                   $op->delta = $delta;
-                   return $op;
-               });
+            // Attach the computed delta
+            $op->delta = $delta;
 
-               $netSum = $operationDeltas->sum('delta');
+            return $op;
+        });
 
-               // Opening balance so final balance equals current total across locations
-               $openingBalance = (float) $totalStockQuantityAcrossLocations - (float) $netSum;
+        $netSum = $operationDeltas->sum('delta');
 
-               // Build running balance sequence
-               $running = 0.0;
-               $operationsWithBalance = $operationDeltas->map(function ($op) use (&$running, $openingBalance) {
-                   $running += (float) $op->delta;
-                   $op->balance = $openingBalance + $running;
-                   return $op;
-               });
+        // Opening balance so final balance equals current total across locations
+        $openingBalance = (float) $totalStockQuantityAcrossLocations - (float) $netSum;
+
+        // Build running balance sequence
+        $running = 0.0;
+        $operationsWithBalance = $operationDeltas->map(function ($op) use (&$running, $openingBalance) {
+            $running += (float) $op->delta;
+            $op->balance = $openingBalance + $running;
+
+            return $op;
+        });
 
         // dd($operationsWithBalance, $openingBalance);
         return Inertia('Stocks/StockCard', [
@@ -244,18 +252,19 @@ class StockController extends Controller
 
     public function exportStockCard(Stock $stock)
     {
-        $fileName = 'stock_card_' . $stock->product->sku . '_' . $stock->batch->batch_number . '.xlsx';
+        $fileName = 'stock_card_'.$stock->product->sku.'_'.$stock->batch->batch_number.'.xlsx';
         $operation = Operation::where('product_id', $stock->product_id)
             ->where('batch_id', $stock->batch_id)
             ->where('location_id', $stock->location_id)
             ->first();
-        return Excel::download(new \App\Exports\StockCardExport($operation), $fileName);
+
+        return Excel::download(new StockCardExport($operation), $fileName);
     }
 
     public function export(Stock $stock)
     {
         $exportTime = now()->format('Ymd_His');
-        $fileName = $stock->product->sku . '_' . $stock->batch->batch_number . '_' . $stock->location->name . '_' . $exportTime;
+        $fileName = $stock->product->sku.'_'.$stock->batch->batch_number.'_'.$stock->location->name.'_'.$exportTime;
         $range = request()->query('range', 'all');
         $exportRange = $range ?? 'all';
 
@@ -265,7 +274,7 @@ class StockController extends Controller
             $cutoffDate = now()->subDays(90);
         } elseif ($exportRange === '180d') {
             $cutoffDate = now()->subDays(180);
-        } elseif($exportRange === '1y') {
+        } elseif ($exportRange === '1y') {
             $cutoffDate = now()->subYear();
         } elseif ($exportRange === 'this_month') {
             $cutoffDate = now()->startOfMonth();
@@ -293,7 +302,7 @@ class StockController extends Controller
         $stock->total_locations = $totalLocations;
         $stock->total_quantity = $totalStockQuantityAcrossLocations;
 
-        return Excel::download(new \App\Exports\StockExport($stock, $cutoffDate), $fileName . '.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        return Excel::download(new StockExport($stock, $cutoffDate), $fileName.'.xlsx', \Maatwebsite\Excel\Excel::XLSX);
 
     }
 
@@ -310,7 +319,7 @@ class StockController extends Controller
             $cutoffDate = now()->subDays(90);
         } elseif ($exportRange === '180d') {
             $cutoffDate = now()->subDays(180);
-        } elseif($exportRange === '1y') {
+        } elseif ($exportRange === '1y') {
             $cutoffDate = now()->subYear();
         } elseif ($exportRange === 'this_month') {
             $cutoffDate = now()->startOfMonth();
@@ -320,7 +329,7 @@ class StockController extends Controller
             $cutoffDate = null; // 'all' range
         }
 
-        $fileName = 'stock_card_' . $stock->product->sku . '_' . $stock->batch->batch_number . '_' . $exportTime . '.pdf';
+        $fileName = 'stock_card_'.$stock->product->sku.'_'.$stock->batch->batch_number.'_'.$exportTime.'.pdf';
 
         $stock->load([
             'product:id,name,sku,product_type_id',
@@ -340,14 +349,14 @@ class StockController extends Controller
             'batch:id,batch_number,supplier_id',
             'batch.supplier:id,partner_id',
             'batch.supplier.partner:id,name',
-            'user:id,name'
+            'user:id,name',
         ])
-        ->where('product_id', $stock->product_id)
-        ->where('batch_id', $stock->batch_id)
-        ->whereBetween('operation_date', [($cutoffDate ?? \Carbon\Carbon::parse('1900-01-01')), now()])
-        ->orderBy('operation_date', 'asc')
-        ->orderBy('id', 'asc')
-        ->get();
+            ->where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->whereBetween('operation_date', [($cutoffDate ?? Carbon::parse('1900-01-01')), now()])
+            ->orderBy('operation_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
         $totalLocations = Stock::where('product_id', $stock->product_id)
             ->where('batch_id', $stock->batch_id)->distinct('location_id')->count();
@@ -356,79 +365,85 @@ class StockController extends Controller
             ->sum('quantity');
         $stock->total_locations = $totalLocations;
 
-            $operationDeltas = $operations->map(function ($op) {
-                $type = $op->operation_type;
+        $operationDeltas = $operations->map(function ($op) {
+            $type = $op->operation_type;
 
-                // Normalize types to your domain semantics
-                // inbound => +qty, outbound => -qty, adjustment(addition) => +qty, adjustment(subtraction) => -qty,
-                // return => +qty, transfer => 0 (when aggregating across locations)
-                $qty = (float) $op->quantity;
+            // Normalize types to your domain semantics
+            // inbound => +qty, outbound => -qty, adjustment(addition) => +qty, adjustment(subtraction) => -qty,
+            // return => +qty, transfer => 0 (when aggregating across locations)
+            $qty = (float) $op->quantity;
 
-                $delta = 0.0;
-                if ($type === 'initial') {
-                    $delta = +$qty;
-                } elseif ($type === 'inbound') {
-                    $delta = +$qty;
-                } elseif ($type === 'outbound') {
-                    $delta = -$qty;
-                } elseif ($type === 'adjustment') {
-                    // When stored, remarks or a dedicated field may indicate addition/subtraction.
-                    // If you persist adjustmentType, use it here; otherwise infer from remarks.
-                    // Example assumes you have "addition"/"subtraction" in remarks, adjust to your actual data.
-                    $adj = null;
-                    if (isset($op->remarks)) {
-                        $r = strtolower($op->remarks);
-                        if (str_contains($r, 'addition')) $adj = 'addition';
-                        if (str_contains($r, 'subtraction')) $adj = 'subtraction';
+            $delta = 0.0;
+            if ($type === 'initial') {
+                $delta = +$qty;
+            } elseif ($type === 'inbound') {
+                $delta = +$qty;
+            } elseif ($type === 'outbound') {
+                $delta = -$qty;
+            } elseif ($type === 'adjustment') {
+                // When stored, remarks or a dedicated field may indicate addition/subtraction.
+                // If you persist adjustmentType, use it here; otherwise infer from remarks.
+                // Example assumes you have "addition"/"subtraction" in remarks, adjust to your actual data.
+                $adj = null;
+                if (isset($op->remarks)) {
+                    $r = strtolower($op->remarks);
+                    if (str_contains($r, 'addition')) {
+                        $adj = 'addition';
                     }
-                    if ($adj === 'subtraction') {
-                        $delta = -$qty;
-                    } else {
-                        $delta = +$qty;
+                    if (str_contains($r, 'subtraction')) {
+                        $adj = 'subtraction';
                     }
-                } elseif ($type === 'return') {
-                    $delta = +$qty;
-                } elseif ($type === 'transfer') {
-                    // Aggregated card across locations: neutralize transfers
-                    $delta = 0.0;
-                } elseif($type === 'transfer_in') {
-                    $delta = +$qty;
-                } elseif($type === 'transfer_out') {
+                }
+                if ($adj === 'subtraction') {
                     $delta = -$qty;
                 } else {
-                    // Unknown type -> neutral
-                    $delta = 0.0;
+                    $delta = +$qty;
                 }
+            } elseif ($type === 'return') {
+                $delta = +$qty;
+            } elseif ($type === 'transfer') {
+                // Aggregated card across locations: neutralize transfers
+                $delta = 0.0;
+            } elseif ($type === 'transfer_in') {
+                $delta = +$qty;
+            } elseif ($type === 'transfer_out') {
+                $delta = -$qty;
+            } else {
+                // Unknown type -> neutral
+                $delta = 0.0;
+            }
 
-                // Attach the computed delta
-                $op->delta = $delta;
-                return $op;
-            });
+            // Attach the computed delta
+            $op->delta = $delta;
 
-            $netSum = $operationDeltas->sum('delta');
+            return $op;
+        });
 
-            // Opening balance so final balance equals current total in location
-            $openingBalance = (float) $totalStockQuantityAcrossLocations - (float) $netSum;
+        $netSum = $operationDeltas->sum('delta');
 
-            // Build running balance sequence
-            $running = 0.0;
-            $operationsWithBalance = $operationDeltas->map(function ($op) use (&$running, $openingBalance) {
-                $running += (float) $op->delta;
-                $op->balance = $openingBalance + $running;
-                return $op;
-            });
+        // Opening balance so final balance equals current total in location
+        $openingBalance = (float) $totalStockQuantityAcrossLocations - (float) $netSum;
 
-            // Data periode
-            $dataPeriode = $cutoffDate ? $cutoffDate->format('d/m/Y') . ' to ' . now()->format('d/m/Y') : 'All Time';
+        // Build running balance sequence
+        $running = 0.0;
+        $operationsWithBalance = $operationDeltas->map(function ($op) use (&$running, $openingBalance) {
+            $running += (float) $op->delta;
+            $op->balance = $openingBalance + $running;
 
-        return Excel::download(new \App\Exports\StockCardViewAllExport($operationsWithBalance, $stock, $dataPeriode), $fileName, \Maatwebsite\Excel\Excel::MPDF);
+            return $op;
+        });
+
+        // Data periode
+        $dataPeriode = $cutoffDate ? $cutoffDate->format('d/m/Y').' to '.now()->format('d/m/Y') : 'All Time';
+
+        return Excel::download(new StockCardViewAllExport($operationsWithBalance, $stock, $dataPeriode), $fileName, \Maatwebsite\Excel\Excel::MPDF);
 
     }
 
     public function exportStockCardByLocation(Stock $stock)
     {
         $exportTime = now()->format('Ymd_His');
-        $fileName = $stock->product->sku . '_' . $stock->batch->batch_number . '_' . $stock->location->name . '_' . $exportTime . '.xlsx';
+        $fileName = $stock->product->sku.'_'.$stock->batch->batch_number.'_'.$stock->location->name.'_'.$exportTime.'.xlsx';
 
         $stock->load([
             'product:id,name,sku,product_type_id',
@@ -448,15 +463,14 @@ class StockController extends Controller
             'batch:id,batch_number,supplier_id',
             'batch.supplier:id,partner_id',
             'batch.supplier.partner:id,name',
-            'user:id,name'
+            'user:id,name',
         ])
-        ->where('product_id', $stock->product_id)
-        ->where('batch_id', $stock->batch_id)
-        ->where('location_id', $stock->location_id)
-        ->orderBy('operation_date', 'asc')
-        ->orderBy('id', 'asc')
-        ->get();
-
+            ->where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->where('location_id', $stock->location_id)
+            ->orderBy('operation_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
         // Calculate opening balance based on total stock quantity from Stock model, one location
         $totalStockInLocation = $stock->quantity;
@@ -481,8 +495,12 @@ class StockController extends Controller
                 $adj = null;
                 if (isset($op->remarks)) {
                     $r = strtolower($op->remarks);
-                    if (str_contains($r, 'addition')) $adj = 'addition';
-                    if (str_contains($r, 'subtraction')) $adj = 'subtraction';
+                    if (str_contains($r, 'addition')) {
+                        $adj = 'addition';
+                    }
+                    if (str_contains($r, 'subtraction')) {
+                        $adj = 'subtraction';
+                    }
                 }
                 if ($adj === 'subtraction') {
                     $delta = -$qty;
@@ -501,6 +519,7 @@ class StockController extends Controller
 
             // Attach the computed delta
             $op->delta = $delta;
+
             return $op;
         });
 
@@ -514,10 +533,11 @@ class StockController extends Controller
         $operationsWithBalance = $operationDeltas->map(function ($op) use (&$running, $openingBalance) {
             $running += (float) $op->delta;
             $op->balance = $openingBalance + $running;
+
             return $op;
         });
 
-        return Excel::download(new \App\Exports\StockCardLocationExport($operationsWithBalance, $stock, $totalStockInLocation), $fileName);
+        return Excel::download(new StockCardLocationExport($operationsWithBalance, $stock, $totalStockInLocation), $fileName);
     }
 
     public function exportPdf(Stock $stock)
@@ -529,13 +549,13 @@ class StockController extends Controller
             $cutoffDate = now()->subDays(90);
         } elseif ($exportRange === '180d') {
             $cutoffDate = now()->subDays(180);
-        } elseif($exportRange === '1y') {
+        } elseif ($exportRange === '1y') {
             $cutoffDate = now()->subYear();
         } else {
             $cutoffDate = null; // 'all' range
         }
         $exportTime = now()->format('Ymd_His');
-        $fileName = $stock->product->sku . '_' . $stock->batch->batch_number . '_' . $stock->location->name . '_' . $exportTime . '.xlsx';
+        $fileName = $stock->product->sku.'_'.$stock->batch->batch_number.'_'.$stock->location->name.'_'.$exportTime.'.xlsx';
 
         $stock->load([
             'product:id,name,sku,product_type_id',
@@ -555,16 +575,15 @@ class StockController extends Controller
             'batch:id,batch_number,supplier_id',
             'batch.supplier:id,partner_id',
             'batch.supplier.partner:id,name',
-            'user:id,name'
+            'user:id,name',
         ])
-        ->where('product_id', $stock->product_id)
-        ->where('batch_id', $stock->batch_id)
-        ->where('location_id', $stock->location_id)
-        ->whereBetween('operation_date', [($cutoffDate ?? \Carbon\Carbon::parse('1900-01-01')), now()])
-        ->orderBy('operation_date', 'asc')
-        ->orderBy('id', 'asc')
-        ->get();
-
+            ->where('product_id', $stock->product_id)
+            ->where('batch_id', $stock->batch_id)
+            ->where('location_id', $stock->location_id)
+            ->whereBetween('operation_date', [($cutoffDate ?? Carbon::parse('1900-01-01')), now()])
+            ->orderBy('operation_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
         // Calculate opening balance based on total stock quantity from Stock model, one location
         $totalStockInLocation = $stock->quantity;
@@ -589,8 +608,12 @@ class StockController extends Controller
                 $adj = null;
                 if (isset($op->remarks)) {
                     $r = strtolower($op->remarks);
-                    if (str_contains($r, 'addition')) $adj = 'addition';
-                    if (str_contains($r, 'subtraction')) $adj = 'subtraction';
+                    if (str_contains($r, 'addition')) {
+                        $adj = 'addition';
+                    }
+                    if (str_contains($r, 'subtraction')) {
+                        $adj = 'subtraction';
+                    }
                 }
                 if ($adj === 'subtraction') {
                     $delta = -$qty;
@@ -602,9 +625,9 @@ class StockController extends Controller
             } elseif ($type === 'transfer') {
                 // Aggregated card across locations: neutralize transfers
                 $delta = 0.0;
-            } elseif($type === 'transfer_in') {
+            } elseif ($type === 'transfer_in') {
                 $delta = +$qty;
-            } elseif($type === 'transfer_out') {
+            } elseif ($type === 'transfer_out') {
                 $delta = -$qty;
             } else {
                 // Unknown type -> neutral
@@ -613,6 +636,7 @@ class StockController extends Controller
 
             // Attach the computed delta
             $op->delta = $delta;
+
             return $op;
         });
 
@@ -626,13 +650,14 @@ class StockController extends Controller
         $operationsWithBalance = $operationDeltas->map(function ($op) use (&$running, $openingBalance) {
             $running += (float) $op->delta;
             $op->balance = $openingBalance + $running;
+
             return $op;
         });
 
         // Data periode
-        $dataPeriode = $cutoffDate ? $cutoffDate->format('d/m/Y') . ' to ' . now()->format('d/m/Y') : 'All Time';
+        $dataPeriode = $cutoffDate ? $cutoffDate->format('d/m/Y').' to '.now()->format('d/m/Y') : 'All Time';
 
         // Use PDF
-        return Excel::download(new \App\Exports\StockCardViewExport($operationsWithBalance, $stock, $dataPeriode), $fileName, \Maatwebsite\Excel\Excel::MPDF);
+        return Excel::download(new StockCardViewExport($operationsWithBalance, $stock, $dataPeriode), $fileName, \Maatwebsite\Excel\Excel::MPDF);
     }
 }
