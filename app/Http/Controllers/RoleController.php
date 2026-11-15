@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -77,6 +78,9 @@ class RoleController extends Controller
         $this->authorize('update', $role);
 
         $role->permissions()->sync($request->input('permissions', []));
+        $role->users()->each(function (User $user) {
+            $user->forgetAuthorizationCache();
+        });
 
         return redirect()->route('role.edit.permissions', $role)->with('success', 'Permissions updated successfully');
     }

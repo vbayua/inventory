@@ -103,6 +103,7 @@ class AdminController extends Controller
         }
         $user->roles()->sync($roles->pluck('id')->all());
         $user->save();
+        $user->forgetAuthorizationCache();
 
         return to_route('admin.users.index')->with('success', 'User updated successfully.');
     }
