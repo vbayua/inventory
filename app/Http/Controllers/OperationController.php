@@ -57,13 +57,13 @@ class OperationController extends Controller
         $stockQuery = $stockId ? $stock->where('id', $stockId)->first() : null;
 
         return Inertia('Operations/Create', [
-            'stocks' => $stock,
+            'stocks' => Inertia::defer(fn () => $stock, rescue: true),
             'products' => Inertia::optional(fn () => $products),
-            'batches' => $batches,
-            'units' => $units,
-            'warehouses' => $warehouse,
-            'locations' => $locations,
-            'stockQuery' => $stockQuery,
+            'batches' => Inertia::defer(fn () => $batches),
+            'units' => Inertia::defer(fn () => $units),
+            'warehouses' => Inertia::defer(fn () => $warehouse),
+            'locations' => Inertia::defer(fn () => $locations),
+            'stockQuery' => Inertia::defer(fn () => $stockQuery),
             'operationType' => $operationType,
         ]);
     }

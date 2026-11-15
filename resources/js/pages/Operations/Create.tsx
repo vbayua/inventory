@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { BreadcrumbItem } from '@/types';
 import { Batch, Location, Product, ProductsWithLinks, Stock, Unit, Warehouse } from '@/types/resources';
-import { Head, router } from '@inertiajs/react';
+import { Deferred, Head, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { BoxesIcon, CalendarIcon, ChevronsUpDown, NotepadTextIcon, PackageIcon } from 'lucide-react';
 import { SubmitEventHandler, useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ import ContainerFormLayout from '@/components/container-form-layout';
 import ReturnSection from './page-components/Create/ReturnSection';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import OperationCardSkeleton from '@/components/operations/operation-card-skeleton';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -41,6 +42,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type OperationType = 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
 
+type OperationProps = {
+    stocks?: Stock[];
+    products?: ProductsWithLinks[];
+    warehouses?: Warehouse[];
+    locations?: Location[];
+    batches?: Batch[];
+    units?: Unit[];
+    stockQuery?: Stock;
+    operationType?: OperationType;
+    requests?: any;
+}
 
 export default function Create({
     stocks,
@@ -51,17 +63,7 @@ export default function Create({
     units,
     stockQuery,
     operationType,
-}: {
-    stocks: Stock[];
-    products: ProductsWithLinks[];
-    warehouses: Warehouse[];
-    locations: Location[];
-    batches: Batch[];
-    units: Unit[];
-    stockQuery?: Stock;
-    operationType?: OperationType;
-    requests?: any;
-}) {
+}: OperationProps) {
     const stock = {
         data: stockQuery ?? undefined,
     };
@@ -126,11 +128,20 @@ export default function Create({
         }
     }, [products, productDialogOpen])
 
-    console.log(operationTypeData);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Operation" />
             <ContainerFormLayout>
+                <Deferred
+                    data="stocks"
+                    fallback={<OperationCardSkeleton />}
+                    rescue={({ reloading }) => (
+                        <div>
+                            <p>Failed to load Stocks.</p>
+                            <Button disabled={reloading} onClick={() => router.reload()}>Retry</Button>
+                        </div>
+                    )}
+                >
                 <form onSubmit={createOperation} className="mb-6 space-y-6">
                     <h1 className="mb-12 text-2xl font-semibold">Operasi Stok - {operationTypeData}</h1>
 
@@ -244,8 +255,10 @@ export default function Create({
                                                         <Button
                                                             variant={'link'}
                                                             onClick={() => {
-                                                                window.open(route('batch.create', { product: form.selectedProduct?.id }), '_blank');
+                                                                window.open(route('batch.create', { product: form.selectedProduct?.id }), '_blank')
+
                                                             }}
+                                                            type="button"
                                                         >
                                                             Register Batch Baru?
                                                         </Button>
@@ -352,6 +365,7 @@ export default function Create({
                         </Button>
                     </div>
                 </form>
+            </Deferred>
             </ContainerFormLayout>
         </AppLayout>
     );
