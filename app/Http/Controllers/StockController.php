@@ -83,7 +83,7 @@ class StockController extends Controller
             ->where('batch_id', $stock->batch_id)
             ->latest()
             ->get();
-        $operations = Inertia::lazy(fn () => $operationsData);
+        $operations = Inertia::optional(fn () => $operationsData);
 
         // dd($operations);
 

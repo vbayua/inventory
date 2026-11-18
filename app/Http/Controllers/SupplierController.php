@@ -36,7 +36,7 @@ class SupplierController extends Controller
         $relatedPartnerIds = Supplier::pluck('partner_id')->all();
 
         return Inertia::render('Suppliers/Create', [
-            'partners' => Inertia::lazy(fn () => Partner::select('id', 'name')
+            'partners' => Inertia::optional(fn () => Partner::select('id', 'name')
                 ->whereNotIn('id', $relatedPartnerIds)
                 ->orderBy('name')
                 ->get()),
@@ -68,7 +68,7 @@ class SupplierController extends Controller
             'supplier' => $supplier,
             'products' => $productsFromSupplier,
             'totalProducts' => $totalProducts,
-            'allProducts' => Inertia::lazy(
+            'allProducts' => Inertia::optional(
                 fn () => Product::select('id', 'name', 'sku')
                     ->whereNotIn('id', $relatedProductIds)
                     ->orderBy('name')

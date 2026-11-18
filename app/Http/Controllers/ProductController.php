@@ -52,10 +52,10 @@ class ProductController extends Controller
     public function create()
     {
         // $this->authorize('create', Product::class);
-        $suppliers = Inertia::lazy(fn () => Cache::remember('suppliers_list', 300, fn () => Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
+        $suppliers = Inertia::optional(fn () => Cache::remember('suppliers_list', 300, fn () => Supplier::select('id', 'partner_id')->with('partner:id,name')->get())
         );
         // $suppliers = \App\Models\Supplier::select('id', 'partner_id')->with('partner:id,name')->get();
-        $partners = Inertia::lazy(function () {
+        $partners = Inertia::optional(function () {
             return Cache::remember('partners_list', 3600, fn () => Partner::select('id', 'name')->get());
         });
 
