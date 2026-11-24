@@ -147,7 +147,7 @@ export default function TransferSection({ form, warehouses, locations }: { form:
                 </div>
             </div>
 
-            <QuantityUnitInput data={data} setData={setData} units={filteredUnits} errors={errors} currentStock={currentStock} />
+            <QuantityUnitInput clearErrors={form.clearErrors} data={data} setData={setData} units={filteredUnits} errors={errors} currentStock={currentStock} />
         </>
     );
 }

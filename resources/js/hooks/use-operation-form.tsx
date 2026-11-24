@@ -37,7 +37,7 @@ export default function useOperationForm({
     operationType: 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
     adjustmentType?: 'addition' | 'subtraction';
 }) {
-    const { data, setData, post, reset, processing, errors } = useForm<OperationForm>({
+    const { data, setData, post, reset, processing, errors, setError, clearErrors } = useForm<OperationForm>({
         product: '',
         batch: '',
         quantity: 0,
@@ -45,7 +45,7 @@ export default function useOperationForm({
         date: '',
         unit: '',
         operationType: operationType,
-        adjustmentType: adjustmentType,
+        adjustmentType: adjustmentType ?? '',
         remarks: '',
         source_location: '',
         destination_location: '',
@@ -175,7 +175,10 @@ export default function useOperationForm({
 
     const filteredUnits = useMemo(() => {
         if (!selectedProduct || !selectedBatch) return [];
-        return (units ?? []).filter((unit) => unit.base_unit === selectedProduct.unit.base_unit);
+        const productUnit = selectedProduct.unit;
+        const productBaseUnit =
+            typeof productUnit === 'string' ? units?.find((unit) => unit.name === productUnit)?.base_unit : productUnit.base_unit;
+        return (units ?? []).filter((unit) => unit.base_unit === productBaseUnit);
     }, [selectedProduct, selectedBatch, units]);
 
     const filteredDestinationLocations = useMemo(() => {
@@ -235,6 +238,8 @@ export default function useOperationForm({
         post,
         setData,
         errors,
+        setError,
+        clearErrors,
         reset,
         processing,
         currentStock,

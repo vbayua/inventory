@@ -90,9 +90,11 @@ export default function Create({
     const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();
         if (!form.data.unit) {
+            form.setError('unit', 'Unit belum dipilih.');
             toast.error('Unit belum dipilih.');
             return;
         }
+        form.clearErrors('unit');
         form.post('/operations', {
             onSuccess: () => {
                 form.reset();
@@ -276,19 +278,19 @@ export default function Create({
                         </div>
 
                         {/*TRANSFER SECTION*/}
-                        {operationTypeData === 'transfer' && <TransferSection form={form} warehouses={warehouses} locations={locations} />}
+                        {operationTypeData === 'transfer' && <TransferSection form={form} warehouses={warehouses ?? []} locations={locations ?? []} />}
                         {/*END OF TRANSFER SECTION*/}
 
                         {/*OUTBOUND SECTION*/}
-                        {operationTypeData === 'outbound' && <OutboundSection form={form} warehouses={warehouses} />}
+                        {operationTypeData === 'outbound' && <OutboundSection form={form} warehouses={warehouses ?? []} />}
                         {/*END OF OUTBOUND SECTION*/}
 
                         {/*INBOUND SECTION*/}
-                        {operationTypeData === 'inbound' && <InboundSection form={form} warehouses={warehouses} />}
+                        {operationTypeData === 'inbound' && <InboundSection form={form} warehouses={warehouses ?? []} />}
                         {/*END OF INBOUND SECTION*/}
 
                         {/*RETURN SECTION*/}
-                        {operationTypeData === 'return' && <ReturnSection form={form} warehouses={warehouses} />}
+                        {operationTypeData === 'return' && <ReturnSection form={form} warehouses={warehouses ?? []} />}
                         {/*END OF RETURN SECTION*/}
 
                         {/* Adjust Qty Section */}

@@ -1,7 +1,8 @@
+import { Warehouse } from '@/types/resources';
 import QuantityUnitInput from "./QuantityUnitInput";
 import WarehouseLocationPicker from "./WarehouseLocationPicker";
 
-export default function ReturnSection({ form, warehouses }) {
+export default function ReturnSection({ form, warehouses }: { form: any; warehouses: Warehouse[] }) {
     const {
         data,
         setData,
@@ -34,7 +35,7 @@ export default function ReturnSection({ form, warehouses }) {
                 errors={errors}
             />
 
-            <QuantityUnitInput data={data} setData={setData} units={filteredUnits} errors={errors} currentStock={currentStock} />
+            <QuantityUnitInput clearErrors={form.clearErrors} data={data} setData={setData} units={filteredUnits} errors={errors} currentStock={currentStock} />
 
         </>
     )

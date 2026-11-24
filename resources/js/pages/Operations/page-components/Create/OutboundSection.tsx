@@ -35,7 +35,7 @@ export default function OutboundSection({ form, warehouses }: { form: any; wareh
                 errors={errors}
             />
 
-            <QuantityUnitInput data={data} setData={setData} units={filteredUnits} errors={errors} currentStock={currentStock} />
+            <QuantityUnitInput clearErrors={form.clearErrors} data={data} setData={setData} units={filteredUnits} errors={errors} currentStock={currentStock} />
         </>
     );
 }

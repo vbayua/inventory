@@ -15,12 +15,14 @@ export default function QuantityUnitInput({
     units,
     currentStock,
     errors,
+    clearErrors,
 }: {
     data: any;
     setData: any;
     units: Unit[];
     currentStock: Stock;
     errors: any;
+    clearErrors?: (field: string) => void;
 }) {
     const [unitPopoverOpen, setUnitPopoverOpen] = useState(false);
     const selectedUnitName: string | undefined = data.unit || (currentStock ? currentStock.unit : undefined);
@@ -83,6 +85,7 @@ export default function QuantityUnitInput({
                                     getLabel={(item) => item.name}
                                     onSelect={(item) => {
                                         setData('unit', item.name);
+                                        clearErrors?.('unit');
                                         setUnitPopoverOpen(false);
                                     }}
                                     placeholder="Pilih unit"
@@ -92,6 +95,7 @@ export default function QuantityUnitInput({
                         </Popover>
                     </ButtonGroup>
                 </ButtonGroup>
+                {errors.unit && <p className="mt-1 text-right text-sm text-red-500">{errors.unit}</p>}
                 {currentStock && (
                     <p className="text-muted-foreground mt-1 text-sm text-right">
                         {`In stock: ${Number(currentStock.quantity)} ${currentStock.unit}`}
