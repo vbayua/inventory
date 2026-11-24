@@ -28,11 +28,11 @@ export default function useOperationForm({
     operationType,
     adjustmentType,
 }: {
-    stocks: Stock[];
-    warehouses: Warehouse[];
-    batches: Batch[];
+    stocks?: Stock[];
+    warehouses?: Warehouse[];
+    batches?: Batch[];
     locations: Location[] | undefined;
-    units: Unit[];
+    units?: Unit[];
     stockQuery?: Stock | undefined;
     operationType: 'outbound' | 'inbound' | 'adjustment' | 'transfer' | 'return';
     adjustmentType?: 'addition' | 'subtraction';
@@ -136,7 +136,7 @@ export default function useOperationForm({
 
     const filteredBatches = useMemo(() => {
         if (!selectedProduct) return [];
-        return batches.filter((batch) => batch.product_id === selectedProduct.id);
+        return (batches ?? []).filter((batch) => batch.product_id === selectedProduct.id);
     }, [selectedProduct, batches]);
 
     const filteredLocations = useMemo(() => {
@@ -144,7 +144,7 @@ export default function useOperationForm({
         if (data.operationType === 'outbound' || data.operationType === 'transfer') {
             return (
                 selectedWarehouse.locations?.filter((location) =>
-                    stocks.some(
+                    stocks?.some(
                         (item: Stock) =>
                             item.batch_id === selectedBatch.id &&
                             item.product_id === selectedProduct.id &&
@@ -159,10 +159,10 @@ export default function useOperationForm({
 
     const filteredSourceLocations = useMemo(() => {
         if (!selectedProduct || !selectedBatch || !selectedTransferLocations.source_warehouse) return [];
-        const filteredData = warehouses.find((warehouse) => warehouse.id === selectedTransferLocations?.source_warehouse?.id);
+        const filteredData = warehouses?.find((warehouse) => warehouse.id === selectedTransferLocations?.source_warehouse?.id);
         return (
             filteredData?.locations?.filter((location) =>
-                stocks.some(
+                stocks?.some(
                     (item: Stock) =>
                         item.batch_id === selectedBatch.id &&
                         item.product_id === selectedProduct.id &&
@@ -175,12 +175,12 @@ export default function useOperationForm({
 
     const filteredUnits = useMemo(() => {
         if (!selectedProduct || !selectedBatch) return [];
-        return units.filter((unit) => unit.base_unit === selectedProduct.unit.base_unit);
+        return (units ?? []).filter((unit) => unit.base_unit === selectedProduct.unit.base_unit);
     }, [selectedProduct, selectedBatch, units]);
 
     const filteredDestinationLocations = useMemo(() => {
         if (!selectedProduct || !selectedBatch || !selectedTransferLocations.destination_warehouse) return [];
-        const filteredData = warehouses.find((warehouse) => warehouse.id === selectedTransferLocations?.destination_warehouse?.id);
+        const filteredData = warehouses?.find((warehouse) => warehouse.id === selectedTransferLocations?.destination_warehouse?.id);
         return filteredData?.locations ?? [];
     }, [selectedProduct, selectedBatch, selectedTransferLocations.destination_warehouse, warehouses]);
 
@@ -206,8 +206,8 @@ export default function useOperationForm({
                   )
                 : undefined;
             if (currentStock) {
-                setSelectedUnit(units.find((unit) => unit.name === currentStock.unit));
-                setSelectedWarehouse(warehouses.find((warehouse) => warehouse.id === currentStock.location?.warehouse_id));
+                setSelectedUnit(units?.find((unit) => unit.name === currentStock.unit));
+                setSelectedWarehouse(warehouses?.find((warehouse) => warehouse.id === currentStock.location?.warehouse_id));
                 setData('batch', String(selectedBatch?.id));
                 setData('unit', currentStock.unit);
                 return currentStock;

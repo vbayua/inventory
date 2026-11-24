@@ -89,7 +89,10 @@ export default function Create({
 
     const createOperation: SubmitEventHandler = (e) => {
         e.preventDefault();
-        console.log('Creating operation with data:', form.data);
+        if (!form.data.unit) {
+            toast.error('Unit belum dipilih.');
+            return;
+        }
         form.post('/operations', {
             onSuccess: () => {
                 form.reset();
